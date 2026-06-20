@@ -47,6 +47,25 @@ Donors can contribute native XLM to community campaigns. Every donation register
 
 ---
 
+### 📖 User Guide (How to Use)
+
+#### 🧑‍💻 As a Client / Donor
+1. **Connect Wallet:** Click the `Connect Freighter` button at the top right to link your Stellar wallet. Ensure you are on the Testnet.
+2. **Find a Campaign:** Browse the **Active** campaigns tab. You can use the search bar to find specific causes.
+3. **Donate XLM:** Enter an amount (e.g., `10.00`) in the input box inside a campaign card and click **Donate Now**.
+4. **Sign Transaction:** Approve the transaction in your Freighter extension. You will earn **1 Loyalty Point** upon success.
+5. **Claim Reward:** Once you accumulate **10 Points**, go to the `Reward Approvals` section at the top and click **Claim Reward (1 XLM)**.
+6. **Wait for Approval:** Your status will change to *Pending*. Once the Owner approves it, 1.00 XLM will be transferred to your wallet and your points will reset.
+
+#### 👑 As the Owner / Admin
+1. **Connect Admin Wallet:** Connect the Freighter wallet that holds the private key of the Contract Owner. The `Admin Settings Panel` will automatically appear.
+2. **Create Campaigns:** Click the **Create New Campaign** button (plus icon) to launch a new fundraising target. Fill in the Title, Description, and Target XLM.
+3. **Manage Campaigns:** Click the green pencil icon on any existing campaign to update its details or deactivate it.
+4. **Approve Claims:** Monitor the `Pending Claims` queue in the Admin Dashboard. Click **Approve** to authorize the smart contract to send 1.00 XLM to the loyal donor.
+5. **Withdraw Treasury Funds:** Use the **Withdraw Funds** button next to the Treasury Balance to transfer accumulated donation funds from the smart contract to your own wallet. Ensure you leave enough balance to pay out pending donor rewards.
+
+---
+
 ### Security & Error Handling
 
 StelDot implements a robust, two-layer error handling architecture covering edge cases and providing an excellent UX:

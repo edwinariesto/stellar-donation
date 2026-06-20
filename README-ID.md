@@ -46,6 +46,25 @@ Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Setiap kali
 
 ---
 
+### 📖 Panduan Pengguna (Cara Menggunakan)
+
+#### 🧑‍💻 Sebagai Klien / Donatur
+1. **Hubungkan Dompet:** Klik tombol `Connect Freighter` di pojok kanan atas untuk menautkan dompet Stellar Anda. Pastikan jaringan berada di Testnet.
+2. **Cari Kampanye:** Telusuri tab kampanye **Aktif**. Anda dapat menggunakan bilah pencarian untuk mencari kampanye tertentu.
+3. **Donasi XLM:** Masukkan nominal (misal: `10.00`) di kotak input pada kartu kampanye dan klik **Donasi Sekarang**.
+4. **Tanda Tangani Transaksi:** Setujui transaksi di ekstensi Freighter Anda. Anda akan mendapatkan **1 Poin Loyalitas** setiap kali berhasil berdonasi.
+5. **Klaim Hadiah:** Setelah Anda mengumpulkan **10 Poin**, buka bagian `Persetujuan Hadiah` di atas dan klik **Klaim Reward (1 XLM)**.
+6. **Tunggu Persetujuan:** Status Anda akan berubah menjadi *Pending*. Setelah Admin menyetujuinya, 1.00 XLM akan dikirim ke dompet Anda dan poin Anda akan direset.
+
+#### 👑 Sebagai Pemilik / Admin
+1. **Hubungkan Dompet Admin:** Hubungkan dompet Freighter yang memegang kunci pribadi (Private Key) dari Pemilik Kontrak. `Panel Pengaturan Admin` akan otomatis muncul di bagian atas.
+2. **Buat Kampanye:** Klik tombol **Buat Kampanye Baru** (ikon plus) untuk meluncurkan target penggalangan dana baru. Isi Judul, Deskripsi, dan Target XLM.
+3. **Kelola Kampanye:** Klik ikon pensil hijau pada kampanye mana pun yang sudah ada untuk memperbarui detailnya atau menonaktifkannya.
+4. **Setujui Klaim:** Pantau antrean `Klaim Tertunda` di Dashboard Admin. Klik **Setujui** untuk mengizinkan *smart contract* mengirim 1.00 XLM ke donatur setia.
+5. **Tarik Dana Kas:** Gunakan tombol **Tarik Dana** di sebelah Saldo Kas (Treasury Balance) untuk mentransfer dana donasi yang terkumpul dari *smart contract* ke dompet pribadi Anda. Pastikan Anda menyisakan saldo yang cukup untuk membayar hadiah donatur yang tertunda.
+
+---
+
 ### Keamanan & Penanganan Kesalahan (Error Handling)
 
 StelDot menerapkan arsitektur penanganan kesalahan dua lapis yang solid untuk menutupi berbagai anomali (edge cases) dan memberikan pengalaman pengguna (UX) yang mulus:
