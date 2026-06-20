@@ -10,7 +10,7 @@ import {
   getGlobalTopDonors
 } from './utils/stellar';
 import { Address, nativeToScVal } from '@stellar/stellar-sdk';
-
+import bannerImg from './image/banner.png';
 const DEFAULT_CONTRACT_ID = 'CABKLAYMJR3WTCAAP4CYZHF7OKAAE47U62EHI2GIY276NNEUB4SGJVBD';
 const NATIVE_XLM_SAC = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
@@ -906,6 +906,11 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="max-w-6xl w-full mx-auto px-6 mt-8 flex-grow">
+        
+        {/* Responsive Hero Banner */}
+        <div className="w-full mb-8 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white border border-ios-lightGray/50">
+          <img src={bannerImg} alt="StelDot Campaign Banner" className="w-full h-auto object-cover max-h-[180px] sm:max-h-[300px] md:max-h-[400px] hover:scale-[1.02] transition-transform duration-700 ease-in-out" />
+        </div>
         
         {/* On-Chain Connection Mode Warning */}
         {isMockMode && (
