@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #F2F2F7;
+    color: #000000;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+}
+
+/* Micro-animations and custom effects */
+.ios-transition {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ios-active-scale:active {
+  transform: scale(0.96);
+}
+
+/* Pulsing highlight animation */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(0, 122, 255, 0.1); }
+  50% { box-shadow: 0 0 20px rgba(0, 122, 255, 0.25); }
+}
+
+.glow-blue {
+  animation: pulseGlow 2.5s infinite;
+}
