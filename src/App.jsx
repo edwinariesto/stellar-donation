@@ -791,8 +791,8 @@ export default function App() {
       
       {/* Sync Progress Banner */}
       {syncProgress && (
-        <div className="fixed top-0 left-0 right-0 bg-blue-600/95 backdrop-blur-md text-white text-xs font-bold text-center py-2 z-[9999] shadow-md flex items-center justify-center gap-3 transition-all duration-300">
-          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+        <div className="relative bg-blue-600/95 backdrop-blur-md text-white text-[10px] sm:text-xs font-bold text-center py-2 z-[50] shadow-md flex items-center justify-center gap-2 sm:gap-3 transition-all duration-300">
+          <span className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
           <span>{t.blockchainSync}: {syncProgress}</span>
         </div>
       )}
@@ -811,35 +811,35 @@ export default function App() {
       )}
 
       {/* Main Header */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-ios-lightGray shadow-sm h-16 flex items-center">
-        <div className="max-w-6xl w-full mx-auto px-6 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-ios-lightGray shadow-sm min-h-[64px] py-2 flex items-center">
+        <div className="max-w-6xl w-full mx-auto px-3 sm:px-6 flex flex-wrap sm:flex-nowrap justify-between items-center gap-y-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-7 sm:h-7">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
             </svg>
-            <span className="text-xl font-bold tracking-tight text-ios-darkText">Stel<span className="text-ios-blue">Dot</span></span>
+            <span className="text-base sm:text-xl font-bold tracking-tight text-ios-darkText hidden sm:block">Stel<span className="text-ios-blue">Dot</span></span>
           </div>
 
           
-          <div className="flex items-center gap-3">
-            <div className="flex items-center bg-[#F2F2F7] rounded-full p-1 border border-ios-lightGray/40 mr-2">
+          <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-3">
+            <div className="flex items-center bg-[#F2F2F7] rounded-full p-0.5 sm:p-1 border border-ios-lightGray/40 mr-1 sm:mr-2">
               <button
                 onClick={() => setLang('id')}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${lang === 'id' ? 'bg-white shadow-sm text-ios-darkText' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
+                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-xs font-bold transition-all ${lang === 'id' ? 'bg-white shadow-sm text-ios-darkText' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
               >
-                🇮🇩 IND
+                🇮🇩 <span className="hidden sm:inline">IND</span>
               </button>
               <button
                 onClick={() => setLang('en')}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${lang === 'en' ? 'bg-white shadow-sm text-ios-darkText' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
+                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-xs font-bold transition-all ${lang === 'en' ? 'bg-white shadow-sm text-ios-darkText' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
               >
-                🇬🇧 ENG
+                🇬🇧 <span className="hidden sm:inline">ENG</span>
               </button>
             </div>
 
             <button 
               onClick={showOnboardingGuide}
-              className="w-8 h-8 rounded-full border border-ios-lightGray flex items-center justify-center text-ios-secondaryText hover:bg-gray-50 active:scale-95 transition-all"
+              className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border border-ios-lightGray flex items-center justify-center text-ios-secondaryText hover:bg-gray-50 active:scale-95 transition-all text-[10px] sm:text-sm font-bold shrink-0"
               title="View Onboarding Guide"
             >
               i
@@ -849,27 +849,28 @@ export default function App() {
               <button 
                 onClick={refreshData}
                 disabled={isLoading}
-                className="ios-transition ios-active-scale px-4 py-2 rounded-full text-xs font-semibold bg-ios-lightGray text-ios-secondaryText flex items-center gap-2 hover:bg-gray-200"
+                className="ios-transition ios-active-scale px-2 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-semibold bg-ios-lightGray text-ios-secondaryText flex items-center gap-1 sm:gap-2 hover:bg-gray-200 shrink-0"
               >
-                {isLoading ? <span className="spinner w-3 h-3 border-2"></span> : t.sync}
+                {isLoading ? <span className="spinner w-3 h-3 border-2"></span> : <span className="hidden sm:inline">{t.sync}</span>}
+                {!isLoading && <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" className="sm:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>}
               </button>
             ) : null}
 
             {userAddress ? (
-              <div className="flex items-center gap-2">
-                <div className="px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 bg-ios-lightGray text-ios-secondaryText cursor-default">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <div className="px-2 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-sm font-semibold flex items-center gap-1 sm:gap-2 bg-ios-lightGray text-ios-secondaryText cursor-default shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" className="hidden sm:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                   </svg>
-                  <span>{`${userAddress.substring(0, 6)}...${userAddress.substring(50)}`}</span>
+                  <span>{`${userAddress.substring(0, 4)}...${userAddress.substring(52)}`}</span>
                 </div>
                 <button 
                   onClick={handleDisconnectWallet}
-                  className="ios-transition ios-active-scale px-4 py-2 rounded-full text-sm font-semibold bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20 flex items-center gap-2"
+                  className="ios-transition ios-active-scale px-2 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-sm font-semibold bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20 flex items-center gap-1 sm:gap-2 shrink-0"
                   title={t.disconnectWallet}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" className="sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                     <polyline points="16 17 21 12 16 7"></polyline>
                     <line x1="21" y1="12" x2="9" y2="12"></line>
@@ -880,13 +881,14 @@ export default function App() {
             ) : (
               <button 
                 onClick={handleConnectWallet}
-                className="ios-transition ios-active-scale px-5 py-2 rounded-full text-sm font-semibold flex items-center gap-2 bg-ios-blue text-white shadow-md shadow-blue-500/10 hover:bg-blue-600"
+                className="ios-transition ios-active-scale px-3 py-1.5 sm:px-5 sm:py-2 rounded-full text-[10px] sm:text-sm font-semibold flex items-center gap-1 sm:gap-2 bg-ios-blue text-white shadow-md shadow-blue-500/10 hover:bg-blue-600 shrink-0"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" className="sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                <span>{t.connectFreighter}</span>
+                <span className="hidden sm:inline">{t.connectFreighter}</span>
+                <span className="sm:hidden">Connect</span>
               </button>
             )}
           </div>

@@ -7,20 +7,25 @@
 ## 🇺🇸 English Version
 
 ### Description
-StelDot is a Decentralized Application (dApp) built on the Stellar network using Soroban smart contracts. It implements a **Donate-to-Earn** loyalty rewards model. 
+
+StelDot is a Decentralized Application (dApp) built on the Stellar network using Soroban smart contracts. It implements a **Donate-to-Earn** loyalty rewards model.
 Donors can contribute native XLM to community campaigns. Every donation registers 1 Loyalty Point. Once a donor accumulates 10 loyalty points, they can claim a reward of **1.00 XLM**. Upon owner approval, the points reset to 0, but the historic donation records are safely persisted on the blockchain forever. Double-claims are prevented by locking claimant status to "Pending" until the contract owner executes the payout.
 
 ---
 
 ### Smart Contract Information (Testnet)
-- **Stellar Testnet Contract ID**: `CABKLAYMJR3WTCAAP4CYZHF7OKAAE47U62EHI2GIY276NNEUB4SGJVBD`
+
+- **Deployed Contract Address (ID)**: `CABKLAYMJR3WTCAAP4CYZHF7OKAAE47U62EHI2GIY276NNEUB4SGJVBD`
+- **View on Stellar Explorer**: [Stellar.Expert Contract Link](https://stellar.expert/explorer/testnet/contract/CABKLAYMJR3WTCAAP4CYZHF7OKAAE47U62EHI2GIY276NNEUB4SGJVBD)
 - **Asset/Token Address (Native XLM SAC)**: `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
+- **Example Transaction Hash (Contract Call)**: [`b9d0b2292c4e09e8eb22d036171491e87b8d2086bf8b265874c8d182cb9c9020`](https://stellar.expert/explorer/testnet/tx/b9d0b2292c4e09e8eb22d036171491e87b8d2086bf8b265874c8d182cb9c9020)
 
 ---
 
 ### Features
 
 #### For Clients (Donors)
+
 - **Support Campaigns**: Donate any positive amount of XLM to active campaigns.
 - **Categorized Tabs**: Easily navigate between **Active**, **Fully Funded**, and **Inactive** campaigns.
 - **Loyalty Rewards**: Earn 1 loyalty point per donation. Track active points dynamically.
@@ -32,6 +37,7 @@ Donors can contribute native XLM to community campaigns. Every donation register
 - **Search & Pagination**: Effortlessly find specific campaigns by ID or Title and navigate through pages.
 
 #### For Owners (Administrators)
+
 - **Owner Dashboard**: A premium, prominent control panel to manage the platform.
 - **Campaign Creation**: Upload and configure funding campaigns with unique IDs, titles, descriptions, and targets.
 - **Campaign Editing**: Flexibly modify existing campaigns (e.g., correcting typos, adjusting targets, or toggling active status).
@@ -42,6 +48,7 @@ Donors can contribute native XLM to community campaigns. Every donation register
 ---
 
 ### Technology Stack
+
 - **Smart Contract**: Rust, Soroban SDK (v26)
 - **Frontend Framework**: React (Vite)
 - **Styling**: Tailwind CSS (Apple iOS-style Design System)
@@ -52,6 +59,7 @@ Donors can contribute native XLM to community campaigns. Every donation register
 ---
 
 ### Project Directory Structure
+
 ```text
 stellar-steldot/
 ├── contracts/
@@ -79,48 +87,57 @@ stellar-steldot/
 ### Setup Instructions
 
 #### 1. Smart Contract Verification
+
 Verify the smart contract functionality using Cargo tests:
+
 ```bash
 cargo test
 ```
+
 To compile the contract to optimized WASM format:
+
 ```bash
 stellar contract build
 ```
 
 #### 2. Deploying and Initializing Your Own Contract
+
 Fund a testnet address and deploy:
+
 ```bash
 stellar keys generate --global deployer
 stellar keys fund deployer
 stellar contract deploy --wasm target/wasm32v1-none/release/donation.wasm --source deployer --network testnet
 ```
+
 Initialize the contract (specify your public key as owner and testnet native asset SAC as token):
+
 ```bash
 stellar contract invoke --id <YOUR_CONTRACT_ID> --source deployer --network testnet -- initialize --owner <OWNER_PUBLIC_KEY> --token CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
 ```
 
 #### 3. Run the Frontend Locally
+
 Install all React/Vite/Tailwind dependencies and launch:
+
 ```bash
 npm install
 npm run dev
 ```
+
 Open `http://localhost:5173`. Clicking on the **Contract ID** link allows you to paste your new contract ID to connect live!
 
 ---
 
 ### Application Preview
 ### 👤 Owner: Created New Campaign
+
 <img width="700" alt="Owner Created New Campaign" src="https://github.com/user-attachments/assets/7197efcf-0ad6-47c3-8987-9768a48553e8" />
 
 ---
 
 ### 🤝 Client: Add Donation
+
 <img width="700" alt="Client Add Donation 1" src="https://github.com/user-attachments/assets/94515b5d-baba-4da7-b6f3-9f6db2ab2888" />
 <br>
 <img width="700" alt="Client Add Donation 2" src="https://github.com/user-attachments/assets/3211e77c-d9e5-425c-b3fc-226bf329c378" />
-
-
-
-
