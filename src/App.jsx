@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { translations } from './utils/i18n';
-import Swal from 'sweetalert2';
+import SwalOrig from 'sweetalert2';
+
+const Swal = SwalOrig.mixin({
+  buttonsStyling: false,
+  customClass: {
+    popup: 'overflow-hidden !pb-0',
+    actions: 'flex w-full mt-6 !mb-0 !border-none',
+    confirmButton: 'flex-1 bg-[#34C759] hover:bg-green-600 text-white py-3.5 font-bold transition-colors !m-0 !rounded-none min-w-0',
+    cancelButton: 'flex-1 bg-[#FF3B30] hover:bg-red-600 text-white py-3.5 font-bold transition-colors !m-0 !rounded-none min-w-0',
+    denyButton: 'flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3.5 font-bold transition-colors !m-0 !rounded-none min-w-0'
+  }
+});
 import {
   checkFreighterInstalled,
   getFreighterAddress,
@@ -260,7 +271,7 @@ export default function App() {
       }));
     } catch (err) {
       console.error(err);
-      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: t.translateFailed, showConfirmButton: false, timer: 3000 });
+      SwalOrig.fire({ toast: true, position: 'top-end', icon: 'error', title: t.translateFailed, showConfirmButton: false, timer: 3000 });
       setTranslatedCampaigns(prev => {
         const next = { ...prev };
         delete next[camp.id];
@@ -582,15 +593,6 @@ export default function App() {
           <span class="absolute right-4 font-bold text-xs text-ios-blue">XLM</span>
         </div>
       `,
-      showCancelButton: true,
-      focusConfirm: false,
-      buttonsStyling: false,
-      customClass: {
-        popup: 'overflow-hidden !pb-0',
-        actions: 'flex w-full mt-6 !mb-0 !border-none',
-        confirmButton: 'flex-1 bg-[#34C759] hover:bg-green-600 text-white py-3.5 font-bold transition-colors !m-0 !rounded-none',
-        cancelButton: 'flex-1 bg-[#FF3B30] hover:bg-red-600 text-white py-3.5 font-bold transition-colors !m-0 !rounded-none'
-      },
       preConfirm: () => {
         return parseFloat(document.getElementById('swal-withdraw').value);
       }
@@ -659,13 +661,6 @@ export default function App() {
       `,
       focusConfirm: false,
       showCancelButton: true,
-      buttonsStyling: false,
-      customClass: {
-        popup: 'overflow-hidden !pb-0',
-        actions: 'flex w-full mt-6 !mb-0 !border-none',
-        confirmButton: 'flex-1 bg-[#34C759] hover:bg-green-600 text-white py-3.5 font-bold transition-colors !m-0 !rounded-none',
-        cancelButton: 'flex-1 bg-[#FF3B30] hover:bg-red-600 text-white py-3.5 font-bold transition-colors !m-0 !rounded-none'
-      },
       preConfirm: () => {
         return {
           title: document.getElementById('swal-title').value,
@@ -811,11 +806,7 @@ export default function App() {
     Swal.fire({
       title: t.welcomeTitle,
       html: t.welcomeDesc,
-      confirmButtonText: t.letsGo,
-      confirmButtonColor: '#007AFF',
-      customClass: {
-        popup: 'rounded-2xl'
-      }
+      confirmButtonText: t.letsGo
     });
     localStorage.setItem('steldot_onboarded', 'true');
   };
@@ -827,8 +818,6 @@ export default function App() {
       inputLabel: t.configContractLabel,
       inputValue: contractId,
       showCancelButton: true,
-      confirmButtonColor: '#007AFF',
-      cancelButtonColor: '#8E8E93',
       inputValidator: (value) => {
         if (!value) {
           return t.contractRequired;
