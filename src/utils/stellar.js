@@ -86,7 +86,9 @@ export const getGlobalTopDonors = async (contractId) => {
       await rpcServer.getEvents({ startLedger: 1, filters: [], limit: 1 });
     } catch(err) {
       const match = err.message.match(/range: (\d+) - (\d+)/);
+      const match2 = err.message.match(/greater than or equal to (\d+)/);
       if (match) minLedger = parseInt(match[1], 10);
+      else if (match2) minLedger = parseInt(match2[1], 10);
     }
     
     const latest = await rpcServer.getLatestLedger();
@@ -97,23 +99,27 @@ export const getGlobalTopDonors = async (contractId) => {
     for (let i = 0; i < 6; i++) {
       const startLedger = Math.max(minLedger, currentEnd - 5000);
       let pagingToken;
-      
-      while (true) {
-        const res = await rpcServer.getEvents({
-          startLedger,
-          filters: [{ type: 'contract', contractIds: [contractId] }],
-          limit: 1000,
-          pagination: pagingToken ? { cursor: pagingToken } : undefined
-        });
-        
-        if (!res.events || res.events.length === 0) break;
-        
-        // Filter out events that are beyond our current chunk's end
-        const validEvents = res.events.filter(e => parseInt(e.ledger, 10) <= currentEnd);
-        allEvents = allEvents.concat(validEvents);
-        
-        pagingToken = res.events[res.events.length - 1].pagingToken;
-        if (parseInt(res.events[res.events.length - 1].ledger, 10) >= currentEnd) break;
+      try {
+        while (true) {
+          const res = await rpcServer.getEvents({
+            startLedger,
+            filters: [{ type: 'contract', contractIds: [contractId] }],
+            limit: 1000,
+            pagination: pagingToken ? { cursor: pagingToken } : undefined
+          });
+          
+          if (!res.events || res.events.length === 0) break;
+          
+          // Filter out events that are beyond our current chunk's end
+          const validEvents = res.events.filter(e => parseInt(e.ledger, 10) <= currentEnd);
+          allEvents = allEvents.concat(validEvents);
+          
+          pagingToken = res.events[res.events.length - 1].pagingToken;
+          if (parseInt(res.events[res.events.length - 1].ledger, 10) >= currentEnd) break;
+        }
+      } catch (e) {
+        console.warn('RPC retention limit reached while scanning older ledgers:', e.message);
+        break; // Stop scanning older chunks, but keep allEvents collected so far!
       }
       
       currentEnd = startLedger - 1;

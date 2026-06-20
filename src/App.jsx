@@ -571,6 +571,66 @@ export default function App() {
       }
     }
   };
+  // Owner withdraws from treasury
+  const handleWithdraw = async () => {
+    const { value: formValues } = await Swal.fire({
+      title: t.withdrawFunds,
+      html: `
+        <p class="text-sm text-gray-500 mb-4">${t.withdrawDesc}</p>
+        <div class="relative flex items-center">
+          <input type="number" id="swal-withdraw" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50" min="0.1" step="0.1" placeholder="10.00">
+          <span class="absolute right-4 font-bold text-xs text-ios-blue">XLM</span>
+        </div>
+      `,
+      showCancelButton: true,
+      focusConfirm: false,
+      buttonsStyling: false,
+      customClass: {
+        popup: 'overflow-hidden !pb-0',
+        actions: 'flex w-full mt-6 !mb-0 !border-none',
+        confirmButton: 'flex-1 bg-[#34C759] hover:bg-green-600 text-white py-3.5 font-bold transition-colors !m-0 !rounded-none',
+        cancelButton: 'flex-1 bg-[#FF3B30] hover:bg-red-600 text-white py-3.5 font-bold transition-colors !m-0 !rounded-none'
+      },
+      preConfirm: () => {
+        return parseFloat(document.getElementById('swal-withdraw').value);
+      }
+    });
+
+    if (!formValues || isNaN(formValues) || formValues <= 0) return;
+
+    if (isMockMode) {
+      if (formValues > contractBalance) {
+        Swal.fire({ title: t.withdrawFailed, text: 'Insufficient treasury balance.', icon: 'error' });
+        return;
+      }
+      setContractBalance(prev => prev - formValues);
+      Swal.fire({ title: t.withdrawSuccess, text: 'Withdrawn in mock mode.', icon: 'success' });
+    } else {
+      setIsLoading(true);
+      try {
+        const amountSc = nativeToScVal(formValues * 10000000, { type: 'i128' });
+        const ownerSc = nativeToScVal(Address.fromString(userAddress));
+        
+        const txRes = await executeTransaction(contractId, 'withdraw', [ownerSc, amountSc], userAddress);
+        Swal.fire({
+          title: t.withdrawSuccess,
+          html: t.withdrawSuccessDesc(formValues, txRes.hash),
+          icon: 'success',
+          confirmButtonColor: '#34C759'
+        });
+        await refreshData();
+      } catch (err) {
+        Swal.fire({
+          title: t.withdrawFailed,
+          text: err.message || t.requestFailedDesc,
+          icon: 'error',
+          confirmButtonColor: '#FF3B30'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
 
 
   // Owner updates a campaign
@@ -1118,14 +1178,23 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="bg-ios-bg p-4 rounded-xl border border-ios-lightGray/30 mt-6 flex justify-between items-center text-xs">
+                <div className="bg-ios-bg p-4 rounded-xl border border-ios-lightGray/30 mt-6 flex justify-between items-center text-xs flex-wrap gap-3">
                   <div>
                     <span className="text-ios-darkGray block font-semibold uppercase text-[9px]">{t.treasuryCashBalance}</span>
                     <strong className="text-base text-ios-red">{contractBalance.toFixed(2)} XLM</strong>
                   </div>
-                  <span className="text-[10px] text-ios-secondaryText bg-white border border-ios-lightGray/40 px-2.5 py-1 rounded-full font-bold">
-                    {t.minRequired}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-ios-secondaryText bg-white border border-ios-lightGray/40 px-2.5 py-1 rounded-full font-bold hidden sm:block">
+                      {t.minRequired}
+                    </span>
+                    <button 
+                      onClick={handleWithdraw}
+                      disabled={isLoading || contractBalance <= 0}
+                      className="bg-ios-blue hover:bg-blue-600 text-white text-[10px] px-3 py-1.5 rounded-lg font-bold shadow-sm transition-colors disabled:opacity-50 flex-shrink-0"
+                    >
+                      {t.withdrawFunds}
+                    </button>
+                  </div>
                 </div>
 
               </div>
