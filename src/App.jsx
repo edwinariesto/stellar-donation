@@ -35,7 +35,7 @@ export default function App() {
   const [contractBalance, setContractBalance] = useState(0);
   const [topDonors, setTopDonors] = useState([]);
   const [ownerAddress, setOwnerAddress] = useState('');
-  const [lang, setLang] = useState('id');
+  const [lang, setLang] = useState('en');
   const t = translations[lang];
 
   // UI state
@@ -49,7 +49,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('active'); // active, completed, inactive
   const [currentPage, setCurrentPage] = useState(1);
-  const CAMPAIGNS_PER_PAGE = 5;
+  const CAMPAIGNS_PER_PAGE = 3;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -601,9 +601,10 @@ export default function App() {
       showCancelButton: true,
       buttonsStyling: false,
       customClass: {
-        actions: 'flex w-full mt-4 rounded-xl overflow-hidden shadow-sm',
-        confirmButton: 'flex-1 bg-[#34C759] hover:bg-green-600 text-white py-3 font-bold transition-colors m-0 rounded-none',
-        cancelButton: 'flex-1 bg-[#FF3B30] hover:bg-red-600 text-white py-3 font-bold transition-colors m-0 rounded-none'
+        popup: 'overflow-hidden !pb-0',
+        actions: 'flex w-full mt-6 !mb-0 !border-none',
+        confirmButton: 'flex-1 bg-[#34C759] hover:bg-green-600 text-white py-3.5 font-bold transition-colors !m-0 !rounded-none',
+        cancelButton: 'flex-1 bg-[#FF3B30] hover:bg-red-600 text-white py-3.5 font-bold transition-colors !m-0 !rounded-none'
       },
       preConfirm: () => {
         return {
@@ -793,7 +794,7 @@ export default function App() {
   // Helper metric computation
   const acceptPercentage = totalClaimsApproved + totalClaimsPending > 0
     ? ((totalClaimsApproved / (totalClaimsApproved + totalClaimsPending)) * 100).toFixed(1)
-    : '100.0';
+    : '0.0';
 
   return (
     <div className="min-h-screen bg-[#F2F2F7] flex flex-col font-sans relative pb-12">
@@ -833,16 +834,16 @@ export default function App() {
           <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-3">
             <div className="flex items-center bg-[#F2F2F7] rounded-full p-0.5 sm:p-1 border border-ios-lightGray/40 mr-1 sm:mr-2">
               <button
-                onClick={() => setLang('id')}
-                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-xs font-bold transition-all ${lang === 'id' ? 'bg-white shadow-sm text-ios-darkText' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
-              >
-                🇮🇩 <span className="hidden sm:inline">IND</span>
-              </button>
-              <button
                 onClick={() => setLang('en')}
-                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-xs font-bold transition-all ${lang === 'en' ? 'bg-white shadow-sm text-ios-darkText' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
+                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-xs font-bold transition-all ${lang === 'en' ? 'bg-[#34C759] shadow-sm text-white' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
               >
                 🇬🇧 <span className="hidden sm:inline">ENG</span>
+              </button>
+              <button
+                onClick={() => setLang('id')}
+                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-xs font-bold transition-all ${lang === 'id' ? 'bg-[#34C759] shadow-sm text-white' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
+              >
+                🇮🇩 <span className="hidden sm:inline">IND</span>
               </button>
             </div>
 
