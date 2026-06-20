@@ -371,7 +371,11 @@ export default function App() {
           title: t.donationSuccess,
           html: t.donationSuccessMock(amount),
           icon: 'success',
-          confirmButtonColor: '#34C759'
+          confirmButtonColor: '#34C759',
+          timer: 5000,
+          timerProgressBar: true
+        }).then(() => {
+          window.location.reload();
         });
         
         // Clear input
@@ -394,15 +398,20 @@ export default function App() {
         const amountSc = nativeToScVal(amountStroops, { type: 'i128' });
 
         const txRes = await executeTransaction(contractId, 'donate', [donorSc, campaignSc, amountSc], userAddress);
+        
+        setDonateAmounts(prev => ({ ...prev, [campaignId]: '' }));
+        await refreshData();
+        
         Swal.fire({
           title: t.donationSuccess,
           html: t.donationProcessed(amount, txRes.hash),
           icon: 'success',
-          confirmButtonColor: '#34C759'
+          confirmButtonColor: '#34C759',
+          timer: 5000,
+          timerProgressBar: true
+        }).then(() => {
+          window.location.reload();
         });
-        
-        setDonateAmounts(prev => ({ ...prev, [campaignId]: '' }));
-        await refreshData();
       } catch (err) {
         Swal.fire({
           title: t.txFailed,
