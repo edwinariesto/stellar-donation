@@ -110,4 +110,13 @@ Buka browser di `http://localhost:5173` untuk mengakses aplikasi. Anda dapat men
 ---
 
 ### Tampilan Aplikasi
+### 👤 Owner: Created New Campaign
+<img width="700" alt="Owner Created New Campaign" src="https://github.com/user-attachments/assets/7197efcf-0ad6-47c3-8987-9768a48553e8" />
+
+---
+
+### 🤝 Client: Add Donation
+<img width="700" alt="Client Add Donation 1" src="https://github.com/user-attachments/assets/94515b5d-baba-4da7-b6f3-9f6db2ab2888" />
+<br>
+<img width="700" alt="Client Add Donation 2" src="https://github.com/user-attachments/assets/3211e77c-d9e5-425c-b3fc-226bf329c378" />
 ![Screenshot](https://raw.githubusercontent.com/stellar-steldot/design/main/preview.png)
