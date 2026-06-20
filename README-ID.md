@@ -46,6 +46,38 @@ Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Setiap kali
 
 ---
 
+### Keamanan & Penanganan Kesalahan (Error Handling)
+
+StelDot menerapkan arsitektur penanganan kesalahan dua lapis yang solid untuk menutupi berbagai anomali (edge cases) dan memberikan pengalaman pengguna (UX) yang mulus:
+
+#### 1. Validasi Antarmuka / UI (11 Kondisi Kesalahan)
+Memberikan peringatan pop-up `SweetAlert` yang ramah pengguna untuk mencegah data buruk masuk ke blockchain.
+- **Kesalahan Koneksi**: Otentikasi dompet Freighter gagal atau ekstensi belum diinstal.
+- **Jumlah Tidak Valid**: Input nominal donasi 0 atau negatif.
+- **Transaksi Gagal**: Pengguna membatalkan tanda tangan di dompet Freighter, atau ada kegagalan on-chain.
+- **Poin Tidak Cukup**: Menekan tombol klaim saat poin loyalitas di bawah 10.
+- **Permintaan/Persetujuan Gagal**: Tanda tangan dibatalkan saat bertransaksi.
+- **Input Tidak Valid**: Admin membiarkan formulir kosong saat membuat kampanye baru.
+- **Penyebaran Gagal**: Kesalahan saat Admin membuat kampanye baru.
+- **Kas Kurang (Treasury Deficit)**: Saldo *smart contract* saat ini kurang dari 1.00 XLM, mencegah Admin menyetujui klaim agar tidak terjadi *error*.
+- **Format Contract Tidak Valid**: ID Smart Contract yang dimasukkan tidak valid (bukan 56 karakter).
+- **Gagal Menerjemahkan**: Kesalahan koneksi ke API Google Translate.
+
+#### 2. Penjagaan Keamanan Smart Contract (13 Kondisi Panic)
+Menjadi benteng pertahanan terakhir terhadap manipulasi transaksi langsung di blockchain.
+- `already initialized`: Mencegah inisialisasi ulang kontrak.
+- `not authorized: only owner can ...`: Kendali akses ketat khusus Pemilik (Admin).
+- `campaign already exists`: Mencegah duplikasi ID Kampanye.
+- `donation amount must be positive`: Validasi nilai transaksi on-chain.
+- `campaign is inactive`: Menolak donasi ke kampanye yang sudah dihentikan.
+- `insufficient loyalty points: need at least 10`: Verifikasi on-chain kelayakan hadiah.
+- `claim already pending`: Mencegah kerentanan **Double-Claim** / Klaim ganda.
+- `no pending claim for donor`: Mencegah pencairan dana sewenang-wenang.
+- `insufficient treasury balance to payout reward`: Pengamanan likuiditas kas.
+- `withdrawal amount must be positive`: Mencegah penarikan dana kas yang tidak valid.
+
+---
+
 ### Teknologi yang Digunakan
 
 - **Smart Contract**: Rust, Soroban SDK (v26)

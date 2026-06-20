@@ -47,6 +47,38 @@ Donors can contribute native XLM to community campaigns. Every donation register
 
 ---
 
+### Security & Error Handling
+
+StelDot implements a robust, two-layer error handling architecture covering edge cases and providing an excellent UX:
+
+#### 1. Frontend UI Validations (11 Error States)
+Provides user-friendly `SweetAlert` pop-ups to prevent bad data before reaching the blockchain.
+- **Connection Error**: Freighter wallet authentication fails or is missing.
+- **Invalid Amount**: Donation input is zero or negative.
+- **Transaction Failed**: User rejects the signature or a generic on-chain failure occurs.
+- **Points Insufficient**: Attempting to claim rewards with less than 10 points.
+- **Request/Approval Failed**: Signature rejection during transaction.
+- **Invalid Inputs**: Missing required fields when creating/editing campaigns.
+- **Deployment Failed**: Failure creating a new campaign.
+- **Treasury Deficit**: Smart contract balance is below the required 1.00 XLM payout. Prevents the owner from submitting an invalid transaction.
+- **Invalid Contract Format**: Contract ID pasted is not 56 characters long.
+- **Translation Failed**: Google Translate API network error.
+
+#### 2. Smart Contract On-Chain Guards (13 Panic States)
+Acts as the final line of defense against malicious transactions directly on the blockchain.
+- `already initialized`: Prevents re-initialization of the contract.
+- `not authorized: only owner can ...`: Strict Role-Based Access Control (RBAC).
+- `campaign already exists`: Prevents campaign ID collisions.
+- `donation amount must be positive`: On-chain validation of values.
+- `campaign is inactive`: Reverts donations to halted campaigns.
+- `insufficient loyalty points: need at least 10`: Double-verifies reward eligibility.
+- `claim already pending`: Prevents **Double-Claim** vulnerabilities.
+- `no pending claim for donor`: Prevents arbitrary payouts.
+- `insufficient treasury balance to payout reward`: Liquidity safeguarding.
+- `withdrawal amount must be positive`: Invalid treasury withdrawals.
+
+---
+
 ### Technology Stack
 
 - **Smart Contract**: Rust, Soroban SDK (v26)
