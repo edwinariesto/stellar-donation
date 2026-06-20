@@ -1320,7 +1320,7 @@ export default function App() {
                             disabled={isLoading}
                             className="bg-ios-blue text-white rounded-xl px-6 py-3 text-sm font-bold shadow-md shadow-blue-500/10 ios-active-scale hover:bg-blue-600 transition-all flex-shrink-0"
                           >
-                            Donate
+                            {t.donate}
                           </button>
                         </div>
 
