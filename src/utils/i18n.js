@@ -161,7 +161,18 @@ export const translations = {
     tabCompleted: 'Terkumpul Penuh',
     tabInactive: 'Dihentikan',
     campCompleted: 'Kampanye telah mencapai target',
-    campInactive: 'Kampanye sudah dihentikan'
+    campInactive: 'Kampanye sudah dihentikan',
+    progressRewardsTitle: 'Pencapaian Sosial',
+    progressRewardsDesc: 'Kumpulkan total volume donasi untuk membuka medali dan sertifikat eksklusif.',
+    milestone1: 'Pahlawan Sosial (> 25 XLM)',
+    milestone2: 'Duta Kebaikan (> 50 XLM)',
+    milestone3: 'Malaikat Penolong (> 100 XLM)',
+    milestone4: 'Legenda Komunitas (> 500 XLM)',
+    certTitle: 'Sertifikat Partisipasi Sosial',
+    certPresentedTo: 'Diberikan dengan bangga kepada:',
+    certDesc: 'Atas kontribusi luar biasa sebesar lebih dari 25 XLM untuk kampanye kemanusiaan dan sosial di jaringan Stellar.',
+    downloadCert: 'Unduh Sertifikat',
+    close: 'Tutup'
   },
   en: {
     walletConnected: 'Wallet Connected',
@@ -324,6 +335,17 @@ export const translations = {
     tabActive: 'Active',
     tabCompleted: 'Fully Funded',
     tabInactive: 'Inactive',
+    progressRewardsTitle: 'Social Achievements',
+    progressRewardsDesc: 'Accumulate total donation volume to unlock exclusive badges and certificates.',
+    milestone1: 'Social Hero (> 25 XLM)',
+    milestone2: 'Ambassador of Goodness (> 50 XLM)',
+    milestone3: 'Helping Angel (> 100 XLM)',
+    milestone4: 'Community Legend (> 500 XLM)',
+    certTitle: 'Certificate of Social Participation',
+    certPresentedTo: 'Proudly presented to:',
+    certDesc: 'For outstanding contributions of over 25 XLM to humanitarian and social campaigns on the Stellar network.',
+    downloadCert: 'Download Certificate',
+    close: 'Close',
     campCompleted: 'Campaign has reached its target',
     campInactive: 'Campaign is inactive'
   }

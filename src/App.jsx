@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import html2canvas from 'html2canvas';
 import { translations } from './utils/i18n';
 import SwalOrig from 'sweetalert2';
 
@@ -64,6 +65,8 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('active'); // active, completed, inactive
   const [currentPage, setCurrentPage] = useState(1);
+  const [showCertificate, setShowCertificate] = useState(false);
+  const [isDownloadingCert, setIsDownloadingCert] = useState(false);
   const CAMPAIGNS_PER_PAGE = 3;
 
   useEffect(() => {
@@ -827,6 +830,29 @@ export default function App() {
       }
     });
   };
+  const handleDownloadCertificate = async () => {
+    const certNode = document.getElementById('certificate-node');
+    if (!certNode) return;
+    setIsDownloadingCert(true);
+    try {
+      const canvas = await html2canvas(certNode, {
+        scale: 2, // High resolution
+        backgroundColor: '#ffffff'
+      });
+      const image = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = `steldot_certificate_${userAddress.substring(0,6)}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Failed to generate certificate:', err);
+      Swal.fire('Error', 'Failed to generate certificate image.', 'error');
+    } finally {
+      setIsDownloadingCert(false);
+    }
+  };
 
 
   return (
@@ -1020,6 +1046,72 @@ export default function App() {
               >
                 {t.claimRewardBtn} {(loyaltyPoints >= 10) && `(${(loyaltyPoints * 0.05).toFixed(2)} XLM)`}
               </button>
+            </div>
+            
+            {/* Progress Rewards */}
+            <div className="mt-8 pt-8 border-t border-ios-lightGray/60 w-full col-span-full">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                <div>
+                  <h3 className="font-bold text-lg text-ios-darkText">{t.progressRewardsTitle}</h3>
+                  <p className="text-sm text-ios-secondaryText mt-1">{t.progressRewardsDesc}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+                {/* Milestone 1 */}
+                <button 
+                  onClick={() => {
+                    if (totalDonated > 25 || isOwner) {
+                      setShowCertificate(true);
+                    }
+                  }}
+                  disabled={!(totalDonated > 25 || isOwner)}
+                  className={`relative flex flex-col items-center justify-center p-6 rounded-3xl border-2 transition-all ${
+                    totalDonated > 25 || isOwner 
+                      ? 'bg-gradient-to-b from-amber-50 to-orange-50 border-orange-200 hover:border-orange-300 hover:shadow-md hover:-translate-y-1 cursor-pointer' 
+                      : 'bg-gray-50 border-gray-100 opacity-60 cursor-not-allowed'
+                  }`}
+                >
+                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-4 ${
+                    totalDonated > 25 || isOwner
+                      ? 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-orange-500/30'
+                      : 'bg-gray-200'
+                  }`}>
+                    {totalDonated > 25 || isOwner ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15l-3.09 1.63.59-3.45-2.5-2.44 3.46-.5L12 7l1.54 3.24 3.46.5-2.5 2.44.59 3.45z"/><circle cx="12" cy="12" r="10"/></svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    )}
+                  </div>
+                  <span className={`text-[10px] sm:text-xs font-bold text-center ${totalDonated > 25 || isOwner ? 'text-orange-700' : 'text-gray-500'}`}>
+                    {t.milestone1}
+                  </span>
+                </button>
+
+                {/* Milestone 2 */}
+                <div className="relative flex flex-col items-center justify-center p-6 rounded-3xl border-2 bg-gray-50 border-gray-100 opacity-60">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-4 bg-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                  <span className="text-[10px] sm:text-xs font-bold text-center text-gray-500">{t.milestone2}</span>
+                </div>
+
+                {/* Milestone 3 */}
+                <div className="relative flex flex-col items-center justify-center p-6 rounded-3xl border-2 bg-gray-50 border-gray-100 opacity-60">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-4 bg-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                  <span className="text-[10px] sm:text-xs font-bold text-center text-gray-500">{t.milestone3}</span>
+                </div>
+
+                {/* Milestone 4 */}
+                <div className="relative flex flex-col items-center justify-center p-6 rounded-3xl border-2 bg-gray-50 border-gray-100 opacity-60">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-4 bg-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                  <span className="text-[10px] sm:text-xs font-bold text-center text-gray-500">{t.milestone4}</span>
+                </div>
+              </div>
             </div>
           </section>
         )}
@@ -1488,6 +1580,84 @@ export default function App() {
           </div>
         </section>
       </main>
+
+      {/* Certificate Modal */}
+      {showCertificate && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="relative w-full max-w-3xl flex flex-col items-center my-auto">
+            {/* Modal Actions */}
+            <div className="w-full flex justify-end gap-2 mb-4">
+              <button 
+                onClick={handleDownloadCertificate}
+                disabled={isDownloadingCert}
+                className="bg-white hover:bg-gray-100 text-ios-blue font-bold px-4 py-2 rounded-xl flex items-center gap-2 shadow-lg disabled:opacity-50"
+              >
+                {isDownloadingCert ? <span className="spinner w-4 h-4 border-2 border-ios-blue"></span> : <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>}
+                {t.downloadCert}
+              </button>
+              <button 
+                onClick={() => setShowCertificate(false)}
+                className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-xl backdrop-blur-md"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            {/* Certificate DOM to Capture */}
+            <div 
+              id="certificate-node" 
+              className="bg-white w-full rounded-none sm:rounded-xl shadow-2xl relative overflow-hidden"
+              style={{
+                aspectRatio: '1.414 / 1',
+                padding: '40px',
+                background: '#fff url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23f3f4f6\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
+              }}
+            >
+              {/* Border */}
+              <div className="absolute inset-4 sm:inset-6 border-4 border-double border-amber-300 rounded-lg pointer-events-none"></div>
+              <div className="absolute inset-[22px] sm:inset-[30px] border border-amber-200/50 rounded pointer-events-none"></div>
+
+              {/* Content */}
+              <div className="relative h-full flex flex-col items-center justify-center text-center p-8 z-10 bg-white/90 backdrop-blur-sm rounded-xl">
+                {/* Logo Area */}
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-orange-500/20 border-4 border-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15l-3.09 1.63.59-3.45-2.5-2.44 3.46-.5L12 7l1.54 3.24 3.46.5-2.5 2.44.59 3.45z"/><circle cx="12" cy="12" r="10"/></svg>
+                </div>
+                
+                <h1 className="text-3xl sm:text-5xl font-serif font-bold text-gray-800 mb-2 uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">
+                  {t.certTitle}
+                </h1>
+                
+                <p className="text-sm sm:text-lg text-gray-500 italic mt-8 mb-4 font-serif">
+                  {t.certPresentedTo}
+                </p>
+                
+                <div className="w-full max-w-md border-b-2 border-gray-300 pb-2 mb-6">
+                  <h2 className="text-xl sm:text-2xl font-mono font-bold text-gray-900 break-all leading-tight">
+                    {userAddress}
+                  </h2>
+                </div>
+                
+                <p className="text-sm sm:text-base text-gray-600 max-w-lg leading-relaxed">
+                  {t.certDesc}
+                </p>
+
+                <div className="absolute bottom-8 right-8 text-right hidden sm:block">
+                  <div className="w-32 border-b border-gray-400 pb-1 mb-1">
+                    <span className="font-serif italic text-gray-800 font-bold block signature-font">StelDot Protocol</span>
+                  </div>
+                  <span className="text-xs text-gray-400 uppercase tracking-widest">Verified Issuer</span>
+                </div>
+                
+                <div className="absolute bottom-8 left-8 text-left hidden sm:block">
+                  <span className="text-xs text-gray-400 block mb-1">DATE ISSUED</span>
+                  <span className="font-mono text-sm text-gray-600 font-bold">{new Date().toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
