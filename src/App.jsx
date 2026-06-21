@@ -1229,10 +1229,27 @@ export default function App() {
                   <div key={camp.id} className="bg-white rounded-2xl p-6 shadow-ios border border-ios-lightGray/30 ios-transition hover:shadow-md">
                     <div className="flex justify-between items-start gap-4 mb-2">
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-ios-blue bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
                             {t.campaignIdLabel}{camp.id}
                           </span>
+                          
+                          <button 
+                            onClick={() => handleTranslate(camp)}
+                            disabled={translated?.loading}
+                            title={translated ? t.showOriginal : t.translateBtn}
+                            className={`px-2 py-0.5 rounded-full border transition-colors flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${translated ? 'bg-blue-100 border-blue-200 text-blue-600' : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'}`}
+                          >
+                            {translated?.loading ? (
+                              <span className="spinner w-3 h-3 border-2 border-blue-500 inline-block rounded-full"></span>
+                            ) : (
+                              <>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+                                {translated ? 'Translated' : 'Translate'}
+                              </>
+                            )}
+                          </button>
+
                           {isOwner && (
                             <button onClick={() => handleUpdateCampaign(camp)} className="text-[10px] font-bold text-ios-darkText bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full hover:bg-gray-200 transition-colors flex items-center gap-1">
                               <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
@@ -1240,19 +1257,7 @@ export default function App() {
                             </button>
                           )}
                         </div>
-                        <div className="flex items-start sm:items-center gap-2 mt-1">
-                          <button 
-                            onClick={() => handleTranslate(camp)}
-                            disabled={translated?.loading}
-                            title={translated ? t.showOriginal : t.translateBtn}
-                            className={`p-1.5 rounded-full border transition-colors flex items-center justify-center flex-shrink-0 mt-1 sm:mt-0 ${translated ? 'bg-blue-100 border-blue-200 text-blue-600' : 'bg-gray-50 border-gray-200 text-gray-400 hover:bg-gray-100'}`}
-                          >
-                            {translated?.loading ? (
-                              <span className="spinner w-3 h-3 border-2 border-ios-blue"></span>
-                            ) : (
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-                            )}
-                          </button>
+                        <div className="flex items-start sm:items-center gap-2 mt-2">
                           <h3 className="font-bold text-lg text-ios-darkText leading-tight">{activeTitle} {!camp.active && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-2 align-middle">Inactive</span>}</h3>
                         </div>
                       </div>
