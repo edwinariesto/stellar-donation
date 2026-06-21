@@ -10,11 +10,44 @@ import {
   xdr,
   Account
 } from '@stellar/stellar-sdk';
-import { isConnected, requestAccess, signTransaction } from '@stellar/freighter-api';
+import { isConnected, requestAccess, signTransaction, getNetworkDetails } from '@stellar/freighter-api';
 
-const RPC_URL = 'https://soroban-testnet.stellar.org';
-const HORIZON_URL = 'https://horizon-testnet.stellar.org';
-const rpcServer = new rpc.Server(RPC_URL);
+export const NETWORKS = {
+  TESTNET: {
+    rpc: 'https://soroban-testnet.stellar.org',
+    horizon: 'https://horizon-testnet.stellar.org',
+    passphrase: Networks.TESTNET,
+    networkName: 'TESTNET'
+  },
+  PUBLIC: {
+    rpc: 'https://soroban-mainnet.stellar.org',
+    horizon: 'https://horizon.stellar.org',
+    passphrase: Networks.PUBLIC,
+    networkName: 'PUBLIC'
+  }
+};
+
+export let currentNetwork = NETWORKS.TESTNET;
+export let rpcServer = new rpc.Server(currentNetwork.rpc);
+
+export function setAppNetwork(networkType) {
+  if (NETWORKS[networkType]) {
+    currentNetwork = NETWORKS[networkType];
+    rpcServer = new rpc.Server(currentNetwork.rpc);
+  }
+}
+
+export async function checkFreighterNetwork() {
+  try {
+    const details = await getNetworkDetails();
+    if (details && (details.network === 'PUBLIC' || details.network === 'TESTNET')) {
+      return details.network;
+    }
+  } catch (err) {
+    console.warn("Failed to get network details from Freighter", err);
+  }
+  return 'TESTNET';
+}
 
 // Check if Freighter is installed
 export async function checkFreighterInstalled() {
@@ -45,7 +78,7 @@ export async function getFreighterAddress() {
 // Fetch XLM balance from Horizon
 export async function getXlmBalance(address) {
   try {
-    const res = await fetch(`${HORIZON_URL}/accounts/${address}`);
+    const res = await fetch(`${currentNetwork.horizon}/accounts/${address}`);
     if (!res.ok) return '0.00';
     const data = await res.json();
     const nativeAsset = data.balances.find(b => b.asset_type === 'native');
@@ -65,7 +98,7 @@ export const callReadOnly = async (contractId, method, args = []) => {
     const account = new Account(mockSource, '1');
 
     const contractObj = new Contract(contractId);
-    let tx = new TransactionBuilder(account, { fee: '100', networkPassphrase: Networks.TESTNET })
+    let tx = new TransactionBuilder(account, { fee: '100', networkPassphrase: currentNetwork.passphrase })
       .addOperation(contractObj.call(method, ...args))
       .setTimeout(30)
       .build();
@@ -151,7 +184,7 @@ export const getGlobalTopDonors = async (contractId) => {
 // Execute write transaction via Freighter signing
 export async function executeTransaction(contractId, functionName, args = [], userAddress) {
   // 1. Get sequence from Horizon
-  const res = await fetch(`${HORIZON_URL}/accounts/${userAddress}`);
+  const res = await fetch(`${currentNetwork.horizon}/accounts/${userAddress}`);
   if (!res.ok) {
     throw new Error('Failed to retrieve account details from Horizon.');
   }
@@ -162,7 +195,7 @@ export async function executeTransaction(contractId, functionName, args = [], us
   const contractObj = new Contract(contractId);
   let tx = new TransactionBuilder(account, {
     fee: BASE_FEE,
-    networkPassphrase: Networks.TESTNET,
+    networkPassphrase: currentNetwork.passphrase,
   })
     .addOperation(contractObj.call(functionName, ...args))
     .setTimeout(60)
@@ -174,12 +207,12 @@ export async function executeTransaction(contractId, functionName, args = [], us
   // 4. Convert to XDR and request Freighter signature
   const xdrString = tx.toXDR();
   const signedXdr = await signTransaction(xdrString, {
-    network: 'TESTNET',
+    network: currentNetwork.networkName,
   });
 
   // 5. Submit transaction
   const finalXdr = typeof signedXdr === 'string' ? signedXdr : signedXdr.signedTxXdr || signedXdr;
-  const signedTx = TransactionBuilder.fromXDR(finalXdr, Networks.TESTNET);
+  const signedTx = TransactionBuilder.fromXDR(finalXdr, currentNetwork.passphrase);
   let sendResponse = await rpcServer.sendTransaction(signedTx);
 
   if (sendResponse.status === 'ERROR') {

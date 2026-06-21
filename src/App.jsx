@@ -18,7 +18,9 @@ import {
   getXlmBalance,
   callReadOnly,
   executeTransaction,
-  getGlobalTopDonors
+  getGlobalTopDonors,
+  checkFreighterNetwork,
+  setAppNetwork
 } from './utils/stellar';
 import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import bannerImg from './image/banner.png';
@@ -32,6 +34,7 @@ export default function App() {
   const [freighterBalance, setFreighterBalance] = useState('0.00');
   const [contractId, setContractId] = useState(DEFAULT_CONTRACT_ID);
   const [isMockMode, setIsMockMode] = useState(true);
+  const [networkMode, setNetworkMode] = useState('TESTNET');
   const isOwner = userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O';
   
   // Platform & Contract State
@@ -75,6 +78,14 @@ export default function App() {
       const savedAddress = localStorage.getItem('steldot_wallet_address');
       if (savedAddress) setUserAddress(savedAddress);
 
+      if (installed) {
+        const net = await checkFreighterNetwork();
+        setNetworkMode(net);
+        setAppNetwork(net);
+        const savedContract = localStorage.getItem(`steldot_contract_${net}`);
+        if (savedContract) setContractId(savedContract);
+      }
+
       // Show onboarding if not shown before
       const hasOnboarded = localStorage.getItem('steldot_onboarded');
       if (!hasOnboarded) {
@@ -107,14 +118,24 @@ export default function App() {
     return () => clearInterval(interval);
   }, [userAddress]);
 
-  // Check if Freighter status changes
+  // Check if Freighter status and network changes
   useEffect(() => {
     const interval = setInterval(async () => {
       const installed = await checkFreighterInstalled();
       setFreighterInstalled(installed);
-    }, 5000);
+      
+      if (installed) {
+        const net = await checkFreighterNetwork();
+        if (net !== networkMode) {
+          setNetworkMode(net);
+          setAppNetwork(net);
+          const savedContract = localStorage.getItem(`steldot_contract_${net}`);
+          setContractId(savedContract || DEFAULT_CONTRACT_ID);
+        }
+      }
+    }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [networkMode]);
 
   // Refresh stats and state
   const refreshData = async () => {
@@ -207,7 +228,7 @@ export default function App() {
       setIsMockMode(false);
     } catch (err) {
       console.warn('On-chain fetch failed, falling back to mock mode:', err);
-      enableMockMode('Unable to sync with Stellar Testnet. Running in offline/mock preview mode.');
+      enableMockMode(`Unable to sync with Stellar ${networkMode}. Running in offline/mock preview mode.`);
     } finally {
       setIsLoading(false);
       setSyncProgress('');
@@ -415,7 +436,7 @@ export default function App() {
         
         Swal.fire({
           title: t.donationSuccess,
-          html: t.donationProcessed(amount, txRes.hash),
+          html: t.donationProcessed(amount, txRes.hash, networkMode),
           icon: 'success',
           confirmButtonColor: '#34C759',
           timer: 5000,
@@ -565,7 +586,7 @@ export default function App() {
         const txRes = await executeTransaction(contractId, 'approve_claim', [ownerSc, donorSc], userAddress);
         Swal.fire({
           title: t.claimApproved,
-          html: t.approvedSuccessfully(clientAddress.substring(0, 6) + '...', txRes.hash),
+          html: t.approvedSuccessfully(clientAddress.substring(0, 6) + '...', txRes.hash, networkMode),
           icon: 'success',
           confirmButtonColor: '#34C759'
         });
@@ -616,7 +637,7 @@ export default function App() {
         const txRes = await executeTransaction(contractId, 'withdraw', [ownerSc, amountSc], userAddress);
         Swal.fire({
           title: t.withdrawSuccess,
-          html: t.withdrawSuccessDesc(formValues, txRes.hash),
+          html: t.withdrawSuccessDesc(formValues, txRes.hash, networkMode),
           icon: 'success',
           confirmButtonColor: '#34C759'
         });
@@ -773,7 +794,7 @@ export default function App() {
 
         Swal.fire({
           title: t.campaignAdded,
-          text: t.campaignAddedDesc,
+          text: typeof t.campaignAddedDesc === 'function' ? t.campaignAddedDesc(networkMode) : t.campaignAddedDesc,
           icon: 'success',
           confirmButtonColor: '#34C759'
         });
@@ -829,7 +850,7 @@ export default function App() {
       }
     }).then((result) => {
       if (result.isConfirmed) {
-        localStorage.setItem('steldot_contract_id', result.value);
+        localStorage.setItem(`steldot_contract_${networkMode}`, result.value);
         setContractId(result.value);
         Swal.fire({
           title: t.updated,
@@ -971,7 +992,7 @@ export default function App() {
             </svg>
             <div>
               <span className="font-bold">{t.mockModeAlert}</span> {t.mockModeDesc} 
-              <button onClick={handleContractIdPrompt} className="underline font-bold ml-1 text-ios-blue">{t.setContractId}</button> {t.toLinkTestnet}
+              <button onClick={handleContractIdPrompt} className="underline font-bold ml-1 text-ios-blue">{t.setContractId}</button> {typeof t.toLinkTestnet === 'function' ? t.toLinkTestnet(networkMode) : t.toLinkTestnet}
             </div>
           </div>
         )}
@@ -1488,7 +1509,9 @@ export default function App() {
               <ul className="space-y-3 text-xs">
                 <li className="flex justify-between border-b border-ios-lightGray/20 pb-2">
                   <span className="text-ios-darkGray font-medium">{t.network}</span>
-                  <span className="badge badge-success font-bold text-ios-green">Stellar Testnet</span>
+                  <span className="badge badge-success font-bold text-ios-green">
+                    {networkMode === 'PUBLIC' ? 'Stellar Mainnet' : 'Stellar Testnet'}
+                  </span>
                 </li>
                 
                 <li className="flex justify-between border-b border-ios-lightGray/20 pb-2">
