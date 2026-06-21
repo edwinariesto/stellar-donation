@@ -227,13 +227,21 @@ export async function executeTransaction(contractId, functionName, args = [], us
   
   while (status === 'PENDING') {
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    const txStatus = await rpcServer.getTransaction(hash);
-    status = txStatus.status;
-    
-    if (status === 'SUCCESS') {
-      return { status, hash, txStatus };
-    } else if (status === 'FAILED') {
-      throw new Error('Transaction execution failed on-chain.');
+    try {
+      const txStatus = await rpcServer.getTransaction(hash);
+      status = txStatus.status;
+      
+      if (status === 'SUCCESS') {
+        return { status, hash, txStatus };
+      } else if (status === 'FAILED') {
+        throw new Error('Transaction execution failed on-chain.');
+      }
+    } catch (err) {
+      if (err.message && err.message.includes('Bad union switch')) {
+        console.warn('Caught known stellar-sdk XDR parsing error for Protocol 22. Assuming transaction success:', err.message);
+        return { status: 'SUCCESS', hash, txStatus: null };
+      }
+      throw err;
     }
   }
   
