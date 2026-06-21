@@ -580,7 +580,7 @@ export default function App() {
           </div>
           <div class="flex items-center gap-2 pt-2 pb-1">
             <input type="checkbox" id="swal-active" class="w-5 h-5 accent-blue-500 rounded border-gray-300 focus:ring-blue-500 cursor-pointer" ${camp.active ? 'checked' : ''}>
-            <label for="swal-active" class="text-sm font-bold text-gray-700 cursor-pointer">Set as Active Campaign</label>
+            <label for="swal-active" class="text-sm font-bold text-gray-700 cursor-pointer">${t.setAsActive || 'Set as Active Campaign'}</label>
           </div>
         </div>
       `,
@@ -745,11 +745,11 @@ export default function App() {
       title: t.configContract,
       html: `
         <div class="text-left mb-2">
-          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Mainnet Contract ID</label>
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">${t.mainnetContractId || 'MAINNET CONTRACT ID'}</label>
           <input id="swal-input-mainnet" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" value="${savedMainnet}" placeholder="C...">
         </div>
         <div class="text-left mt-4">
-          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Testnet Contract ID</label>
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">${t.testnetContractId || 'TESTNET CONTRACT ID'}</label>
           <input id="swal-input-testnet" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" value="${savedTestnet}" placeholder="C...">
         </div>
       `,
@@ -893,7 +893,7 @@ export default function App() {
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
                 <span className="hidden sm:inline">{t.connectFreighter}</span>
-                <span className="sm:hidden">Connect</span>
+                <span className="sm:hidden">{t.connectBtn || 'Connect'}</span>
               </button>
             )}
           </div>
@@ -954,7 +954,7 @@ export default function App() {
                   
                   {/* Unclaimed Volume */}
                   <div className="mt-4 flex justify-between items-center bg-[#F2F2F7] py-2 px-3 rounded-xl border border-ios-lightGray/30">
-                    <span className="text-xs font-semibold text-ios-secondaryText">Unclaimed Volume</span>
+                    <span className="text-xs font-semibold text-ios-secondaryText">{t.unclaimedVolume || 'Unclaimed Volume'}</span>
                     <span className="text-sm font-bold text-ios-blue">{loyaltyPoints.toFixed(2)} XLM</span>
                   </div>
                 </>
@@ -1030,7 +1030,7 @@ export default function App() {
                 <h3 className="font-bold text-sm text-ios-secondaryText uppercase tracking-wider mb-4">{t.createNewCampaign}</h3>
                 <form onSubmit={handleCreateCampaign} className="space-y-4">
                   <div>
-                    <label className="text-[10px] font-bold text-ios-darkGray block mb-1">AUTO CAMPAIGN ID</label>
+                    <label className="text-[10px] font-bold text-ios-darkGray block mb-1">{t.autoCampaignId || 'AUTO CAMPAIGN ID'}</label>
                     <input 
                       type="text" 
                       value={newCampaign.id}
@@ -1083,9 +1083,9 @@ export default function App() {
               {/* Instant Claims Note */}
               <div className="flex flex-col h-full justify-start">
                 <div className="bg-ios-bg p-6 rounded-xl border border-ios-lightGray/30">
-                  <h3 className="font-bold text-sm text-ios-secondaryText uppercase tracking-wider mb-2">Automated Payouts</h3>
+                  <h3 className="font-bold text-sm text-ios-secondaryText uppercase tracking-wider mb-2">{t.automatedPayouts || 'Automated Payouts'}</h3>
                   <p className="text-xs text-ios-darkGray leading-relaxed">
-                    Reward claims are now processed instantly and automatically on-chain. There is no longer a need for manual approval queue. Donors receive their XLM immediately upon claiming.
+                    {t.automatedPayoutsDesc || 'Reward claims are now processed instantly and automatically on-chain. There is no longer a need for manual approval queue. Donors receive their XLM immediately upon claiming.'}
                   </p>
                 </div>
 
@@ -1229,7 +1229,7 @@ export default function App() {
                           {isOwner && (
                             <button onClick={() => handleUpdateCampaign(camp)} className="text-[10px] font-bold text-ios-darkText bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full hover:bg-gray-200 transition-colors flex items-center gap-1">
                               <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                              Edit
+                              {t.editBtn || 'Edit'}
                             </button>
                           )}
                         </div>
