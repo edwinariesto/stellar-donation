@@ -1238,14 +1238,14 @@ export default function App() {
                             onClick={() => handleTranslate(camp)}
                             disabled={translated?.loading}
                             title={translated ? t.showOriginal : t.translateBtn}
-                            className={`px-2 py-0.5 rounded-full border transition-colors flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${translated ? 'bg-blue-100 border-blue-200 text-blue-600' : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'}`}
+                            className={`px-2 py-0.5 rounded-full border transition-colors flex items-center gap-1 text-[10px] font-bold ${translated ? 'bg-blue-100 border-blue-200 text-blue-600' : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'}`}
                           >
                             {translated?.loading ? (
                               <span className="spinner w-3 h-3 border-2 border-blue-500 inline-block rounded-full"></span>
                             ) : (
                               <>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-                                {translated ? 'Translated' : 'Translate'}
+                                {translated ? (t.translatedBtn || 'Translated') : (t.translateBtn || 'Translate')}
                               </>
                             )}
                           </button>
