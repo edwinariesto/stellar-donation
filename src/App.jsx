@@ -1087,9 +1087,14 @@ export default function App() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                   )}
                 </div>
-                <span className={`text-[10px] sm:text-xs font-bold text-center ${totalDonated > 25 || isOwner ? 'text-orange-700' : 'text-gray-500'}`}>
-                  {t.milestone1}
-                </span>
+                <div className="flex flex-col items-center">
+                  <span className={`text-[10px] sm:text-xs font-bold text-center ${totalDonated > 25 || isOwner ? 'text-orange-700' : 'text-gray-500'}`}>
+                    {t.milestone1}
+                  </span>
+                  <span className={`text-[10px] sm:text-xs text-center mt-1 font-mono ${totalDonated > 25 || isOwner ? 'text-orange-600/80' : 'text-gray-400'}`}>
+                    (&gt; 25 XLM)
+                  </span>
+                </div>
               </button>
 
               {/* Milestone 2 */}
@@ -1097,7 +1102,10 @@ export default function App() {
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-4 bg-gray-200">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 </div>
-                <span className="text-[10px] sm:text-xs font-bold text-center text-gray-500">{t.milestone2}</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-[10px] sm:text-xs font-bold text-center text-gray-500">{t.milestone2}</span>
+                  <span className="text-[10px] sm:text-xs text-center mt-1 font-mono text-gray-400">(&gt; 50 XLM)</span>
+                </div>
               </div>
 
               {/* Milestone 3 */}
@@ -1105,7 +1113,10 @@ export default function App() {
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-4 bg-gray-200">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 </div>
-                <span className="text-[10px] sm:text-xs font-bold text-center text-gray-500">{t.milestone3}</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-[10px] sm:text-xs font-bold text-center text-gray-500">{t.milestone3}</span>
+                  <span className="text-[10px] sm:text-xs text-center mt-1 font-mono text-gray-400">(&gt; 100 XLM)</span>
+                </div>
               </div>
 
               {/* Milestone 4 */}
@@ -1113,7 +1124,10 @@ export default function App() {
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-4 bg-gray-200">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 </div>
-                <span className="text-[10px] sm:text-xs font-bold text-center text-gray-500">{t.milestone4}</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-[10px] sm:text-xs font-bold text-center text-gray-500">{t.milestone4}</span>
+                  <span className="text-[10px] sm:text-xs text-center mt-1 font-mono text-gray-400">(&gt; 500 XLM)</span>
+                </div>
               </div>
             </div>
           </div>
