@@ -917,18 +917,6 @@ export default function App() {
           <img src={bannerImg} alt="StelDot Campaign Banner" className="w-full h-auto object-cover max-h-[180px] sm:max-h-[300px] md:max-h-[400px] hover:scale-[1.02] transition-transform duration-700 ease-in-out" />
         </div>
         
-        {/* On-Chain Connection Mode Warning */}
-        {isMockMode && (
-          <div className="mb-6 p-4 rounded-2xl bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm flex gap-3 items-center shadow-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-600 flex-shrink-0">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <div>
-              <span className="font-bold">{t.mockModeAlert}</span> {t.mockModeDesc} 
-              <button onClick={handleContractIdPrompt} className="underline font-bold ml-1 text-ios-blue">{t.setContractId}</button> {typeof t.toLinkTestnet === 'function' ? t.toLinkTestnet(networkMode) : t.toLinkTestnet}
-            </div>
-          </div>
-        )}
 
         {/* Header Cards Row (Heading Metrics) */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
