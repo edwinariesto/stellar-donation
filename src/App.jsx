@@ -468,6 +468,16 @@ export default function App() {
 
     let rewardXlm = (loyaltyPoints * 0.05).toFixed(2);
 
+    if (contractBalance < parseFloat(rewardXlm)) {
+      Swal.fire({
+        title: t.treasuryDeficit,
+        text: typeof t.treasuryDeficitDesc === 'function' ? t.treasuryDeficitDesc(contractBalance.toFixed(2)) : t.treasuryDeficitDesc,
+        icon: 'error',
+        confirmButtonColor: '#FF3B30'
+      });
+      return;
+    }
+
     if (isMockMode) {
       setIsLoading(true);
       setTimeout(() => {
@@ -534,11 +544,16 @@ export default function App() {
 
     if (!formValues || isNaN(formValues) || formValues <= 0) return;
 
+    if (formValues > contractBalance) {
+      Swal.fire({ 
+        title: t.withdrawFailed, 
+        text: typeof t.treasuryDeficitDesc === 'function' ? t.treasuryDeficitDesc(contractBalance.toFixed(2)) : 'Insufficient treasury balance.', 
+        icon: 'error' 
+      });
+      return;
+    }
+
     if (isMockMode) {
-      if (formValues > contractBalance) {
-        Swal.fire({ title: t.withdrawFailed, text: 'Insufficient treasury balance.', icon: 'error' });
-        return;
-      }
       setContractBalance(prev => prev - formValues);
       Swal.fire({ title: t.withdrawSuccess, text: 'Withdrawn in mock mode.', icon: 'success' }).then(() => window.location.reload());
     } else {
