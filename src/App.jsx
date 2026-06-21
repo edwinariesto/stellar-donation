@@ -1639,13 +1639,13 @@ export default function App() {
                 
                 {/* Watermark */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none z-[-1]">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15l-3.09 1.63.59-3.45-2.5-2.44 3.46-.5L12 7l1.54 3.24 3.46.5-2.5 2.44.59 3.45z"/><circle cx="12" cy="12" r="10"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                 </div>
 
                 <div className="flex flex-col items-center w-full mt-4">
                   {/* Logo Area */}
                   <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-orange-500/20 border-4 border-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15l-3.09 1.63.59-3.45-2.5-2.44 3.46-.5L12 7l1.54 3.24 3.46.5-2.5 2.44.59 3.45z"/><circle cx="12" cy="12" r="10"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                   </div>
                   
                   <h1 className="text-2xl sm:text-3xl font-serif font-bold text-amber-600 mb-2 uppercase tracking-widest">
