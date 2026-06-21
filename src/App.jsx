@@ -1034,10 +1034,10 @@ export default function App() {
             <p className="text-[11px] text-ios-darkGray mt-4">{t.acrossCampaigns}</p>
           </div>
 
-          {/* Metric Card 2: Loyalty Points */}
+          {/* Metric Card 2: Reward Claim Status */}
           <div className="bg-white rounded-2xl p-6 shadow-ios border border-ios-lightGray/30 flex flex-col justify-between">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-ios-darkGray">{t.pointsAccept}</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-ios-darkGray">{t.rewardClaimStatus || 'Status Klaim Reward'}</span>
               
               {!userAddress ? (
                 <div className="text-lg font-bold text-ios-darkGray mt-3 opacity-60">
@@ -1045,25 +1045,26 @@ export default function App() {
                 </div>
               ) : (
                 <>
-                  <div className="text-3xl font-extrabold text-ios-green mt-2">
-                    {loyaltyPoints} <span className="text-lg font-bold text-ios-darkGray">{t.approved}</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <div className="text-xs font-semibold text-ios-secondaryText">
-                      {claimStatus === 1 
-                        ? t.claimPendingLabel
-                        : loyaltyPoints >= 10 
-                          ? <span className="text-ios-blue">{t.readyToClaim}</span>
-                          : `${10 - loyaltyPoints} ${t.pointsToNext}`}
+                  <div className="mt-2 flex gap-6">
+                    <div>
+                      <div className="text-2xl font-extrabold text-ios-green">
+                        {Math.max(0, Math.floor((Math.floor(totalDonated) - loyaltyPoints) / 10) - (claimStatus === 1 ? 1 : 0))} <span className="text-sm font-bold text-ios-darkGray">{t.successful || 'Sukses'}</span>
+                      </div>
                     </div>
+                    <div>
+                      <div className="text-2xl font-extrabold text-ios-orange">
+                        {claimStatus === 1 ? 1 : 0} <span className="text-sm font-bold text-ios-darkGray">{t.pendingLabel || 'Pending'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Active Points Moved Here */}
+                  <div className="mt-4 flex justify-between items-center bg-[#F2F2F7] py-2 px-3 rounded-xl border border-ios-lightGray/30">
+                    <span className="text-xs font-semibold text-ios-secondaryText">{t.activePoints}</span>
+                    <span className="text-sm font-bold text-ios-blue">{loyaltyPoints} / 10</span>
                   </div>
                 </>
               )}
-            </div>
-            
-            {/* Progress of points vs 10 max */}
-            <div className="w-full bg-ios-lightGray h-2 rounded-full overflow-hidden mt-3">
-              <div className="bg-ios-green h-full transition-all duration-500 ease-out" style={{ width: `${userAddress ? Math.min((loyaltyPoints / 10) * 100, 100) : 0}%` }}></div>
             </div>
           </div>
 
@@ -1073,12 +1074,7 @@ export default function App() {
               <span className="text-xs font-bold uppercase tracking-wider text-ios-darkGray">{t.yourDonation}</span>
               <div className="text-3xl font-extrabold text-ios-darkText mt-2">{totalDonated.toFixed(2)} <span className="text-lg font-bold text-ios-blue">XLM</span></div>
             </div>
-            {userAddress ? (
-              <div className="mt-4 flex justify-between items-center bg-[#F2F2F7] py-2 px-3 rounded-xl border border-ios-lightGray/30">
-                <span className="text-xs font-semibold text-ios-secondaryText">{t.activePoints}</span>
-                <span className="text-sm font-bold text-ios-blue">{loyaltyPoints} / 10</span>
-              </div>
-            ) : (
+            {!userAddress && (
               <p className="text-[11px] text-ios-red mt-4">{t.connectHistory}</p>
             )}
           </div>
