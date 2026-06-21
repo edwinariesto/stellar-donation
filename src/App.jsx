@@ -885,13 +885,13 @@ export default function App() {
             <div className="flex items-center bg-[#F2F2F7] rounded-full p-0.5 sm:p-1 border border-ios-lightGray/40 mr-1 sm:mr-2">
               <button
                 onClick={() => setLang('en')}
-                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-xs font-bold transition-all ${lang === 'en' ? 'bg-[#34C759] shadow-sm text-white' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
+                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-xs font-bold transition-all ${lang === 'en' ? 'bg-ios-blue shadow-sm text-white' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
               >
                 🇬🇧 <span className="hidden sm:inline">ENG</span>
               </button>
               <button
                 onClick={() => setLang('id')}
-                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-xs font-bold transition-all ${lang === 'id' ? 'bg-[#34C759] shadow-sm text-white' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
+                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-xs font-bold transition-all ${lang === 'id' ? 'bg-ios-blue shadow-sm text-white' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
               >
                 🇮🇩 <span className="hidden sm:inline">IND</span>
               </button>
