@@ -791,10 +791,6 @@ export default function App() {
     });
   };
 
-  // Helper metric computation
-  const acceptPercentage = totalClaimsApproved + totalClaimsPending > 0
-    ? ((totalClaimsApproved / (totalClaimsApproved + totalClaimsPending)) * 100).toFixed(1)
-    : '0.0';
 
   return (
     <div className="min-h-screen bg-[#F2F2F7] flex flex-col font-sans relative pb-12">
