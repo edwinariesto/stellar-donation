@@ -399,7 +399,7 @@ export default function App() {
           timer: 5000,
           timerProgressBar: true
         }).then(() => {
-          // No reload needed
+          window.location.reload();
         });
         
         // Clear input
@@ -434,7 +434,7 @@ export default function App() {
           timer: 5000,
           timerProgressBar: true
         }).then(() => {
-          // No reload needed
+          window.location.reload();
         });
       } catch (err) {
         Swal.fire({
@@ -482,7 +482,7 @@ export default function App() {
           text: `You have successfully claimed ${rewardXlm} XLM.`,
           icon: 'success',
           confirmButtonColor: '#007AFF'
-        });
+        }).then(() => window.location.reload());
       }, 1500);
     } else {
       try {
@@ -502,7 +502,7 @@ export default function App() {
           text: `You have successfully received ${rewardXlm} XLM in your wallet.`,
           icon: 'success',
           confirmButtonColor: '#34C759'
-        });
+        }).then(() => window.location.reload());
         await refreshData();
       } catch (err) {
         Swal.fire({
@@ -540,7 +540,7 @@ export default function App() {
         return;
       }
       setContractBalance(prev => prev - formValues);
-      Swal.fire({ title: t.withdrawSuccess, text: 'Withdrawn in mock mode.', icon: 'success' });
+      Swal.fire({ title: t.withdrawSuccess, text: 'Withdrawn in mock mode.', icon: 'success' }).then(() => window.location.reload());
     } else {
       setIsLoading(true);
       try {
@@ -553,7 +553,7 @@ export default function App() {
           html: t.withdrawSuccessDesc(formValues, txRes.hash, networkMode),
           icon: 'success',
           confirmButtonColor: '#34C759'
-        });
+        }).then(() => window.location.reload());
         await refreshData();
       } catch (err) {
         Swal.fire({
@@ -616,7 +616,7 @@ export default function App() {
       setCampaigns(prev => prev.map(c => 
         c.id === camp.id ? { ...c, title: formValues.title, description: formValues.description, target: formValues.target, active: formValues.active } : c
       ));
-      Swal.fire('Updated', 'Campaign updated in mock mode.', 'success');
+      Swal.fire('Updated', 'Campaign updated in mock mode.', 'success').then(() => window.location.reload());
     } else {
       try {
         setIsLoading(true);
@@ -642,7 +642,7 @@ export default function App() {
           userAddress
         );
 
-        Swal.fire('Updated', 'Campaign updated successfully on-chain.', 'success');
+        Swal.fire('Updated', 'Campaign updated successfully on-chain.', 'success').then(() => window.location.reload());
         await refreshData();
       } catch (err) {
         Swal.fire('Update Failed', err.message || 'Signature rejected.', 'error');
@@ -680,7 +680,7 @@ export default function App() {
         text: t.campaignCreatedMock,
         icon: 'success',
         confirmButtonColor: '#34C759'
-      });
+      }).then(() => window.location.reload());
     } else {
       try {
         setIsLoading(true);
@@ -710,7 +710,7 @@ export default function App() {
           text: typeof t.campaignAddedDesc === 'function' ? t.campaignAddedDesc(networkMode) : t.campaignAddedDesc,
           icon: 'success',
           confirmButtonColor: '#34C759'
-        });
+        }).then(() => window.location.reload());
         const unixTime = Math.floor(Date.now() / 1000);
         setNewCampaign({ id: `StelDot-${unixTime}`, title: '', description: '', target: '' });
         await refreshData();
