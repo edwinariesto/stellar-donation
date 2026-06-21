@@ -1635,15 +1635,20 @@ export default function App() {
               <div className="absolute inset-[22px] sm:inset-[26px] border border-amber-200/50 rounded pointer-events-none"></div>
 
               {/* Content - Portrait Centered */}
-              <div className="relative h-full flex flex-col items-center justify-between text-center p-6 z-10 bg-white/90 backdrop-blur-sm rounded-xl">
+              <div className="relative h-full flex flex-col items-center justify-between text-center p-6 z-10 bg-white/90 backdrop-blur-sm rounded-xl overflow-hidden">
                 
+                {/* Watermark */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none z-[-1]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15l-3.09 1.63.59-3.45-2.5-2.44 3.46-.5L12 7l1.54 3.24 3.46.5-2.5 2.44.59 3.45z"/><circle cx="12" cy="12" r="10"/></svg>
+                </div>
+
                 <div className="flex flex-col items-center w-full mt-4">
                   {/* Logo Area */}
                   <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-orange-500/20 border-4 border-white">
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15l-3.09 1.63.59-3.45-2.5-2.44 3.46-.5L12 7l1.54 3.24 3.46.5-2.5 2.44.59 3.45z"/><circle cx="12" cy="12" r="10"/></svg>
                   </div>
                   
-                  <h1 className="text-2xl sm:text-3xl font-serif font-bold text-gray-800 mb-2 uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">
+                  <h1 className="text-2xl sm:text-3xl font-serif font-bold text-amber-600 mb-2 uppercase tracking-widest">
                     {t.certTitle}
                   </h1>
                   
