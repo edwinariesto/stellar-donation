@@ -1691,8 +1691,13 @@ export default function App() {
                 Tunjukkan Barcode Eksklusif ini pada seluruh acara resmi StelDot di seluruh dunia untuk mendapatkan akses VIP Gratis dan penggantian biaya transportasi penuh.
               </p>
 
-              <div className="bg-white p-4 rounded-2xl shadow-inner mb-6 ring-4 ring-emerald-500/20">
-                <QRCode value={userAddress || 'StelDot-Legend'} size={200} />
+              <div className="bg-white p-4 rounded-2xl shadow-inner mb-6 ring-4 ring-emerald-500/20 relative flex items-center justify-center">
+                <QRCode value={userAddress || 'StelDot-Legend'} size={200} level="H" />
+                <div className="absolute bg-white rounded-lg p-1.5 shadow-sm flex items-center justify-center" style={{ width: 44, height: 44 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                </div>
               </div>
 
               <div className="w-full bg-gray-800/50 rounded-xl p-3 border border-gray-700/50">
