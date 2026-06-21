@@ -20,7 +20,7 @@ export const NETWORKS = {
     networkName: 'TESTNET'
   },
   PUBLIC: {
-    rpc: 'https://soroban-mainnet.stellar.org',
+    rpc: 'https://mainnet.sorobanrpc.com',
     horizon: 'https://horizon.stellar.org',
     passphrase: Networks.PUBLIC,
     networkName: 'PUBLIC'
@@ -104,11 +104,13 @@ export const callReadOnly = async (contractId, method, args = []) => {
       .build();
 
     const sim = await rpcServer.simulateTransaction(tx);
-    if (!sim || !sim.result || !sim.result.retval) return null;
+    if (!sim || !sim.result || !sim.result.retval) {
+      throw new Error('Simulation failed or returned no result.');
+    }
     return scValToNative(sim.result.retval);
   } catch (e) {
     console.warn(`Read-only call failed for ${method}:`, e);
-    return null;
+    throw e;
   }
 };
 
