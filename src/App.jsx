@@ -835,24 +835,48 @@ export default function App() {
   };
 
   const handleContractIdPrompt = () => {
+    const savedTestnet = localStorage.getItem('steldot_contract_TESTNET') || DEFAULT_CONTRACT_ID;
+    const savedMainnet = localStorage.getItem('steldot_contract_PUBLIC') || '';
+
     Swal.fire({
       title: t.configContract,
-      input: 'text',
-      inputLabel: t.configContractLabel,
-      inputValue: contractId,
+      html: `
+        <div class="text-left mb-2">
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Mainnet Contract ID</label>
+          <input id="swal-input-mainnet" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" value="${savedMainnet}" placeholder="C...">
+        </div>
+        <div class="text-left mt-4">
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Testnet Contract ID</label>
+          <input id="swal-input-testnet" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" value="${savedTestnet}" placeholder="C...">
+        </div>
+      `,
+      focusConfirm: false,
       showCancelButton: true,
-      inputValidator: (value) => {
-        if (!value) {
-          return t.contractRequired;
+      preConfirm: () => {
+        const mainnetVal = document.getElementById('swal-input-mainnet').value.trim();
+        const testnetVal = document.getElementById('swal-input-testnet').value.trim();
+        
+        if (mainnetVal && (!mainnetVal.startsWith('C') || mainnetVal.length !== 56)) {
+          Swal.showValidationMessage('Mainnet Contract ID is invalid');
+          return false;
         }
-        if (!value.startsWith('C') || value.length !== 56) {
-          return t.contractInvalid;
+        if (testnetVal && (!testnetVal.startsWith('C') || testnetVal.length !== 56)) {
+          Swal.showValidationMessage('Testnet Contract ID is invalid');
+          return false;
         }
+        return { mainnet: mainnetVal, testnet: testnetVal };
       }
     }).then((result) => {
       if (result.isConfirmed) {
-        localStorage.setItem(`steldot_contract_${networkMode}`, result.value);
-        setContractId(result.value);
+        if (result.value.mainnet) {
+          localStorage.setItem('steldot_contract_PUBLIC', result.value.mainnet);
+        }
+        if (result.value.testnet) {
+          localStorage.setItem('steldot_contract_TESTNET', result.value.testnet);
+        }
+        
+        const newId = networkMode === 'PUBLIC' ? result.value.mainnet : result.value.testnet;
+        if (newId) setContractId(newId);
         Swal.fire({
           title: t.updated,
           text: t.updatedDesc,
