@@ -888,16 +888,7 @@ export default function App() {
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 sm:w-4 sm:h-4"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
             </button>
             
-            {userAddress ? (
-              <button 
-                onClick={refreshData}
-                disabled={isLoading}
-                className="ios-transition ios-active-scale px-2 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-semibold bg-ios-lightGray text-ios-secondaryText flex items-center gap-1 sm:gap-2 hover:bg-gray-200 shrink-0"
-              >
-                {isLoading ? <span className="spinner w-3 h-3 border-2"></span> : <span className="hidden sm:inline">{t.sync}</span>}
-                {!isLoading && <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" className="sm:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>}
-              </button>
-            ) : null}
+
 
             {userAddress ? (
               <div className="flex items-center gap-1.5 sm:gap-2">
