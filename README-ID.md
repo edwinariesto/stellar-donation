@@ -9,7 +9,7 @@
 ### Deskripsi
 
 StelDot adalah Aplikasi Terdesentralisasi (dApp) yang dibangun di atas jaringan Stellar menggunakan smart contract Soroban. Proyek ini menerapkan model loyalitas **Donate-to-Earn**.
-Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Setiap kali donasi dikirimkan (berapapun jumlahnya), donatur mendapatkan **1 Poin Loyalitas**. Ketika poin mencapai 10, donatur dapat mengklaim reward sebesar **1.00 XLM**. Poin aktif akan di-reset menjadi 0 setelah disetujui admin, namun riwayat donasi historis akan tetap tercatat di blockchain selamanya. Klaim ganda dicegah dengan mengunci status klaim menjadi "Pending" hingga disetujui owner.
+Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Total volume donasi mereka dilacak secara real-time. Ketika total donasi yang belum diberi hadiah mencapai batas minimal **10 XLM**, donatur berhak mengklaim hadiah sebesar **5% dari total donasinya tersebut**. Pembayaran diproses secara instan dan otomatis oleh *smart contract*, lalu nominal volume donasinya di-reset menjadi 0 (riwayat akumulasi donasi seumur hidup tetap tersimpan utuh di blockchain).
 
 ---
 
@@ -28,21 +28,20 @@ Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Setiap kali
 
 - **Kirim Donasi**: Kirim XLM dengan nominal bebas ke kampanye aktif.
 - **Kategori Tab Pintar**: Navigasi mudah untuk melihat kampanye yang **Berjalan**, **Terkumpul Penuh**, atau **Dihentikan**.
-- **Poin Loyalitas**: Kumpulkan 1 poin per donasi, pantau poin aktif secara real-time.
-- **Klaim Reward**: Ajukan penarikan 1.00 XLM jika poin mencapai >= 10.
+- **Poin Loyalitas (Volume)**: Lacak volume donasi yang belum diklaim. Dapatkan persentase hadiah mutlak sebesar 5%.
+- **Pencairan Instan**: Tarik hadiah 5% Anda secara seketika segera setelah volume mencapai ambang batas 10 XLM.
 - **Integrasi Dompet**: Melihat saldo XLM Freighter yang terhubung secara otomatis.
-- **Pencegahan Double Claim**: Tombol klaim terkunci saat status pending.
-- **Dukungan Multi-Bahasa**: Ubah bahasa UI antara Bahasa Indonesia dan Bahasa Inggris dengan satu klik.
+- **Dukungan Multi-Bahasa**: Ubah bahasa UI antara Bahasa Indonesia dan Bahasa Inggris dengan mulus, dikendalikan oleh sistem lokalisasi kamus dinamis `i18n.js`.
 - **Terjemahan Otomatis**: Integrasi Google Translate API untuk menerjemahkan judul dan deskripsi kampanye sesuai dengan preferensi bahasa Anda.
 - **Pencarian & Pagination**: Cari kampanye berdasarkan ID atau Judul, dan navigasikan halaman dengan sistem _pagination_ yang rapi.
 
 #### Fitur Owner (Administrator)
 
 - **Dashboard Admin Premium**: Panel kontrol eksklusif di posisi atas untuk mengelola keseluruhan aplikasi.
+- **Konfigurasi Smart Contract**: Terdapat tombol pengatur koneksi Smart Contract yang tertanam secara elegan di Dashboard Owner.
 - **Buka Kampanye**: Tambahkan kampanye baru dengan ID unik, judul, deskripsi, dan target dana.
 - **Edit Kampanye**: Perbarui detail kampanye yang sudah berjalan (seperti memperbaiki salah ketik, mengubah target, atau menonaktifkan kampanye).
-- **Otorisasi Klaim**: Pantau antrean donatur dan setujui pencairan dana 1.00 XLM.
-- **Validasi Saldo**: Kontrak akan membatalkan transaksi jika saldo kas di bawah 1.00 XLM, mencegah penarikan defisit.
+- **Validasi Saldo**: Kontrak akan membatalkan transaksi otomatis jika saldo kas tidak mencukupi untuk membayar reward 5% milik donatur.
 
 ---
 
@@ -52,16 +51,16 @@ Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Setiap kali
 1. **Hubungkan Dompet:** Klik tombol `Connect Freighter` di pojok kanan atas untuk menautkan dompet Stellar Anda. Pastikan jaringan berada di Testnet.
 2. **Cari Kampanye:** Telusuri tab kampanye **Aktif**. Anda dapat menggunakan bilah pencarian untuk mencari kampanye tertentu.
 3. **Donasi XLM:** Masukkan nominal (misal: `10.00`) di kotak input pada kartu kampanye dan klik **Donasi Sekarang**.
-4. **Tanda Tangani Transaksi:** Setujui transaksi di ekstensi Freighter Anda. Anda akan mendapatkan **1 Poin Loyalitas** setiap kali berhasil berdonasi.
-5. **Klaim Hadiah:** Setelah Anda mengumpulkan **10 Poin**, buka bagian `Persetujuan Hadiah` di atas dan klik **Klaim Reward (1 XLM)**.
-6. **Tunggu Persetujuan:** Status Anda akan berubah menjadi *Pending*. Setelah Admin menyetujuinya, 1.00 XLM akan dikirim ke dompet Anda dan poin Anda akan direset.
+4. **Tanda Tangani Transaksi:** Setujui transaksi di ekstensi Freighter Anda. Volume donasi Anda akan tercatat langsung on-chain.
+5. **Klaim Hadiah:** Setelah Anda mengakumulasi volume donasi sebesar **minimal 10 XLM**, buka bagian `Persetujuan Hadiah` di atas dan klik **Klaim Reward**.
+6. **Pencairan Instan:** Klaim Anda diproses seketika! Hadiah sebesar 5% langsung dikirim ke dompet Anda tanpa menunggu admin, dan volume donasi untuk hadiah berikutnya di-reset.
 
 #### 👑 Sebagai Pemilik / Admin
-1. **Hubungkan Dompet Admin:** Hubungkan dompet Freighter yang memegang kunci pribadi (Private Key) dari Pemilik Kontrak. `Panel Pengaturan Admin` akan otomatis muncul di bagian atas.
-2. **Buat Kampanye:** Klik tombol **Buat Kampanye Baru** (ikon plus) untuk meluncurkan target penggalangan dana baru. Isi Judul, Deskripsi, dan Target XLM.
-3. **Kelola Kampanye:** Klik ikon pensil hijau pada kampanye mana pun yang sudah ada untuk memperbarui detailnya atau menonaktifkannya.
-4. **Setujui Klaim:** Pantau antrean `Klaim Tertunda` di Dashboard Admin. Klik **Setujui** untuk mengizinkan *smart contract* mengirim 1.00 XLM ke donatur setia.
-5. **Tarik Dana Kas:** Gunakan tombol **Tarik Dana** di sebelah Saldo Kas (Treasury Balance) untuk mentransfer dana donasi yang terkumpul dari *smart contract* ke dompet pribadi Anda. Pastikan Anda menyisakan saldo yang cukup untuk membayar hadiah donatur yang tertunda.
+1. **Hubungkan Dompet Admin:** Hubungkan dompet Freighter yang memegang kunci pribadi (Private Key) dari Pemilik Kontrak. `Panel Pengaturan Admin` akan otomatis muncul.
+2. **Atur ID Kontrak:** Anda dapat menghubungkan web ke Smart Contract lain menggunakan tombol **⚙️ Set Contract ID** secara permanen.
+3. **Buat Kampanye:** Klik tombol **Buat Kampanye Baru** (ikon plus) untuk meluncurkan target penggalangan dana baru. Isi Judul, Deskripsi, dan Target XLM.
+4. **Kelola Kampanye:** Klik ikon pensil hijau pada kampanye mana pun yang sudah ada untuk memperbarui detailnya atau menonaktifkannya.
+5. **Tarik Dana Kas:** Gunakan tombol **Tarik Dana** di sebelah Saldo Kas (Treasury Balance) untuk mentransfer dana donasi yang terkumpul ke dompet Anda. Pastikan sisakan likuiditas agar donatur bisa mencairkan hadiah otomatisnya!
 
 ---
 
@@ -74,25 +73,22 @@ Memberikan peringatan pop-up `SweetAlert` yang ramah pengguna untuk mencegah dat
 - **Kesalahan Koneksi**: Otentikasi dompet Freighter gagal atau ekstensi belum diinstal.
 - **Jumlah Tidak Valid**: Input nominal donasi 0 atau negatif.
 - **Transaksi Gagal**: Pengguna membatalkan tanda tangan di dompet Freighter, atau ada kegagalan on-chain.
-- **Poin Tidak Cukup**: Menekan tombol klaim saat poin loyalitas di bawah 10.
-- **Permintaan/Persetujuan Gagal**: Tanda tangan dibatalkan saat bertransaksi.
+- **Volume Tidak Cukup**: Menekan tombol klaim saat total akumulasi donasi masih di bawah 10 XLM.
 - **Input Tidak Valid**: Admin membiarkan formulir kosong saat membuat kampanye baru.
 - **Penyebaran Gagal**: Kesalahan saat Admin membuat kampanye baru.
-- **Kas Kurang (Treasury Deficit)**: Saldo *smart contract* saat ini kurang dari 1.00 XLM, mencegah Admin menyetujui klaim agar tidak terjadi *error*.
+- **Kas Kurang (Treasury Deficit)**: Saldo kas *smart contract* saat ini kurang untuk membayar klaim 5% donatur yang sukses.
 - **Format Contract Tidak Valid**: ID Smart Contract yang dimasukkan tidak valid (bukan 56 karakter).
 - **Gagal Menerjemahkan**: Kesalahan koneksi ke API Google Translate.
 
-#### 2. Penjagaan Keamanan Smart Contract (13 Kondisi Panic)
+#### 2. Penjagaan Keamanan Smart Contract (10 Kondisi Panic)
 Menjadi benteng pertahanan terakhir terhadap manipulasi transaksi langsung di blockchain.
 - `already initialized`: Mencegah inisialisasi ulang kontrak.
 - `not authorized: only owner can ...`: Kendali akses ketat khusus Pemilik (Admin).
 - `campaign already exists`: Mencegah duplikasi ID Kampanye.
 - `donation amount must be positive`: Validasi nilai transaksi on-chain.
 - `campaign is inactive`: Menolak donasi ke kampanye yang sudah dihentikan.
-- `insufficient loyalty points: need at least 10`: Verifikasi on-chain kelayakan hadiah.
-- `claim already pending`: Mencegah kerentanan **Double-Claim** / Klaim ganda.
-- `no pending claim for donor`: Mencegah pencairan dana sewenang-wenang.
-- `insufficient treasury balance to payout reward`: Pengamanan likuiditas kas.
+- `insufficient unclaimed volume: need at least 10 XLM`: Verifikasi kelayakan hadiah donatur.
+- `insufficient treasury balance to payout reward`: Pengamanan likuiditas kas jika terjadi *bank run*.
 - `withdrawal amount must be positive`: Mencegah penarikan dana kas yang tidak valid.
 
 ---

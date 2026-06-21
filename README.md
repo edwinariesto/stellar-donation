@@ -9,7 +9,7 @@
 ### Description
 
 StelDot is a Decentralized Application (dApp) built on the Stellar network using Soroban smart contracts. It implements a **Donate-to-Earn** loyalty rewards model.
-Donors can contribute native XLM to community campaigns. Every donation registers 1 Loyalty Point. Once a donor accumulates 10 loyalty points, they can claim a reward of **1.00 XLM**. Upon owner approval, the points reset to 0, but the historic donation records are safely persisted on the blockchain forever. Double-claims are prevented by locking claimant status to "Pending" until the contract owner executes the payout.
+Donors can contribute native XLM to community campaigns. Their total donation volume is tracked continuously. Once a donor accumulates at least 10 XLM in donations, they can instantly claim a reward worth **5% of their accumulated volume**. The payout is processed instantly by the smart contract, and the tracked volume resets to 0 (historic total donations are safely persisted on the blockchain forever).
 
 ---
 
@@ -28,22 +28,20 @@ Donors can contribute native XLM to community campaigns. Every donation register
 
 - **Support Campaigns**: Donate any positive amount of XLM to active campaigns.
 - **Categorized Tabs**: Easily navigate between **Active**, **Fully Funded**, and **Inactive** campaigns.
-- **Loyalty Rewards**: Earn 1 loyalty point per donation. Track active points dynamically.
-- **Earn Payouts**: Request a payout of 1.00 XLM once active points reach 10.
+- **Loyalty Rewards**: Track unclaimed donation volume dynamically. Earn exactly 5% of your total unclaimed volume.
+- **Instant Payouts**: Request an instant 5% reward once your unrewarded donations reach the 10 XLM threshold.
 - **Wallet Integration**: Automatic detection of connected Freighter wallet balances.
-- **Duplicate Claim Protection**: Claim button locks when status is pending, preventing double claims.
-- **Multilingual Support**: Fully togglable English & Indonesian UI.
+- **Multilingual Support**: Fully togglable English & Indonesian UI, driven by a dynamic `i18n.js` dictionary.
 - **Auto-Translation**: Google Translate API integrated directly to read campaign titles and descriptions in your preferred language.
 - **Search & Pagination**: Effortlessly find specific campaigns by ID or Title and navigate through pages.
 
 #### For Owners (Administrators)
 
 - **Owner Dashboard**: A premium, prominent control panel to manage the platform.
+- **Smart Contract Config**: Easily hot-swap between deployed Testnet and Mainnet contracts via the Dashboard.
 - **Campaign Creation**: Upload and configure funding campaigns with unique IDs, titles, descriptions, and targets.
 - **Campaign Editing**: Flexibly modify existing campaigns (e.g., correcting typos, adjusting targets, or toggling active status).
-- **Audit Pending Requests**: View claimants in the queue waiting for payouts.
-- **Payout Approval**: Review and execute on-chain claim approvals.
-- **Treasury Safeguards**: The contract validates that the treasury balance is >= 1.00 XLM before processing. If insufficient, approvals are blocked and warnings are shown.
+- **Treasury Safeguards**: The contract ensures the treasury balance is sufficient before processing any automated payouts. If insufficient, claims are gracefully rejected.
 
 ---
 
@@ -53,16 +51,16 @@ Donors can contribute native XLM to community campaigns. Every donation register
 1. **Connect Wallet:** Click the `Connect Freighter` button at the top right to link your Stellar wallet. Ensure you are on the Testnet.
 2. **Find a Campaign:** Browse the **Active** campaigns tab. You can use the search bar to find specific causes.
 3. **Donate XLM:** Enter an amount (e.g., `10.00`) in the input box inside a campaign card and click **Donate Now**.
-4. **Sign Transaction:** Approve the transaction in your Freighter extension. You will earn **1 Loyalty Point** upon success.
-5. **Claim Reward:** Once you accumulate **10 Points**, go to the `Reward Approvals` section at the top and click **Claim Reward (1 XLM)**.
-6. **Wait for Approval:** Your status will change to *Pending*. Once the Owner approves it, 1.00 XLM will be transferred to your wallet and your points will reset.
+4. **Sign Transaction:** Approve the transaction in your Freighter extension. Your donation volume is tracked on-chain.
+5. **Claim Reward:** Once you accumulate at least **10 XLM** in unrewarded donations, go to the `Reward Approvals` section at the top and click **Claim Reward**.
+6. **Instant Payout:** Your claim is processed instantly by the smart contract! 5% of your unrewarded volume is directly transferred to your wallet and the volume resets.
 
 #### 👑 As the Owner / Admin
 1. **Connect Admin Wallet:** Connect the Freighter wallet that holds the private key of the Contract Owner. The `Admin Settings Panel` will automatically appear.
-2. **Create Campaigns:** Click the **Create New Campaign** button (plus icon) to launch a new fundraising target. Fill in the Title, Description, and Target XLM.
-3. **Manage Campaigns:** Click the green pencil icon on any existing campaign to update its details or deactivate it.
-4. **Approve Claims:** Monitor the `Pending Claims` queue in the Admin Dashboard. Click **Approve** to authorize the smart contract to send 1.00 XLM to the loyal donor.
-5. **Withdraw Treasury Funds:** Use the **Withdraw Funds** button next to the Treasury Balance to transfer accumulated donation funds from the smart contract to your own wallet. Ensure you leave enough balance to pay out pending donor rewards.
+2. **Set Contract:** You can dynamically connect to any deployed smart contract using the **⚙️ Set Contract ID** button in your dashboard.
+3. **Create Campaigns:** Click the **Create New Campaign** button (plus icon) to launch a new fundraising target. Fill in the Title, Description, and Target XLM.
+4. **Manage Campaigns:** Click the green pencil icon on any existing campaign to update its details or deactivate it.
+5. **Withdraw Treasury Funds:** Use the **Withdraw Funds** button next to the Treasury Balance to transfer accumulated donation funds from the smart contract to your own wallet. Ensure you leave enough balance to pay out future automated donor rewards!
 
 ---
 
@@ -75,25 +73,22 @@ Provides user-friendly `SweetAlert` pop-ups to prevent bad data before reaching 
 - **Connection Error**: Freighter wallet authentication fails or is missing.
 - **Invalid Amount**: Donation input is zero or negative.
 - **Transaction Failed**: User rejects the signature or a generic on-chain failure occurs.
-- **Points Insufficient**: Attempting to claim rewards with less than 10 points.
-- **Request/Approval Failed**: Signature rejection during transaction.
+- **Volume Insufficient**: Attempting to claim rewards with less than 10 XLM accumulated.
 - **Invalid Inputs**: Missing required fields when creating/editing campaigns.
 - **Deployment Failed**: Failure creating a new campaign.
-- **Treasury Deficit**: Smart contract balance is below the required 1.00 XLM payout. Prevents the owner from submitting an invalid transaction.
+- **Treasury Deficit**: Smart contract balance is below the required 5% payout amount.
 - **Invalid Contract Format**: Contract ID pasted is not 56 characters long.
 - **Translation Failed**: Google Translate API network error.
 
-#### 2. Smart Contract On-Chain Guards (13 Panic States)
+#### 2. Smart Contract On-Chain Guards (10 Panic States)
 Acts as the final line of defense against malicious transactions directly on the blockchain.
 - `already initialized`: Prevents re-initialization of the contract.
 - `not authorized: only owner can ...`: Strict Role-Based Access Control (RBAC).
 - `campaign already exists`: Prevents campaign ID collisions.
 - `donation amount must be positive`: On-chain validation of values.
 - `campaign is inactive`: Reverts donations to halted campaigns.
-- `insufficient loyalty points: need at least 10`: Double-verifies reward eligibility.
-- `claim already pending`: Prevents **Double-Claim** vulnerabilities.
-- `no pending claim for donor`: Prevents arbitrary payouts.
-- `insufficient treasury balance to payout reward`: Liquidity safeguarding.
+- `insufficient unclaimed volume: need at least 10 XLM`: Double-verifies reward eligibility.
+- `insufficient treasury balance to payout reward`: Liquidity safeguarding against bank runs.
 - `withdrawal amount must be positive`: Invalid treasury withdrawals.
 
 ---
