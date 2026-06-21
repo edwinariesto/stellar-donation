@@ -27,6 +27,9 @@ import bannerImg from './image/banner.png';
 const DEFAULT_CONTRACT_ID = 'CABKLAYMJR3WTCAAP4CYZHF7OKAAE47U62EHI2GIY276NNEUB4SGJVBD';
 const NATIVE_XLM_SAC = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
+const initialNet = localStorage.getItem('steldot_last_network') || 'TESTNET';
+setAppNetwork(initialNet);
+
 export default function App() {
   // Wallet & Network State
   const [freighterInstalled, setFreighterInstalled] = useState(false);
@@ -34,7 +37,7 @@ export default function App() {
   const [freighterBalance, setFreighterBalance] = useState('0.00');
   const [contractId, setContractId] = useState(DEFAULT_CONTRACT_ID);
   const [isMockMode, setIsMockMode] = useState(true);
-  const [networkMode, setNetworkMode] = useState('TESTNET');
+  const [networkMode, setNetworkMode] = useState(initialNet);
   const isOwner = userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O';
   
   // Platform & Contract State
@@ -127,10 +130,8 @@ export default function App() {
       if (installed) {
         const net = await checkFreighterNetwork();
         if (net !== networkMode) {
-          setNetworkMode(net);
-          setAppNetwork(net);
-          const savedContract = localStorage.getItem(`steldot_contract_${net}`);
-          setContractId(savedContract || DEFAULT_CONTRACT_ID);
+          localStorage.setItem('steldot_last_network', net);
+          window.location.reload();
         }
       }
     }, 2000);
