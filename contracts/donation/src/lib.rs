@@ -21,11 +21,9 @@ enum DataKey {
     CampaignIds,
     DonorPoints(Address),
     DonorTotalDonated(Address),
-    ClaimStatus(Address),
-    PendingClaims,
+    DonorSuccessfulClaims(Address),
     TotalRaised,
     TotalClaimsApproved,
-    TotalClaimsPending,
 }
 
 #[contract]
@@ -41,13 +39,9 @@ impl StelDotContract {
         env.storage().instance().set(&DataKey::Token, &token);
         env.storage().instance().set(&DataKey::TotalRaised, &0i128);
         env.storage().instance().set(&DataKey::TotalClaimsApproved, &0u32);
-        env.storage().instance().set(&DataKey::TotalClaimsPending, &0u32);
         
         let empty_campaigns: Vec<u32> = Vec::new(&env);
         env.storage().instance().set(&DataKey::CampaignIds, &empty_campaigns);
-
-        let empty_claims: Vec<Address> = Vec::new(&env);
-        env.storage().instance().set(&DataKey::PendingClaims, &empty_claims);
     }
 
     pub fn create_campaign(env: Env, owner: Address, id: u32, title: String, description: String, target: i128) {
@@ -133,7 +127,7 @@ impl StelDotContract {
         env.events().publish((Symbol::short("donate"), donor, campaign_id), amount);
     }
 
-    pub fn request_claim(env: Env, donor: Address) {
+    pub fn claim_reward(env: Env, donor: Address) {
         donor.require_auth();
 
         let donor_points_key = DataKey::DonorPoints(donor.clone());
@@ -142,80 +136,35 @@ impl StelDotContract {
             panic!("insufficient loyalty points: need at least 10");
         }
 
-        let status_key = DataKey::ClaimStatus(donor.clone());
-        let claim_status: u32 = env.storage().persistent().get(&status_key).unwrap_or(0);
-        if claim_status == 1 {
-            panic!("claim already pending");
-        }
+        let claimable_multiplier = points / 10;
+        let points_to_deduct = claimable_multiplier * 10;
+        let reward_stroops = (claimable_multiplier as i128) * 10_000_000i128;
 
-        // Set status to Pending (1)
-        env.storage().persistent().set(&status_key, &1u32);
-        env.storage().persistent().extend_ttl(&status_key, 5000, 10000);
-
-        // Add to pending claims list
-        let mut pending: Vec<Address> = env.storage().instance().get(&DataKey::PendingClaims).unwrap_or(Vec::new(&env));
-        if !pending.contains(&donor) {
-            pending.push_back(donor.clone());
-            env.storage().instance().set(&DataKey::PendingClaims, &pending);
-        }
-
-        // Update global pending claims count
-        let total_pending: u32 = env.storage().instance().get(&DataKey::TotalClaimsPending).unwrap_or(0);
-        env.storage().instance().set(&DataKey::TotalClaimsPending, &(total_pending + 1));
-
-        env.events().publish((Symbol::short("claim_req"), donor), points);
-    }
-
-    pub fn approve_claim(env: Env, owner: Address, donor: Address) {
-        owner.require_auth();
-        let stored_owner: Address = env.storage().instance().get(&DataKey::Owner).expect("not initialized");
-        if owner != stored_owner {
-            panic!("not authorized: only owner can approve claims");
-        }
-
-        let status_key = DataKey::ClaimStatus(donor.clone());
-        let claim_status: u32 = env.storage().persistent().get(&status_key).unwrap_or(0);
-        if claim_status != 1 {
-            panic!("no pending claim for donor");
-        }
-
-        // Verify treasury balance (needs >= 1 XLM = 10,000,000 stroops)
+        // Verify treasury balance
         let token_addr: Address = env.storage().instance().get(&DataKey::Token).unwrap();
         let token_client = token::Client::new(&env, &token_addr);
         let balance = token_client.balance(&env.current_contract_address());
-        if balance < 10_000_000 {
+        if balance < reward_stroops {
             panic!("insufficient treasury balance to payout reward");
         }
 
-        // Transfer 1 XLM (10,000,000 stroops)
-        token_client.transfer(&env.current_contract_address(), &donor, &10_000_000);
+        // Transfer XLM
+        token_client.transfer(&env.current_contract_address(), &donor, &reward_stroops);
 
-        // Reset points to 0
-        let donor_points_key = DataKey::DonorPoints(donor.clone());
-        env.storage().persistent().set(&donor_points_key, &0u32);
+        // Update points
+        env.storage().persistent().set(&donor_points_key, &(points - points_to_deduct));
 
-        // Clear claim status (0)
-        env.storage().persistent().set(&status_key, &0u32);
+        // Update successful claims for user
+        let donor_claims_key = DataKey::DonorSuccessfulClaims(donor.clone());
+        let successful_claims: u32 = env.storage().persistent().get(&donor_claims_key).unwrap_or(0);
+        env.storage().persistent().set(&donor_claims_key, &(successful_claims + claimable_multiplier));
+        env.storage().persistent().extend_ttl(&donor_claims_key, 5000, 10000);
 
-        // Remove from pending list
-        let pending: Vec<Address> = env.storage().instance().get(&DataKey::PendingClaims).unwrap_or(Vec::new(&env));
-        let mut new_pending = Vec::new(&env);
-        for addr in pending.iter() {
-            if addr != donor {
-                new_pending.push_back(addr);
-            }
-        }
-        env.storage().instance().set(&DataKey::PendingClaims, &new_pending);
-
-        // Update counts
-        let total_pending: u32 = env.storage().instance().get(&DataKey::TotalClaimsPending).unwrap_or(0);
-        if total_pending > 0 {
-            env.storage().instance().set(&DataKey::TotalClaimsPending, &(total_pending - 1));
-        }
+        // Update global totals
         let total_approved: u32 = env.storage().instance().get(&DataKey::TotalClaimsApproved).unwrap_or(0);
-        env.storage().instance().set(&DataKey::TotalClaimsApproved, &(total_approved + 1));
+        env.storage().instance().set(&DataKey::TotalClaimsApproved, &(total_approved + claimable_multiplier));
 
-        env.events().publish((Symbol::short("claim_app"), donor), 10_000_000i128);
+        env.events().publish((Symbol::short("claim"), donor), reward_stroops);
     }
 
     pub fn withdraw(env: Env, owner: Address, amount: i128) {
@@ -252,8 +201,8 @@ impl StelDotContract {
         env.storage().instance().get(&DataKey::TotalClaimsApproved).unwrap_or(0)
     }
 
-    pub fn get_total_claims_pending(env: Env) -> u32 {
-        env.storage().instance().get(&DataKey::TotalClaimsPending).unwrap_or(0)
+    pub fn get_donor_successful_claims(env: Env, donor: Address) -> u32 {
+        env.storage().persistent().get(&DataKey::DonorSuccessfulClaims(donor)).unwrap_or(0)
     }
 
     pub fn get_donor_points(env: Env, donor: Address) -> u32 {
@@ -262,14 +211,6 @@ impl StelDotContract {
 
     pub fn get_donor_total_donated(env: Env, donor: Address) -> i128 {
         env.storage().persistent().get(&DataKey::DonorTotalDonated(donor)).unwrap_or(0)
-    }
-
-    pub fn get_claim_status(env: Env, donor: Address) -> u32 {
-        env.storage().persistent().get(&DataKey::ClaimStatus(donor)).unwrap_or(0)
-    }
-
-    pub fn get_pending_claims(env: Env) -> Vec<Address> {
-        env.storage().instance().get(&DataKey::PendingClaims).unwrap_or(Vec::new(&env))
     }
 
     pub fn get_campaign_ids(env: Env) -> Vec<u32> {

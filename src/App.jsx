@@ -24,7 +24,7 @@ import {
 } from './utils/stellar';
 import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import bannerImg from './image/banner.png';
-const DEFAULT_CONTRACT_ID = 'CABKLAYMJR3WTCAAP4CYZHF7OKAAE47U62EHI2GIY276NNEUB4SGJVBD';
+const DEFAULT_CONTRACT_ID = 'CBIM4QASHMMLCQW75FORZ2LGOJT2Q43VSCGFZWCU7JY4DL5K5RBKEXPX';
 const NATIVE_XLM_SAC = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
 const initialNet = localStorage.getItem('steldot_last_network') || 'TESTNET';
@@ -43,11 +43,9 @@ export default function App() {
   const [campaigns, setCampaigns] = useState([]);
   const [loyaltyPoints, setLoyaltyPoints] = useState(0);
   const [totalDonated, setTotalDonated] = useState(0);
-  const [claimStatus, setClaimStatus] = useState(0); // 0 = None, 1 = Pending
-  const [pendingClaims, setPendingClaims] = useState([]);
+  const [successfulClaims, setSuccessfulClaims] = useState(0);
   const [totalRaised, setTotalRaised] = useState(0);
   const [totalClaimsApproved, setTotalClaimsApproved] = useState(0);
-  const [totalClaimsPending, setTotalClaimsPending] = useState(0);
   const [contractBalance, setContractBalance] = useState(0);
   const [topDonors, setTopDonors] = useState([]);
   const [ownerAddress, setOwnerAddress] = useState('');
@@ -161,9 +159,6 @@ export default function App() {
       const approvedClaimsRes = await callReadOnly(contractId, 'get_total_claims_approved');
       setTotalClaimsApproved(Number(approvedClaimsRes || 0));
 
-      const pendingClaimsCountRes = await callReadOnly(contractId, 'get_total_claims_pending');
-      setTotalClaimsPending(Number(pendingClaimsCountRes || 0));
-
       // Get contract active balance (in SAC token)
       const balRes = await callReadOnly(NATIVE_XLM_SAC, 'balance', [
         nativeToScVal(Address.fromString(contractId))
@@ -183,18 +178,10 @@ export default function App() {
         ]);
         setTotalDonated(donorTotalRes ? Number(donorTotalRes) / 10000000 : 0);
 
-        const statusRes = await callReadOnly(contractId, 'get_claim_status', [
+        const statusRes = await callReadOnly(contractId, 'get_donor_successful_claims', [
           nativeToScVal(Address.fromString(userAddress))
         ]);
-        setClaimStatus(Number(statusRes || 0));
-      }
-
-      // Fetch pending claim list
-      const pendingClaimsListRes = await callReadOnly(contractId, 'get_pending_claims');
-      if (pendingClaimsListRes) {
-        // Resolve raw Addresses to string representations
-        const resolvedClaims = pendingClaimsListRes.map(addr => addr);
-        setPendingClaims(resolvedClaims);
+        setSuccessfulClaims(Number(statusRes || 0));
       }
 
       // Fetch all campaigns
@@ -317,7 +304,6 @@ export default function App() {
     }
     setTotalRaised(prev => prev || 0);
     setTotalClaimsApproved(prev => prev || 0);
-    setTotalClaimsPending(prev => prev || 0);
     setContractBalance(prev => prev || 0);
 
     const realTop = [];
@@ -325,10 +311,6 @@ export default function App() {
       realTop.push({ address: userAddress, amount: totalDonated });
     }
     setTopDonors(realTop);
-    
-    if (pendingClaims.length === 0) {
-      setPendingClaims([]);
-    }
   };
 
 
@@ -338,7 +320,7 @@ export default function App() {
     setFreighterBalance('0.00');
     setLoyaltyPoints(0);
     setTotalDonated(0);
-    setClaimStatus(0);
+    setSuccessfulClaims(0);
   };
 
   // Connect Wallet Action
@@ -463,7 +445,7 @@ export default function App() {
     setDonateAmounts(prev => ({ ...prev, [campaignId]: amount.toString() }));
   };
 
-  // Request Reward Payout
+  // Request Reward Payout (Instant Claim)
   const handleRequestClaim = async () => {
     if (loyaltyPoints < 10) {
       Swal.fire({
@@ -474,27 +456,22 @@ export default function App() {
       });
       return;
     }
-    if (claimStatus === 1) {
-      Swal.fire({
-        title: t.claimPending,
-        text: t.claimPendingDesc,
-        icon: 'warning',
-        confirmButtonColor: '#007AFF'
-      });
-      return;
-    }
+
+    let claimableMultiplier = Math.floor(loyaltyPoints / 10);
+    let rewardXlm = claimableMultiplier; // 1 XLM per 10 points
 
     if (isMockMode) {
       setIsLoading(true);
       setTimeout(() => {
-        setClaimStatus(1);
-        setTotalClaimsPending(prev => prev + 1);
-        setPendingClaims(prev => [...prev, userAddress || 'GCSIMULATEDPENDINGCLIENTKEY']);
+        setLoyaltyPoints(prev => prev - (claimableMultiplier * 10));
+        setSuccessfulClaims(prev => prev + claimableMultiplier);
+        setTotalClaimsApproved(prev => prev + claimableMultiplier);
+        setFreighterBalance(prev => (parseFloat(prev) + rewardXlm).toFixed(2));
         
         setIsLoading(false);
         Swal.fire({
-          title: t.rewardRequested,
-          text: t.rewardRequestedDesc,
+          title: t.rewardRequested || 'Claim Successful',
+          text: `You have successfully claimed ${rewardXlm} XLM.`,
           icon: 'success',
           confirmButtonColor: '#007AFF'
         });
@@ -504,17 +481,17 @@ export default function App() {
         setIsLoading(true);
         Swal.fire({
           title: t.confirmSignature,
-          text: t.confirmClaim,
+          text: `You are about to claim ${rewardXlm} XLM for ${claimableMultiplier * 10} points.`,
           allowOutsideClick: false,
           didOpen: () => Swal.showLoading()
         });
 
         const donorSc = nativeToScVal(Address.fromString(userAddress));
-        await executeTransaction(contractId, 'request_claim', [donorSc], userAddress);
+        await executeTransaction(contractId, 'claim_reward', [donorSc], userAddress);
         
         Swal.fire({
-          title: t.claimSubmitted,
-          text: t.claimSubmittedDesc,
+          title: t.claimSubmitted || 'Claim Successful',
+          text: `You have successfully received ${rewardXlm} XLM in your wallet.`,
           icon: 'success',
           confirmButtonColor: '#34C759'
         });
@@ -522,79 +499,6 @@ export default function App() {
       } catch (err) {
         Swal.fire({
           title: t.requestFailed,
-          text: err.message || t.requestFailedDesc,
-          icon: 'error',
-          confirmButtonColor: '#FF3B30'
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  // Owner approves claim
-  const handleApproveClaim = async (clientAddress) => {
-    // Check treasury balance first (payout is 1 XLM)
-    if (contractBalance < 1) {
-      Swal.fire({
-        title: t.treasuryDeficit,
-        text: t.treasuryDeficitDesc(contractBalance.toFixed(2)),
-        icon: 'error',
-        confirmButtonColor: '#FF3B30'
-      });
-      return;
-    }
-
-    if (isMockMode) {
-      setIsLoading(true);
-      setTimeout(() => {
-        // Payout to claimant
-        if (clientAddress === userAddress) {
-          setFreighterBalance(prev => (parseFloat(prev) + 1.0).toFixed(2));
-          setLoyaltyPoints(0);
-          setClaimStatus(0);
-        }
-        
-        // Remove from list
-        setPendingClaims(prev => prev.filter(c => c !== clientAddress));
-        
-        // Adjust counts and contract balance
-        setTotalClaimsPending(prev => Math.max(0, prev - 1));
-        setTotalClaimsApproved(prev => prev + 1);
-        setContractBalance(prev => Math.max(0, prev - 1.0));
-        
-        setIsLoading(false);
-        Swal.fire({
-          title: t.claimApproved,
-          text: t.claimApprovedMock(`${clientAddress.substring(0, 6)}...${clientAddress.substring(50)}`),
-          icon: 'success',
-          confirmButtonColor: '#34C759'
-        });
-      }, 1500);
-    } else {
-      try {
-        setIsLoading(true);
-        Swal.fire({
-          title: t.approvingClaim,
-          text: t.approvingClaimDesc,
-          allowOutsideClick: false,
-          didOpen: () => Swal.showLoading()
-        });
-
-        const ownerSc = nativeToScVal(Address.fromString(userAddress));
-        const donorSc = nativeToScVal(Address.fromString(clientAddress));
-
-        const txRes = await executeTransaction(contractId, 'approve_claim', [ownerSc, donorSc], userAddress);
-        Swal.fire({
-          title: t.claimApproved,
-          html: t.approvedSuccessfully(clientAddress.substring(0, 6) + '...', txRes.hash, networkMode),
-          icon: 'success',
-          confirmButtonColor: '#34C759'
-        });
-        await refreshData();
-      } catch (err) {
-        Swal.fire({
-          title: t.approvalFailed,
           text: err.message || t.requestFailedDesc,
           icon: 'error',
           confirmButtonColor: '#FF3B30'
@@ -1045,11 +949,10 @@ export default function App() {
                 </div>
               ) : (
                 <>
-                  <div className="mt-2 flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-ios-darkGray">{t.pendingLabel || 'Pending Claims'}</span>
-                      <div className="text-2xl font-extrabold text-ios-orange">
-                        {claimStatus === 1 ? 1 : 0}
+                  <div className="mt-2 flex gap-6">
+                    <div>
+                      <div className="text-2xl font-extrabold text-ios-green">
+                        {successfulClaims} <span className="text-sm font-bold text-ios-darkGray">{t.successful || 'Sukses'}</span>
                       </div>
                     </div>
                   </div>
@@ -1096,20 +999,15 @@ export default function App() {
             <div className="flex flex-col items-end gap-2 w-full md:w-auto">
               <button 
                 onClick={handleRequestClaim}
-                disabled={loyaltyPoints < 10 || claimStatus === 1 || isLoading}
+                disabled={loyaltyPoints < 10 || isLoading}
                 className={`ios-transition ios-active-scale px-8 py-3.5 rounded-2xl text-sm font-bold shadow-md shadow-blue-500/10 w-full md:w-auto ${
-                  loyaltyPoints >= 10 && claimStatus !== 1
+                  loyaltyPoints >= 10
                     ? 'bg-ios-blue text-white hover:bg-blue-600'
                     : 'bg-ios-lightGray text-ios-darkGray cursor-not-allowed shadow-none'
                 }`}
               >
-                {claimStatus === 1 ? t.claimPendingBtn : t.claimRewardBtn}
+                {t.claimRewardBtn}
               </button>
-              {claimStatus === 1 && (
-                <span className="text-xs text-ios-red font-semibold">
-                  {t.limitReached}
-                </span>
-              )}
             </div>
           </section>
         )}
@@ -1187,40 +1085,13 @@ export default function App() {
                 </form>
               </div>
 
-              {/* Pending Claims Queue */}
-              <div className="flex flex-col h-full justify-between">
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-sm text-ios-secondaryText uppercase tracking-wider">{t.pendingRewardsQueue}</h3>
-                    <div className="bg-ios-red/10 border border-ios-red/20 px-3 py-1 rounded-full text-xs font-bold text-ios-red">
-                      {pendingClaims.length} {t.pending}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 overflow-y-auto max-h-[220px] pr-1">
-                    {pendingClaims.length === 0 ? (
-                      <p className="text-xs text-ios-secondaryText text-center py-8">{t.noPendingQueue}</p>
-                    ) : (
-                      pendingClaims.map((claimant, idx) => (
-                        <div key={idx} className="flex justify-between items-center p-3 rounded-xl border border-ios-lightGray/20 bg-gray-50 hover:bg-gray-100 transition-colors">
-                          <div className="min-w-0 flex-grow">
-                            <span className="text-xs font-bold text-ios-darkText font-mono block truncate" title={claimant}>
-                              {claimant}
-                            </span>
-                            <span className="text-[10px] font-semibold text-ios-darkGray uppercase">{t.needsPayout}</span>
-                          </div>
-                          
-                          <button 
-                            onClick={() => handleApproveClaim(claimant)}
-                            disabled={isLoading}
-                            className="bg-ios-green hover:bg-green-600 text-white rounded-lg px-3 py-1.5 text-xs font-bold shadow-md shadow-green-500/10 transition-all flex-shrink-0"
-                          >
-                            {t.approve}
-                          </button>
-                        </div>
-                      ))
-                    )}
-                  </div>
+              {/* Instant Claims Note */}
+              <div className="flex flex-col h-full justify-start">
+                <div className="bg-ios-bg p-6 rounded-xl border border-ios-lightGray/30">
+                  <h3 className="font-bold text-sm text-ios-secondaryText uppercase tracking-wider mb-2">Automated Payouts</h3>
+                  <p className="text-xs text-ios-darkGray leading-relaxed">
+                    Reward claims are now processed instantly and automatically on-chain. There is no longer a need for manual approval queue. Donors receive their XLM immediately upon claiming.
+                  </p>
                 </div>
 
                 <div className="bg-ios-bg p-4 rounded-xl border border-ios-lightGray/30 mt-6 flex justify-between items-center text-xs flex-wrap gap-3">
