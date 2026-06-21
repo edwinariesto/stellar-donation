@@ -24,7 +24,7 @@ import {
 } from './utils/stellar';
 import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import bannerImg from './image/banner.png';
-const DEFAULT_CONTRACT_ID = 'CBIM4QASHMMLCQW75FORZ2LGOJT2Q43VSCGFZWCU7JY4DL5K5RBKEXPX';
+const DEFAULT_CONTRACT_ID = 'CBOKKH33TVJCQRMQ7GMHKAVO7BUS7BRXKAZOKZBUK6YOIE5D6EDDL3Q7';
 const NATIVE_XLM_SAC = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
 const initialNet = localStorage.getItem('steldot_last_network') || 'TESTNET';
