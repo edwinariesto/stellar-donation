@@ -38,8 +38,7 @@ export default function App() {
   const [contractId, setContractId] = useState(DEFAULT_CONTRACT_ID);
   const [isMockMode, setIsMockMode] = useState(true);
   const [networkMode, setNetworkMode] = useState(initialNet);
-  const isOwner = ownerAddress ? userAddress === ownerAddress : userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O';
-  
+
   // Platform & Contract State
   const [campaigns, setCampaigns] = useState([]);
   const [loyaltyPoints, setLoyaltyPoints] = useState(0);
@@ -52,6 +51,7 @@ export default function App() {
   const [contractBalance, setContractBalance] = useState(0);
   const [topDonors, setTopDonors] = useState([]);
   const [ownerAddress, setOwnerAddress] = useState('');
+  const isOwner = ownerAddress ? userAddress === ownerAddress : userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O';
   const [lang, setLang] = useState('en');
   const t = translations[lang];
 
