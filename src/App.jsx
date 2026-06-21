@@ -1021,9 +1021,9 @@ export default function App() {
               <button 
                 onClick={handleRequestClaim}
                 disabled={loyaltyPoints < 10 || isLoading}
-                className={`ios-transition ios-active-scale px-8 py-3.5 rounded-2xl text-sm font-bold shadow-md shadow-blue-500/10 w-full md:w-auto ${
+                className={`ios-transition ios-active-scale px-8 py-3.5 rounded-2xl text-sm font-bold w-full md:w-auto ${
                   loyaltyPoints >= 10
-                    ? 'bg-ios-blue text-white hover:bg-blue-600'
+                    ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:from-amber-500 hover:to-orange-600 shadow-md shadow-orange-500/20'
                     : 'bg-ios-lightGray text-ios-darkGray cursor-not-allowed shadow-none'
                 }`}
               >
