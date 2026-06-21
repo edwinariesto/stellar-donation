@@ -20,7 +20,7 @@ export const NETWORKS = {
     networkName: 'TESTNET'
   },
   PUBLIC: {
-    rpc: 'https://mainnet.sorobanrpc.com',
+    rpc: 'https://soroban-rpc.mainnet.stellar.gateway.fm',
     horizon: 'https://horizon.stellar.org',
     passphrase: Networks.PUBLIC,
     networkName: 'PUBLIC'
