@@ -1074,7 +1074,9 @@ export default function App() {
               <span className="text-xs font-bold uppercase tracking-wider text-ios-darkGray">{t.yourDonation}</span>
               <div className="text-3xl font-extrabold text-ios-darkText mt-2">{totalDonated.toFixed(2)} <span className="text-lg font-bold text-ios-blue">XLM</span></div>
             </div>
-            {!userAddress && (
+            {userAddress ? (
+              <p className="text-[11px] text-ios-darkGray mt-4">{t.yourDonationDesc}</p>
+            ) : (
               <p className="text-[11px] text-ios-red mt-4">{t.connectHistory}</p>
             )}
           </div>
