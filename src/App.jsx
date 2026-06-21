@@ -1020,16 +1020,26 @@ export default function App() {
         {isOwner && (
           <section className="bg-white border-2 border-ios-red/20 rounded-2xl p-8 shadow-ios mb-12 bg-gradient-to-br from-red-50/10 to-white">
             
-            <div className="flex items-center gap-3 border-b border-ios-lightGray pb-4 mb-6">
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center border border-red-200 flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-ios-red">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
+            <div className="flex items-center justify-between border-b border-ios-lightGray pb-4 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center border border-red-200 flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-ios-red">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold tracking-tight text-ios-darkText">{t.adminPanel}</h2>
+                  <p className="text-xs text-ios-secondaryText">{t.adminPanelDesc}</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold tracking-tight text-ios-darkText">{t.adminPanel}</h2>
-                <p className="text-xs text-ios-secondaryText">{t.adminPanelDesc}</p>
-              </div>
+              <button 
+                onClick={(e) => { e.preventDefault(); handleContractIdPrompt(); }} 
+                className="bg-gray-100 hover:bg-gray-200 text-ios-darkText text-xs font-bold py-2 px-4 rounded-full border border-gray-200 transition-colors flex items-center gap-2"
+                title={t.setContractId || 'Set Contract ID'}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span className="hidden sm:inline">{t.setContractId || 'Set Contract ID'}</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
