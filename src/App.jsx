@@ -171,7 +171,7 @@ export default function App() {
         const pointsRes = await callReadOnly(contractId, 'get_donor_points', [
           nativeToScVal(Address.fromString(userAddress))
         ]);
-        setLoyaltyPoints(Number(pointsRes || 0));
+        setLoyaltyPoints(pointsRes ? Number(pointsRes) / 10000000 : 0);
 
         const donorTotalRes = await callReadOnly(contractId, 'get_donor_total_donated', [
           nativeToScVal(Address.fromString(userAddress))
@@ -457,16 +457,15 @@ export default function App() {
       return;
     }
 
-    let claimableMultiplier = Math.floor(loyaltyPoints / 10);
-    let rewardXlm = claimableMultiplier; // 1 XLM per 10 points
+    let rewardXlm = (loyaltyPoints * 0.05).toFixed(2);
 
     if (isMockMode) {
       setIsLoading(true);
       setTimeout(() => {
-        setLoyaltyPoints(prev => prev - (claimableMultiplier * 10));
-        setSuccessfulClaims(prev => prev + claimableMultiplier);
-        setTotalClaimsApproved(prev => prev + claimableMultiplier);
-        setFreighterBalance(prev => (parseFloat(prev) + rewardXlm).toFixed(2));
+        setLoyaltyPoints(0);
+        setSuccessfulClaims(prev => prev + 1);
+        setTotalClaimsApproved(prev => prev + 1);
+        setFreighterBalance(prev => (parseFloat(prev) + parseFloat(rewardXlm)).toFixed(2));
         
         setIsLoading(false);
         Swal.fire({
@@ -481,7 +480,7 @@ export default function App() {
         setIsLoading(true);
         Swal.fire({
           title: t.confirmSignature,
-          text: `You are about to claim ${rewardXlm} XLM for ${claimableMultiplier * 10} points.`,
+          text: `You are about to claim ${rewardXlm} XLM (5% of ${loyaltyPoints.toFixed(2)} XLM unclaimed volume).`,
           allowOutsideClick: false,
           didOpen: () => Swal.showLoading()
         });
@@ -953,10 +952,10 @@ export default function App() {
                     </div>
                   </div>
                   
-                  {/* Active Points Moved Here */}
+                  {/* Unclaimed Volume */}
                   <div className="mt-4 flex justify-between items-center bg-[#F2F2F7] py-2 px-3 rounded-xl border border-ios-lightGray/30">
-                    <span className="text-xs font-semibold text-ios-secondaryText">{t.activePoints}</span>
-                    <span className="text-sm font-bold text-ios-blue">{loyaltyPoints} / 10</span>
+                    <span className="text-xs font-semibold text-ios-secondaryText">Unclaimed Volume</span>
+                    <span className="text-sm font-bold text-ios-blue">{loyaltyPoints.toFixed(2)} XLM</span>
                   </div>
                 </>
               )}
@@ -1002,7 +1001,7 @@ export default function App() {
                     : 'bg-ios-lightGray text-ios-darkGray cursor-not-allowed shadow-none'
                 }`}
               >
-                {t.claimRewardBtn}
+                {t.claimRewardBtn} {(loyaltyPoints >= 10) && `(${(loyaltyPoints * 0.05).toFixed(2)} XLM)`}
               </button>
             </div>
           </section>

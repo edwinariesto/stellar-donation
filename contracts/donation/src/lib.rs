@@ -114,10 +114,10 @@ impl StelDotContract {
         env.storage().persistent().set(&donor_total_key, &(current_total + amount));
         env.storage().persistent().extend_ttl(&donor_total_key, 5000, 10000);
 
-        // Update donor loyalty points (+1 point per donation)
+        // Update donor unclaimed volume (points = stroops donated)
         let donor_points_key = DataKey::DonorPoints(donor.clone());
-        let current_points: u32 = env.storage().persistent().get(&donor_points_key).unwrap_or(0);
-        env.storage().persistent().set(&donor_points_key, &(current_points + 1));
+        let current_points: i128 = env.storage().persistent().get(&donor_points_key).unwrap_or(0);
+        env.storage().persistent().set(&donor_points_key, &(current_points + amount));
         env.storage().persistent().extend_ttl(&donor_points_key, 5000, 10000);
 
         // Update global totals
@@ -131,14 +131,16 @@ impl StelDotContract {
         donor.require_auth();
 
         let donor_points_key = DataKey::DonorPoints(donor.clone());
-        let points: u32 = env.storage().persistent().get(&donor_points_key).unwrap_or(0);
-        if points < 10 {
-            panic!("insufficient loyalty points: need at least 10");
+        let points_stroops: i128 = env.storage().persistent().get(&donor_points_key).unwrap_or(0);
+        
+        // Require at least 10 XLM (100,000,000 stroops) of unclaimed volume
+        if points_stroops < 100_000_000 {
+            panic!("insufficient unclaimed volume: need at least 10 XLM");
         }
 
-        let claimable_multiplier = points / 10;
-        let points_to_deduct = claimable_multiplier * 10;
-        let reward_stroops = (claimable_multiplier as i128) * 10_000_000i128;
+        // Reward is 5% of unclaimed volume
+        // e.g. 30 XLM -> 300,000,000 stroops. 5% of 300M is 15M stroops (1.5 XLM)
+        let reward_stroops = points_stroops * 5 / 100;
 
         // Verify treasury balance
         let token_addr: Address = env.storage().instance().get(&DataKey::Token).unwrap();
@@ -151,18 +153,18 @@ impl StelDotContract {
         // Transfer XLM
         token_client.transfer(&env.current_contract_address(), &donor, &reward_stroops);
 
-        // Update points
-        env.storage().persistent().set(&donor_points_key, &(points - points_to_deduct));
+        // Reset unclaimed volume to 0
+        env.storage().persistent().set(&donor_points_key, &0i128);
 
-        // Update successful claims for user
+        // Update successful claims for user (+1 to count how many times they claimed)
         let donor_claims_key = DataKey::DonorSuccessfulClaims(donor.clone());
         let successful_claims: u32 = env.storage().persistent().get(&donor_claims_key).unwrap_or(0);
-        env.storage().persistent().set(&donor_claims_key, &(successful_claims + claimable_multiplier));
+        env.storage().persistent().set(&donor_claims_key, &(successful_claims + 1));
         env.storage().persistent().extend_ttl(&donor_claims_key, 5000, 10000);
 
-        // Update global totals
+        // Update global totals (+1)
         let total_approved: u32 = env.storage().instance().get(&DataKey::TotalClaimsApproved).unwrap_or(0);
-        env.storage().instance().set(&DataKey::TotalClaimsApproved, &(total_approved + claimable_multiplier));
+        env.storage().instance().set(&DataKey::TotalClaimsApproved, &(total_approved + 1));
 
         env.events().publish((Symbol::short("claim"), donor), reward_stroops);
     }
@@ -205,7 +207,7 @@ impl StelDotContract {
         env.storage().persistent().get(&DataKey::DonorSuccessfulClaims(donor)).unwrap_or(0)
     }
 
-    pub fn get_donor_points(env: Env, donor: Address) -> u32 {
+    pub fn get_donor_points(env: Env, donor: Address) -> i128 {
         env.storage().persistent().get(&DataKey::DonorPoints(donor)).unwrap_or(0)
     }
 
