@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import html2canvas from 'html2canvas';
+import QRCode from 'react-qr-code';
 import { translations } from './utils/i18n';
 import SwalOrig from 'sweetalert2';
 
@@ -66,6 +67,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('active'); // active, completed, inactive
   const [currentPage, setCurrentPage] = useState(1);
   const [showCertificate, setShowCertificate] = useState(false);
+  const [showVIPBarcode, setShowVIPBarcode] = useState(false);
   const [isDownloadingCert, setIsDownloadingCert] = useState(false);
   const CAMPAIGNS_PER_PAGE = 3;
 
@@ -1171,7 +1173,7 @@ export default function App() {
               <button 
                 onClick={() => {
                   if (totalDonated > 500 || isOwner) {
-                    Swal.fire(t.milestone4, 'Hadiah eksklusif untuk pencapaian ini akan segera hadir!', 'info');
+                    setShowVIPBarcode(true);
                   }
                 }}
                 disabled={!(totalDonated > 500 || isOwner)}
@@ -1668,6 +1670,46 @@ export default function App() {
 
           </div>
         </section>
+        {/* VIP Barcode Modal */}
+        {showVIPBarcode && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <div 
+              className="absolute inset-0 bg-black/70 backdrop-blur-md"
+              onClick={() => setShowVIPBarcode(false)}
+            ></div>
+
+            {/* Modal Content */}
+            <div className="bg-gradient-to-b from-gray-900 to-black w-full max-w-sm rounded-3xl shadow-2xl relative overflow-hidden border border-gray-800 z-10 flex flex-col items-center text-center p-8 animate-ios-fade-in glow-blue">
+              
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-teal-500/20">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.956-.734L2.02 6.02a.5.5 0 0 1 .798-.518l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg>
+              </div>
+
+              <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">VIP Legend Pass</h2>
+              <p className="text-xs text-gray-400 mb-8 leading-relaxed px-2">
+                Tunjukkan Barcode Eksklusif ini pada seluruh acara resmi StelDot di seluruh dunia untuk mendapatkan akses VIP Gratis dan penggantian biaya transportasi penuh.
+              </p>
+
+              <div className="bg-white p-4 rounded-2xl shadow-inner mb-6 ring-4 ring-emerald-500/20">
+                <QRCode value={userAddress || 'StelDot-Legend'} size={200} />
+              </div>
+
+              <div className="w-full bg-gray-800/50 rounded-xl p-3 border border-gray-700/50">
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">VIP Wallet Address</p>
+                <p className="font-mono text-xs text-gray-300 break-all">{userAddress}</p>
+              </div>
+
+              <button 
+                onClick={() => setShowVIPBarcode(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white bg-gray-800/50 hover:bg-gray-700 rounded-full p-2 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+        )}
+
       </main>
 
       {/* Certificate Modal */}
