@@ -1045,15 +1045,11 @@ export default function App() {
                 </div>
               ) : (
                 <>
-                  <div className="mt-2 flex gap-6">
-                    <div>
-                      <div className="text-2xl font-extrabold text-ios-green">
-                        {Math.max(0, Math.floor((Math.floor(totalDonated) - loyaltyPoints) / 10) - (claimStatus === 1 ? 1 : 0))} <span className="text-sm font-bold text-ios-darkGray">{t.successful || 'Sukses'}</span>
-                      </div>
-                    </div>
-                    <div>
+                  <div className="mt-2 flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-ios-darkGray">{t.pendingLabel || 'Pending Claims'}</span>
                       <div className="text-2xl font-extrabold text-ios-orange">
-                        {claimStatus === 1 ? 1 : 0} <span className="text-sm font-bold text-ios-darkGray">{t.pendingLabel || 'Pending'}</span>
+                        {claimStatus === 1 ? 1 : 0}
                       </div>
                     </div>
                   </div>
