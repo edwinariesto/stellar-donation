@@ -84,7 +84,16 @@ export default function App() {
         setNetworkMode(net);
         setAppNetwork(net);
         const savedContract = localStorage.getItem(`steldot_contract_${net}`);
-        if (savedContract) setContractId(savedContract);
+        const deprecatedContracts = [
+          'CBOKKH33TVJCQRMQ7GMHKAVO7BUS7BRXKAZOKZBUK6YOIE5D6EDDL3Q7',
+          'CBKZHZ7CFEYLII7O2G7NKTS2RR5SCSQCQI6FA7A4TTPLI25NXSM6BTFB'
+        ];
+        if (savedContract && !deprecatedContracts.includes(savedContract)) {
+          setContractId(savedContract);
+        } else if (savedContract) {
+          localStorage.removeItem(`steldot_contract_${net}`);
+          setContractId(DEFAULT_CONTRACT_ID);
+        }
       }
 
       // Show onboarding if not shown before
