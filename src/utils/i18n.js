@@ -46,7 +46,7 @@ export const translations = {
     campaignAdded: 'Kampanye Ditambahkan!',
     campaignAddedDesc: 'Kampanye telah berhasil disebarkan ke testnet.',
     deploymentFailed: 'Penyebaran Gagal',
-    welcomeTitle: 'Selamat datang di StelDot! 👋',
+    welcomeTitle: 'Selamat datang di StelDot!',
     welcomeDesc: `
         <div class="text-left text-sm leading-relaxed text-gray-700 font-sans">
           <p class="mb-3"><strong>StelDot (Stellar Donation)</strong> adalah sistem hadiah loyalitas Donate-to-Earn yang aman yang dibangun di atas Stellar.</p>
@@ -192,7 +192,7 @@ export const translations = {
     campaignAdded: 'Campaign Added!',
     campaignAddedDesc: 'The campaign has been deployed successfully to testnet.',
     deploymentFailed: 'Deployment Failed',
-    welcomeTitle: 'Welcome to StelDot! 👋',
+    welcomeTitle: 'Welcome to StelDot!',
     welcomeDesc: `
         <div class="text-left text-sm leading-relaxed text-gray-700 font-sans">
           <p class="mb-3"><strong>StelDot (Stellar Donation)</strong> is a secure Donate-to-Earn loyalty reward system built on Stellar.</p>
