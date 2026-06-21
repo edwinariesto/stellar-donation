@@ -370,6 +370,20 @@ export default function App() {
       return;
     }
 
+    const campaign = campaigns.find(c => c.id === campaignId);
+    if (campaign) {
+      const remaining = Math.max(0, campaign.target - campaign.raised);
+      if (amount > remaining) {
+        Swal.fire({
+          title: t.donationExceedsTarget,
+          text: typeof t.donationExceedsTargetDesc === 'function' ? t.donationExceedsTargetDesc(remaining.toFixed(2)) : t.donationExceedsTargetDesc,
+          icon: 'warning',
+          confirmButtonColor: '#FF3B30'
+        });
+        return;
+      }
+    }
+
     if (isMockMode) {
       // Execute Mock Transaction
       setIsLoading(true);
