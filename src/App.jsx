@@ -390,7 +390,7 @@ export default function App() {
           timer: 5000,
           timerProgressBar: true
         }).then(() => {
-          window.location.reload();
+          // No reload needed
         });
         
         // Clear input
@@ -425,7 +425,7 @@ export default function App() {
           timer: 5000,
           timerProgressBar: true
         }).then(() => {
-          window.location.reload();
+          // No reload needed
         });
       } catch (err) {
         Swal.fire({
