@@ -20,7 +20,6 @@ jobs:
         with:
           toolchain: "1.84.0"
           targets: wasm32v1-none
-          # Menambahkan komponen formatting dan clippy (linter)
           components: rustfmt, clippy 
 
       # Menggunakan action khusus Rust Cache agar lebih efisien dan rapi
