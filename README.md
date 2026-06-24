@@ -254,7 +254,8 @@ Open `http://localhost:5173`. Clicking on the **Contract ID** link allows you to
 
 <img width="1918" height="714" alt="Screenshot 2026-06-24 205359" src="https://github.com/user-attachments/assets/83b02a39-3442-4771-8ace-a65315579636" />
    
-### ⚙️ GitHub Actions CI: All Passed
+### ⚙️ GitHub Actions CI: 
+All workflows. Showing runs from all workflows
 
 **View Actions on GitHub**:
 https://github.com/edwinariesto/stellar-donation/actions
