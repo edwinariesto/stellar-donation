@@ -15,10 +15,10 @@ Donors can contribute native XLM to community campaigns. Their total donation vo
 
 ### Smart Contract Information (Testnet)
 
-- **Deployed Contract Address (ID)**: `CABKLAYMJR3WTCAAP4CYZHF7OKAAE47U62EHI2GIY276NNEUB4SGJVBD`
-- **View on Stellar Explorer**: [Stellar.Expert Contract Link](https://stellar.expert/explorer/testnet/contract/CABKLAYMJR3WTCAAP4CYZHF7OKAAE47U62EHI2GIY276NNEUB4SGJVBD)
+- **Deployed Contract Address (ID)**: `CB7EC4T3INCUSZPJDPW25K4YVAIJR7DW6CYJVHIUQK6L24UOAFC5BYBK`
+- **View on Stellar Explorer**: [Stellar.Expert Contract Link](https://stellar.expert/explorer/testnet/contract/CB7EC4T3INCUSZPJDPW25K4YVAIJR7DW6CYJVHIUQK6L24UOAFC5BYBK)
 - **Asset/Token Address (Native XLM SAC)**: `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
-- **Example Transaction Hash (Contract Call)**: [`3524e594b555f10f1031d75611b0b55a93ef3f3eb3ace77d9c09b73daca58638`](https://stellar.expert/explorer/testnet/tx/3524e594b555f10f1031d75611b0b55a93ef3f3eb3ace77d9c09b73daca58638)
+- **Example Transaction Hash (Contract Call)**: [`8d4dbacad4807e9ef67f1d94779df2aa4ae8d674c5d06b2191b10a333e547f30`](https://stellar.expert/explorer/testnet/tx/8d4dbacad4807e9ef67f1d94779df2aa4ae8d674c5d06b2191b10a333e547f30)
 
 ---
 
@@ -234,3 +234,37 @@ Open `http://localhost:5173`. Clicking on the **Contract ID** link allows you to
 <img width="700" alt="Client Add Donation 1" src="https://github.com/user-attachments/assets/94515b5d-baba-4da7-b6f3-9f6db2ab2888" />
 <br>
 <img width="700" alt="Client Add Donation 2" src="https://github.com/user-attachments/assets/3211e77c-d9e5-425c-b3fc-226bf329c378" />
+
+### 🤝 UI Mobile: Show All Features
+
+<img width="366" height="661" alt="Screenshot 2026-06-24 205518" src="https://github.com/user-attachments/assets/139e4eb2-9779-4b3e-835a-ad7a572d8bf1" />
+<img width="370" height="657" alt="Screenshot 2026-06-24 205622" src="https://github.com/user-attachments/assets/6b0047aa-c567-4730-a4cc-8edba5125fd3" />
+<img width="368" height="658" alt="Screenshot 2026-06-24 205644" src="https://github.com/user-attachments/assets/16d74826-701b-4c3e-9bfe-5b0a0effc3f0" />
+<img width="370" height="658" alt="Screenshot 2026-06-24 205739" src="https://github.com/user-attachments/assets/bd6d667a-b5a8-4070-879f-83ca2a4c43de" />
+<img width="369" height="658" alt="Screenshot 2026-06-24 205811" src="https://github.com/user-attachments/assets/41d77496-7ef2-4d3c-a584-a9a1709a4493" />
+<img width="370" height="661" alt="Screenshot 2026-06-24 210436" src="https://github.com/user-attachments/assets/47d359c0-08b5-4081-8eba-517d6c882fc4" />
+<img width="370" height="657" alt="Screenshot 2026-06-24 205926" src="https://github.com/user-attachments/assets/e9b02081-0ebd-4d4e-9696-8b9910c229fd" />
+<img width="368" height="660" alt="Screenshot 2026-06-24 205953" src="https://github.com/user-attachments/assets/33c92751-a321-4024-b1da-b1aa9db07e27" />
+<img width="370" height="654" alt="Screenshot 2026-06-24 210058" src="https://github.com/user-attachments/assets/a07405b3-3f29-4561-b634-496e718cf8f4" />
+<img width="366" height="661" alt="Screenshot 2026-06-24 210214" src="https://github.com/user-attachments/assets/47c6a5d4-c31a-4ccf-8e23-28db16b67410" />
+<img width="370" height="658" alt="Screenshot 2026-06-24 210250" src="https://github.com/user-attachments/assets/a2f9a778-700d-40ac-9e75-95e279369132" />
+<img width="368" height="654" alt="Screenshot 2026-06-24 210310" src="https://github.com/user-attachments/assets/70569ee4-ec78-4505-9504-f83d9004248e" />
+
+### 🤝 Cargo test: 2 passed
+
+<img width="1918" height="714" alt="Screenshot 2026-06-24 205359" src="https://github.com/user-attachments/assets/24f54156-e05b-4711-9748-
+   
+### 🤝 Action Menu on Github: 2 passed
+
+**View on Action on Github**:
+https://github.com/edwinariesto/stellar-donation/actions
+
+<img width="1918" height="991" alt="Screenshot 2026-06-24 212045" src="https://github.com/user-attachments/assets/8d519758-0e91-48d3-91b4-344a20f0d20d" />
+
+
+
+
+   
+   
+   2399f9976e78" />
+
