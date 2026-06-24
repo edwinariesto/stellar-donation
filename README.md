@@ -74,7 +74,7 @@ Donors can contribute native XLM to community campaigns. Their total donation vo
 
 ---
 
-### 🎯 Hackathon Level 3: Key Insights & Criteria Fulfillment
+### 🎯 Key Insights & Criteria Fulfillment
 
 This project meets and exceeds the requirements for the **Advanced Smart Contracts + Production-Ready dApps** hackathon:
 
@@ -91,7 +91,7 @@ This project meets and exceeds the requirements for the **Advanced Smart Contrac
 6. **Writing Tests**
    - The contract is protected by `test.rs` which verifies the end-to-end flow (Accumulative donations -> Instant successful claims) and Negative Tests (Panicking and failing claims if volume is below the threshold).
 
-#### ✅ Hackathon Submission Checklist:
+#### ✅ Submission Checklist:
 - [x] Public GitHub repository
 - [x] README with complete documentation
 - [x] Minimum 10+ meaningful commits
