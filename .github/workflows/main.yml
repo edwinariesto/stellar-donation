@@ -7,8 +7,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test-contracts:
-    name: Run Soroban Contract Tests
+  test-and-build:
+    name: Run Soroban Tests & Build
     runs-on: ubuntu-latest
 
     steps:
@@ -18,21 +18,31 @@ jobs:
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
           targets: wasm32-unknown-unknown
+          # Menambahkan komponen formatting dan clippy (linter)
+          components: rustfmt, clippy 
 
+      # Menggunakan action khusus Rust Cache agar lebih efisien dan rapi
+      # daripada mengatur path cache secara manual
       - name: Cache Rust Dependencies
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            contracts/donation/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          workspaces: "contracts/donation -> target"
+
+      - name: Check Code Formatting
+        working-directory: contracts/donation
+        run: cargo fmt -- --check
+
+      - name: Run Clippy (Linting)
+        working-directory: contracts/donation
+        # Akan gagal (fail) jika ada warning/potensi bug di kodingan
+        run: cargo clippy --all-targets -- -D warnings
 
       - name: Run Contract Tests
-        run: |
-          cd contracts/donation
-          cargo test
+        working-directory: contracts/donation
+        run: cargo test
+
+      - name: Build Wasm Release
+        working-directory: contracts/donation
+        # Memastikan contract benar-benar bisa di-compile menjadi file .wasm
+        run: cargo build --target wasm32-unknown-unknown --release
