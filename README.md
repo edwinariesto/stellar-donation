@@ -74,6 +74,37 @@ Donors can contribute native XLM to community campaigns. Their total donation vo
 
 ---
 
+### 🎯 Hackathon Level 3: Key Insights & Criteria Fulfillment
+
+This project meets and exceeds the requirements for the **Advanced Smart Contracts + Production-Ready dApps** hackathon:
+
+1. **Advanced Smart Contract Development & Architecture**
+   - StelDot features autonomous economic logic (Autonomous Tokenomics). We track accumulated donation volume permanently using `persistent storage` in *stroops* (`i128`).
+2. **Inter-contract Communication**
+   - The smart contract performs seamless cross-contract communication with the Native Stellar Asset Contract (SAC) to verify treasury balances and execute XLM `transfer`s.
+3. **Event Streaming & Real-time Updates**
+   - Every critical action (`donate`, `claim`, `camp_cre`) emits *Soroban Events* (`env.events().publish()`), allowing third-party indexers to track analytics in real-time.
+4. **CI/CD Pipeline Setup**
+   - The repository is equipped with GitHub Actions. Every `push` triggers an automated pipeline running the Rust Linter (`clippy`), formatter (`rustfmt`), unit tests (`cargo test`), and WebAssembly build compilation (`wasm32v1-none`).
+5. **Mobile Responsive & Error Handling**
+   - Built with a robust React + Tailwind CSS architecture. The UI is highly responsive on mobile. The system includes advanced Error Handling covering 20+ failure scenarios, including an elegant fallback if the user lacks a Freighter wallet extension.
+6. **Writing Tests**
+   - The contract is protected by `test.rs` which verifies the end-to-end flow (Accumulative donations -> Instant successful claims) and Negative Tests (Panicking and failing claims if volume is below the threshold).
+
+#### ✅ Hackathon Submission Checklist:
+- [x] Public GitHub repository
+- [x] README with complete documentation
+- [x] Minimum 10+ meaningful commits
+- [x] Live demo link (Frontend Deployed)
+- [x] Contract deployment address (See above)
+- [x] Transaction hash for contract interaction (See above)
+- [x] Screenshot showing Mobile responsive UI
+- [x] Screenshot showing CI/CD pipeline running
+- [x] Screenshot showing Test output with 3+ passing tests
+- [x] Demo video link (1–2 minutes)
+
+---
+
 ### Security & Error Handling
 
 StelDot implements a robust, two-layer error handling architecture covering edge cases and providing an excellent UX:

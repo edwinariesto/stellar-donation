@@ -74,6 +74,37 @@ Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Total volum
 
 ---
 
+### 🎯 Hackathon Level 3: Insight Utama & Pemenuhan Kriteria
+
+Proyek ini telah memenuhi dan melampaui kriteria kompetisi **Advanced Smart Contracts + Production-Ready dApps**:
+
+1. **Advanced Smart Contract Development & Architecture**
+   - StelDot memiliki logika ekonomi mandiri (Autonomous Tokenomics). Kami melacak akumulasi volume donasi secara permanen (`persistent storage`) menggunakan satuan *stroops* (`i128`).
+2. **Inter-contract Communication**
+   - Smart Contract StelDot melakukan komunikasi lintas-kontrak (*cross-contract call*) secara mulus dengan Native Stellar Asset Contract (SAC) untuk memverifikasi saldo kas dan memproses `transfer` XLM.
+3. **Event Streaming & Real-time Updates**
+   - Setiap aksi kritikal dalam sistem (seperti `donate`, `claim`, `camp_cre`) memancarkan *Soroban Events* (`env.events().publish()`), memungkinkan *indexer* pihak ketiga melacak analitik secara *real-time*.
+4. **CI/CD Pipeline Setup**
+   - Repositori dilengkapi dengan GitHub Actions. Setiap `push` memicu *pipeline* otomatis yang menjalankan Rust Linter (`clippy`), *formatter* (`rustfmt`), *unit tests* (`cargo test`), dan kompilasi *build* WebAssembly (`wasm32v1-none`).
+5. **Mobile Responsive & Error Handling**
+   - Dibangun dengan arsitektur tangguh berbasis React + Tailwind CSS. UI sangat responsif di layar ponsel. Sistem dilengkapi *Error Handling* canggih untuk 20+ skenario kesalahan, termasuk _fallback_ jika pengguna tidak memiliki ekstensi dompet Freighter.
+6. **Writing Tests**
+   - Smart contract dilindungi oleh file pengujian `test.rs` yang menguji *end-to-end flow* (Donasi akumulatif -> Klaim instan sukses) serta *Negative Test* (Sistem menggagalkan klaim (Panic) jika poin volume belum mencapai batas minimal).
+
+#### ✅ Hackathon Submission Checklist:
+- [x] Public GitHub repository
+- [x] README with complete documentation
+- [x] Minimum 10+ meaningful commits
+- [x] Live demo link (Frontend Deployed)
+- [x] Contract deployment address (See above)
+- [x] Transaction hash for contract interaction (See above)
+- [x] Screenshot showing Mobile responsive UI
+- [x] Screenshot showing CI/CD pipeline running
+- [x] Screenshot showing Test output with 3+ passing tests
+- [x] Demo video link (1–2 minutes)
+
+---
+
 ### Keamanan & Penanganan Kesalahan (Error Handling)
 
 StelDot menerapkan arsitektur penanganan kesalahan dua lapis yang solid untuk menutupi berbagai anomali (edge cases) dan memberikan pengalaman pengguna (UX) yang mulus:
