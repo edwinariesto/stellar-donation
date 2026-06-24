@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import html2canvas from 'html2canvas';
 import QRCode from 'react-qr-code';
 import { translations } from './utils/i18n';
@@ -21,16 +21,98 @@ import {
   callReadOnly,
   executeTransaction,
   getGlobalTopDonors,
+  getGlobalClaims,
   checkFreighterNetwork,
-  setAppNetwork
+  setAppNetwork,
+  getFreighterPublicKey
 } from './utils/stellar';
 import { Address, nativeToScVal } from '@stellar/stellar-sdk';
-import bannerImg from './image/banner.png';
-const DEFAULT_CONTRACT_ID = 'CDESVDCFJJGP4SE6HSZWWM5AL7WKBBYKYHXLRIGRNTMZGSHQOLJC5VOA';
+import bannerImg from './assets/banner.png';
+const DEFAULT_CONTRACT_ID = 'CB7EC4T3INCUSZPJDPW25K4YVAIJR7DW6CYJVHIUQK6L24UOAFC5BYBK';
 const NATIVE_XLM_SAC = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
 const initialNet = localStorage.getItem('steldot_last_network') || 'TESTNET';
 setAppNetwork(initialNet);
+
+// Animated neuron/blockchain lines canvas overlay
+function NeuronCanvas() {
+  const canvasRef = useRef(null);
+  const animRef = useRef(null);
+
+  const init = useCallback((canvas) => {
+    const ctx = canvas.getContext('2d');
+    const W = canvas.offsetWidth;
+    const H = canvas.offsetHeight;
+    canvas.width = W;
+    canvas.height = H;
+
+    const NODE_COUNT = Math.max(18, Math.floor((W * H) / 22000));
+    const MAX_DIST = Math.min(W, H) * 0.38;
+
+    const nodes = Array.from({ length: NODE_COUNT }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.45,
+      vy: (Math.random() - 0.5) * 0.45,
+      r: Math.random() * 2.5 + 1.5,
+    }));
+
+    const draw = () => {
+      ctx.clearRect(0, 0, W, H);
+
+      // Draw edges
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < MAX_DIST) {
+            const alpha = (1 - dist / MAX_DIST) * 0.22;
+            ctx.strokeStyle = `rgba(0, 122, 255, ${alpha})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw nodes
+      nodes.forEach(n => {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 122, 255, 0.35)';
+        ctx.fill();
+
+        // Update position
+        n.x += n.vx;
+        n.y += n.vy;
+        if (n.x < 0 || n.x > W) n.vx *= -1;
+        if (n.y < 0 || n.y > H) n.vy *= -1;
+      });
+
+      animRef.current = requestAnimationFrame(draw);
+    };
+
+    draw();
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    init(canvas);
+    return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
+  }, [init]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      style={{ mixBlendMode: 'multiply' }}
+    />
+  );
+}
 
 export default function App() {
   // Wallet & Network State
@@ -68,12 +150,133 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showCertificate, setShowCertificate] = useState(false);
   const [showVIPBarcode, setShowVIPBarcode] = useState(false);
+  const [showAmbassadorBarcode, setShowAmbassadorBarcode] = useState(false);
+  const [showAngelReferral, setShowAngelReferral] = useState(false);
   const [isDownloadingCert, setIsDownloadingCert] = useState(false);
   const CAMPAIGNS_PER_PAGE = 3;
+
+  const CLAIMS_PER_PAGE = 5;
+  const [claimHistoryPage, setClaimHistoryPage] = useState(1);
+  const [claimHistorySearch, setClaimHistorySearch] = useState('');
+  const [claimHistoryData, setClaimHistoryData] = useState([]);
+  const filteredClaims = claimHistoryData.filter(c => c.address.toLowerCase().includes(claimHistorySearch.toLowerCase()));
+  const totalClaimPages = Math.max(1, Math.ceil(filteredClaims.length / CLAIMS_PER_PAGE));
+  const currentClaims = filteredClaims.slice((claimHistoryPage - 1) * CLAIMS_PER_PAGE, claimHistoryPage * CLAIMS_PER_PAGE);
+
+  const [userTxPage, setUserTxPage] = useState(1);
+  const [userTxSearch, setUserTxSearch] = useState('');
+  const USER_TX_PER_PAGE = 3;
+  const [userTxData, setUserTxData] = useState([]);
+  const filteredUserTxs = userTxData
+    .filter(tx => tx.wallet === userAddress || tx.to === userAddress)
+    .filter(tx => tx.hash.toLowerCase().includes(userTxSearch.toLowerCase()));
+  const totalUserTxPages = Math.max(1, Math.ceil(filteredUserTxs.length / USER_TX_PER_PAGE));
+  const currentUserTxs = filteredUserTxs.slice((userTxPage - 1) * USER_TX_PER_PAGE, userTxPage * USER_TX_PER_PAGE);
+
+  const [userClaimPage, setUserClaimPage] = useState(1);
+  const [userClaimSearch, setUserClaimSearch] = useState('');
+  const USER_CLAIMS_PER_PAGE = 5;
+  const [userClaimData, setUserClaimData] = useState([]);
+  const filteredUserClaims = userClaimData
+    .filter(c => c.address === userAddress)
+    .filter(c => c.address.toLowerCase().includes(userClaimSearch.toLowerCase()));
+  const totalUserClaimPages = Math.max(1, Math.ceil(filteredUserClaims.length / USER_CLAIMS_PER_PAGE));
+  const currentUserClaims = filteredUserClaims.slice((userClaimPage - 1) * USER_CLAIMS_PER_PAGE, userClaimPage * USER_CLAIMS_PER_PAGE);
+
+  // Fetch Realtime Data from Horizon
+  useEffect(() => {
+    const fetchTxs = async () => {
+      if (!userAddress) {
+        setUserTxData([]);
+        setUserClaimData([]);
+        return;
+      }
+      try {
+        const res = await fetch(`https://horizon-testnet.stellar.org/accounts/${userAddress}/payments?limit=200&order=desc`);
+        if (!res.ok) throw new Error('Horizon fetch failed');
+        const data = await res.json();
+        
+        let txs = [];
+        for (let r of data._embedded.records) {
+          let amount = 0, from = '', to = '';
+          if (r.type === 'payment' || r.type === 'path_payment_strict_receive' || r.type === 'path_payment_strict_send') {
+            amount = parseFloat(r.amount);
+            from = r.from;
+            to = r.to;
+          } else if (r.type === 'create_account') {
+            amount = parseFloat(r.starting_balance);
+            from = r.funder;
+            to = r.account;
+          } else if (r.type === 'invoke_host_function' && r.asset_balance_changes) {
+             const transfer = r.asset_balance_changes.find(c => c.type === 'transfer' && c.asset_type === 'native');
+             if (transfer) {
+               amount = parseFloat(transfer.amount);
+               from = transfer.from;
+               to = transfer.to;
+             }
+          }
+          if (amount > 0) {
+            txs.push({
+              id: r.id,
+              hash: r.transaction_hash,
+              wallet: from,
+              to: to,
+              amount: amount,
+              date: new Date(r.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' }),
+              status: r.transaction_successful ? 'success' : 'failed'
+            });
+          }
+        }
+        setUserTxData(txs);
+        
+        // My Claim Rewards: Transactions received from the Smart Contract
+        const claims = txs.filter(tx => tx.to === userAddress && tx.wallet === contractId).map(tx => ({
+          id: tx.id,
+          address: tx.to,
+          from: tx.wallet,
+          amount: tx.amount,
+          date: tx.date,
+          status: 'approved'
+        }));
+        setUserClaimData(claims);
+        
+      } catch (err) {
+        console.error("Failed to fetch user txs", err);
+      }
+    };
+    fetchTxs();
+  }, [userAddress, contractId]);
+
+  // Admin Claim History Fetch
+  useEffect(() => {
+    const fetchAdminClaims = async () => {
+      if (!contractId) return;
+      try {
+        const claims = await getGlobalClaims(contractId);
+        setClaimHistoryData(claims);
+      } catch (err) {
+        console.error("Failed to fetch admin claims", err);
+      }
+    };
+    fetchAdminClaims();
+  }, [contractId]);
+
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, activeTab]);
+
+  useEffect(() => {
+    setClaimHistoryPage(1);
+  }, [claimHistorySearch]);
+
+  useEffect(() => {
+    setUserTxPage(1);
+  }, [userTxSearch]);
+
+  useEffect(() => {
+    setUserClaimPage(1);
+  }, [userClaimSearch]);
 
   // Initialize Freighter Check and first run check
   useEffect(() => {
@@ -133,22 +336,32 @@ export default function App() {
     return () => clearInterval(interval);
   }, [userAddress]);
 
-  // Check if Freighter status and network changes
+  // Check if Freighter status, network, or account changes
   useEffect(() => {
     const interval = setInterval(async () => {
       const installed = await checkFreighterInstalled();
       setFreighterInstalled(installed);
       
       if (installed) {
+        // Check network change
         const net = await checkFreighterNetwork();
         if (net !== networkMode) {
           localStorage.setItem('steldot_last_network', net);
           window.location.reload();
         }
+
+        // Check account change
+        if (userAddress) {
+          const pk = await getFreighterPublicKey();
+          if (pk && pk !== userAddress) {
+            localStorage.removeItem('steldot_wallet_address');
+            window.location.reload();
+          }
+        }
       }
     }, 2000);
     return () => clearInterval(interval);
-  }, [networkMode]);
+  }, [networkMode, userAddress]);
 
   // Refresh stats and state
   const refreshData = async () => {
@@ -485,7 +698,7 @@ export default function App() {
       return;
     }
 
-    let rewardXlm = (loyaltyPoints * 0.05).toFixed(2);
+    let rewardXlm = (loyaltyPoints * 0.015).toFixed(2);
 
     if (contractBalance < parseFloat(rewardXlm)) {
       Swal.fire({
@@ -518,7 +731,7 @@ export default function App() {
         setIsLoading(true);
         Swal.fire({
           title: t.confirmSignature,
-          text: `You are about to claim ${rewardXlm} XLM (5% of ${loyaltyPoints.toFixed(2)} XLM unclaimed volume).`,
+          text: `You are about to claim ${rewardXlm} XLM (1.5% of ${loyaltyPoints.toFixed(2)} XLM unclaimed volume).`,
           allowOutsideClick: false,
           didOpen: () => Swal.showLoading()
         });
@@ -551,9 +764,9 @@ export default function App() {
       title: t.withdrawFunds,
       html: `
         <p class="text-sm text-gray-500 mb-4">${t.withdrawDesc}</p>
-        <div class="relative flex items-center">
-          <input type="number" id="swal-withdraw" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50" min="0.1" step="0.1" placeholder="10.00">
-          <span class="absolute right-4 font-bold text-xs text-ios-blue">XLM</span>
+        <div class="text-left mt-2 mb-4">
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">${t.amountLabel}</label>
+          <input type="number" id="swal-withdraw" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50" min="0.1" step="0.1" placeholder="${t.placeholderTarget}">
         </div>
       `,
       preConfirm: () => {
@@ -574,7 +787,7 @@ export default function App() {
 
     if (isMockMode) {
       setContractBalance(prev => prev - formValues);
-      Swal.fire({ title: t.withdrawSuccess, text: 'Withdrawn in mock mode.', icon: 'success' }).then(() => window.location.reload());
+      Swal.fire({ title: t.withdrawSuccessAlert, text: t.withdrawMockAlert, icon: 'success' }).then(() => window.location.reload());
     } else {
       setIsLoading(true);
       try {
@@ -606,7 +819,7 @@ export default function App() {
   // Owner updates a campaign
   const handleUpdateCampaign = async (camp) => {
     const { value: formValues } = await Swal.fire({
-      title: 'Update Campaign',
+      title: t.updateCampaign,
       html: `
         <div class="text-left space-y-4 mt-4">
           <div>
@@ -650,13 +863,13 @@ export default function App() {
       setCampaigns(prev => prev.map(c => 
         c.id === camp.id ? { ...c, title: formValues.title, description: formValues.description, target: formValues.target, active: formValues.active } : c
       ));
-      Swal.fire('Updated', 'Campaign updated in mock mode.', 'success').then(() => window.location.reload());
+      Swal.fire(t.updateCampaign, t.updateCampaignMock, 'success').then(() => window.location.reload());
     } else {
       try {
         setIsLoading(true);
         Swal.fire({
-          title: 'Updating Campaign',
-          text: 'Please sign the update_campaign transaction in Freighter.',
+          title: t.updatingCampaign,
+          text: t.updatingCampaignDesc,
           allowOutsideClick: false,
           didOpen: () => Swal.showLoading()
         });
@@ -676,10 +889,10 @@ export default function App() {
           userAddress
         );
 
-        Swal.fire('Updated', 'Campaign updated successfully on-chain.', 'success').then(() => window.location.reload());
+        Swal.fire(t.updateCampaign, t.updateCampaignSuccess, 'success').then(() => window.location.reload());
         await refreshData();
       } catch (err) {
-        Swal.fire('Update Failed', err.message || 'Signature rejected.', 'error');
+        Swal.fire(t.updateFailed, err.message || t.signatureRejected, 'error');
       } finally {
         setIsLoading(false);
       }
@@ -788,12 +1001,12 @@ export default function App() {
       title: t.configContract,
       html: `
         <div class="text-left mb-2">
-          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">${t.mainnetContractId || 'MAINNET CONTRACT ID'}</label>
-          <input id="swal-input-mainnet" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" value="${savedMainnet}" placeholder="C...">
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">${t.mainnetContractId || 'MAINNET CONTRACT ID'}</label>
+          <input id="swal-input-mainnet" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" value="${savedMainnet}" placeholder="${t.egHash}">
         </div>
         <div class="text-left mt-4">
-          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">${t.testnetContractId || 'TESTNET CONTRACT ID'}</label>
-          <input id="swal-input-testnet" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" value="${savedTestnet}" placeholder="C...">
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">${t.testnetContractId || 'TESTNET CONTRACT ID'}</label>
+          <input id="swal-input-testnet" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" value="${savedTestnet}" placeholder="${t.egHash}">
         </div>
       `,
       focusConfirm: false,
@@ -850,12 +1063,118 @@ export default function App() {
       document.body.removeChild(link);
     } catch (err) {
       console.error('Failed to generate certificate:', err);
-      Swal.fire('Error', 'Failed to generate certificate image.', 'error');
+      Swal.fire(t.errorTitle, t.certError, 'error');
     } finally {
       setIsDownloadingCert(false);
     }
   };
+  const handleViewClaimStats = () => {
+    if (claimHistoryData.length === 0) {
+      Swal.fire({
+        title: t.monthlyStatsTitle,
+        text: t.noStatsAvailable,
+        icon: 'info',
+        confirmButtonColor: '#007AFF'
+      });
+      return;
+    }
 
+    const stats = {};
+    claimHistoryData.forEach(claim => {
+      const dateParts = claim.date.split(' ');
+      if (dateParts.length >= 3) {
+        const month = dateParts[1];
+        const year = dateParts[2].replace(',', '');
+        const key = `${month} ${year}`;
+        if (!stats[key]) stats[key] = 0;
+        stats[key] += claim.amount;
+      }
+    });
+
+    const statsArray = Object.entries(stats).map(([period, total]) => ({ period, total }));
+
+    SwalOrig.fire({
+      title: t.monthlyStatsTitle,
+      html: `
+        <div id="claim-stats-container" style="background: white; padding: 24px; border-radius: 20px; width: 100%; box-sizing: border-box; text-align: left;">
+          <h3 style="text-align: center; font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 24px; font-family: sans-serif; letter-spacing: -0.5px;">${t.monthlyStatsTitle}</h3>
+          <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; font-size: 14px;">
+            <thead>
+              <tr style="border-bottom: 2px solid #f3f4f6;">
+                <th style="text-align: left; padding: 12px 8px; color: #6b7280; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">${t.monthYearLabel}</th>
+                <th style="text-align: right; padding: 12px 8px; color: #6b7280; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">${t.totalClaimedLabel}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${statsArray.map((stat, idx) => `
+                <tr style="border-bottom: 1px solid #f3f4f6; background-color: ${idx % 2 === 0 ? '#fafafa' : '#ffffff'};">
+                  <td style="padding: 14px 8px; font-weight: 600; color: #374151;">${stat.period}</td>
+                  <td style="text-align: right; padding: 14px 8px; font-weight: 800; color: #10b981;">${stat.total.toFixed(2)} XLM</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div style="margin-top: 24px; text-align: center; font-size: 11px; font-weight: 600; color: #9ca3af; font-family: sans-serif; display: flex; align-items: center; justify-content: center; gap: 4px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+            StelDot Network Analytics
+          </div>
+        </div>
+        <div style="margin-top: 20px; padding: 0;">
+          <button id="download-stats-btn" style="width: 100%; background: #007AFF; color: white; font-weight: 700; padding: 14px 0; border: none; outline: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; font-family: sans-serif; transition: background 0.2s;" onmouseover="this.style.background='#0062cc'" onmouseout="this.style.background='#007AFF'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            ${t.downloadImage}
+          </button>
+        </div>
+      `,
+      showConfirmButton: false,
+      showCloseButton: true,
+      customClass: {
+        popup: 'rounded-3xl overflow-hidden !p-0 pb-5',
+        htmlContainer: '!p-0 !m-0',
+        title: '!pt-0 !mt-0 !hidden',
+        closeButton: '!text-gray-400 hover:!text-gray-600 focus:!outline-none !top-3 !right-3'
+      },
+      didOpen: () => {
+        const btn = document.getElementById('download-stats-btn');
+        if (btn) {
+          btn.addEventListener('click', async () => {
+            btn.innerHTML = `<span class="animate-spin inline-block mr-2 text-lg">⟳</span> ${t.downloadingImage}`;
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+            try {
+              const container = document.getElementById('claim-stats-container');
+              const originalStyle = container.getAttribute('style');
+              container.style.padding = '40px';
+              
+              const canvas = await html2canvas(container, {
+                scale: 3,
+                backgroundColor: '#ffffff',
+                logging: false,
+                useCORS: true
+              });
+              
+              container.setAttribute('style', originalStyle);
+              
+              const imgData = canvas.toDataURL('image/png');
+              const link = document.createElement('a');
+              link.download = `steldot_claim_stats_${new Date().getTime()}.png`;
+              link.href = imgData;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            } catch (err) {
+              console.error('Failed to generate stats image:', err);
+              Swal.fire(t.errorTitle, t.downloadImageError, 'error');
+            } finally {
+              btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> ${t.downloadImage}`;
+              btn.disabled = false;
+              btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            }
+          });
+        }
+      }
+    });
+  };
 
   return (
     <div className="min-h-screen bg-[#F2F2F7] flex flex-col font-sans relative pb-12">
@@ -896,15 +1215,17 @@ export default function App() {
             <div className="flex items-center bg-[#F2F2F7] rounded-full p-0.5 sm:p-1 border border-ios-lightGray/40 mr-1 sm:mr-2">
               <button
                 onClick={() => setLang('en')}
-                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-xs font-bold transition-all ${lang === 'en' ? 'bg-ios-blue shadow-sm text-white' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
+                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-xs font-bold transition-all flex items-center gap-1.5 ${lang === 'en' ? 'bg-ios-blue shadow-sm text-white' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
               >
-                🇬🇧 <span className="hidden sm:inline">ENG</span>
+                <img src="https://flagcdn.com/w20/gb.png" alt="EN" className="w-3.5 h-2.5 sm:w-4 sm:h-3 rounded-[1px] object-cover" /> 
+                <span className="hidden sm:inline">ENG</span>
               </button>
               <button
                 onClick={() => setLang('id')}
-                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-xs font-bold transition-all ${lang === 'id' ? 'bg-ios-blue shadow-sm text-white' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
+                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-xs font-bold transition-all flex items-center gap-1.5 ${lang === 'id' ? 'bg-ios-blue shadow-sm text-white' : 'text-ios-secondaryText hover:text-ios-darkText'}`}
               >
-                🇮🇩 <span className="hidden sm:inline">IND</span>
+                <img src="https://flagcdn.com/w20/id.png" alt="ID" className="w-3.5 h-2.5 sm:w-4 sm:h-3 rounded-[1px] object-cover" /> 
+                <span className="hidden sm:inline">IND</span>
               </button>
             </div>
 
@@ -960,9 +1281,10 @@ export default function App() {
       {/* Main Content Area */}
       <main className="max-w-6xl w-full mx-auto px-6 mt-8 flex-grow">
         
-        {/* Responsive Hero Banner */}
-        <div className="w-full mb-8 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white border border-ios-lightGray/50">
-          <img src={bannerImg} alt="StelDot Campaign Banner" className="w-full h-auto object-cover max-h-[180px] sm:max-h-[300px] md:max-h-[400px] hover:scale-[1.02] transition-transform duration-700 ease-in-out" />
+        {/* Responsive Hero Banner with Animated Neuron Overlay */}
+        <div className="w-full mb-8 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-white border border-ios-lightGray/50 relative">
+          <img src={bannerImg} alt="StelDot Campaign Banner" className="w-full h-auto object-cover max-h-[180px] sm:max-h-[300px] md:max-h-[400px]" />
+          <NeuronCanvas />
         </div>
         
 
@@ -1046,7 +1368,7 @@ export default function App() {
                     : 'bg-ios-lightGray text-ios-darkGray cursor-not-allowed shadow-none'
                 }`}
               >
-                {t.claimRewardBtn} {(loyaltyPoints >= 10) && `(${(loyaltyPoints * 0.05).toFixed(2)} XLM)`}
+                {t.claimRewardBtn} {(loyaltyPoints >= 10) && `(${(loyaltyPoints * 0.015).toFixed(2)} XLM)`}
               </button>
             </div>
             
@@ -1103,7 +1425,7 @@ export default function App() {
               <button 
                 onClick={() => {
                   if (totalDonated > 50 || isOwner) {
-                    Swal.fire(t.milestone2, 'Hadiah eksklusif untuk pencapaian ini akan segera hadir!', 'info');
+                    setShowAmbassadorBarcode(true);
                   }
                 }}
                 disabled={!(totalDonated > 50 || isOwner)}
@@ -1138,7 +1460,7 @@ export default function App() {
               <button 
                 onClick={() => {
                   if (totalDonated > 100 || isOwner) {
-                    Swal.fire(t.milestone3, 'Hadiah eksklusif untuk pencapaian ini akan segera hadir!', 'info');
+                    setShowAngelReferral(true);
                   }
                 }}
                 disabled={!(totalDonated > 100 || isOwner)}
@@ -1245,7 +1567,7 @@ export default function App() {
                       type="text" 
                       value={newCampaign.id}
                       readOnly
-                      placeholder="e.g. StelDot-126035" 
+                      placeholder={t.egCampaignId}
                       className="w-full bg-[#E5E5EA] border border-ios-lightGray/40 rounded-xl px-4 py-2.5 text-sm outline-none cursor-not-allowed text-ios-darkGray"
                     />
                   </div>
@@ -1255,7 +1577,7 @@ export default function App() {
                       type="text" 
                       value={newCampaign.title}
                       onChange={(e) => setNewCampaign({ ...newCampaign, title: e.target.value })}
-                      placeholder="Save the Wildlife" 
+                      placeholder={t.egTitle}
                       className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all"
                     />
                   </div>
@@ -1264,7 +1586,7 @@ export default function App() {
                     <textarea 
                       value={newCampaign.description}
                       onChange={(e) => setNewCampaign({ ...newCampaign, description: e.target.value })}
-                      placeholder="Describe the funding campaign..." 
+                      placeholder={t.describeCampaign}
                       rows="5"
                       className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all"
                     ></textarea>
@@ -1275,7 +1597,7 @@ export default function App() {
                       type="number" 
                       value={newCampaign.target}
                       onChange={(e) => setNewCampaign({ ...newCampaign, target: e.target.value })}
-                      placeholder="e.g. 500" 
+                      placeholder={t.egTarget}
                       className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all"
                     />
                   </div>
@@ -1288,17 +1610,8 @@ export default function App() {
                     {t.deployCampaign}
                   </button>
                 </form>
-              </div>
 
-              {/* Instant Claims Note */}
-              <div className="flex flex-col h-full justify-start">
-                <div className="bg-ios-bg p-6 rounded-xl border border-ios-lightGray/30">
-                  <h3 className="font-bold text-sm text-ios-secondaryText uppercase tracking-wider mb-2">{t.automatedPayouts || 'Automated Payouts'}</h3>
-                  <p className="text-xs text-ios-darkGray leading-relaxed">
-                    {t.automatedPayoutsDesc || 'Reward claims are now processed instantly and automatically on-chain. There is no longer a need for manual approval queue. Donors receive their XLM immediately upon claiming.'}
-                  </p>
-                </div>
-
+                {/* Treasury Cash Balance */}
                 <div className="bg-ios-bg p-4 rounded-xl border border-ios-lightGray/30 mt-6 flex justify-between items-center text-xs flex-wrap gap-3">
                   <div>
                     <span className="text-ios-darkGray block font-semibold uppercase text-[9px]">{t.treasuryCashBalance}</span>
@@ -1317,9 +1630,109 @@ export default function App() {
                     </button>
                   </div>
                 </div>
-
               </div>
 
+              {/* Claim History */}
+              <div className="flex flex-col h-full justify-start">
+                <div className="flex flex-col mb-4 gap-3">
+                  <div className="flex justify-between items-center w-full">
+                    <h3 className="font-bold text-sm text-ios-secondaryText uppercase tracking-wider">{t.claimHistory}</h3>
+                    <button 
+                      onClick={handleViewClaimStats}
+                      className="p-1.5 bg-ios-blue/10 hover:bg-ios-blue/20 text-ios-blue rounded-lg transition-colors flex items-center justify-center"
+                      title={t.viewStats}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+                    </button>
+                  </div>
+                  <div className="relative w-full">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder={t.searchWallet}
+                      value={claimHistorySearch}
+                      onChange={(e) => setClaimHistorySearch(e.target.value)}
+                      className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-ios-blue transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3 flex-1">
+                  {currentClaims.length === 0 ? (
+                    <div className="text-center py-6 text-xs text-gray-400 bg-gray-50 rounded-2xl border border-gray-100">
+                      No claims found.
+                    </div>
+                  ) : (
+                    currentClaims.map(claim => (
+                      <div 
+                        key={claim.id}
+                        onClick={() => {
+                          SwalOrig.fire({
+                            title: t.claimHistory,
+                            html: `
+                              <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
+                                <strong style="color: #111827;">${t.fromSender}:</strong><br/>
+                                <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">${claim.from}</span><br/>
+                                <strong style="color: #111827;">${t.toReceiver}:</strong><br/>
+                                <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">${claim.address}</span><br/>
+                                <strong style="color: #111827;">${t.amountLabel}:</strong> ${claim.amount.toFixed(2)} XLM<br/><br/>
+                                <strong style="color: #111827;">${t.dateLabel}:</strong> ${claim.date}<br/><br/>
+                                <strong style="color: #111827;">${t.statusLabel}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.approved.toUpperCase()}</span>
+                              </div>
+                            `,
+                            icon: 'info',
+                            confirmButtonText: t.close,
+                            buttonsStyling: false,
+                            customClass: { 
+                              popup: 'rounded-2xl overflow-hidden !p-0',
+                              htmlContainer: '!p-0 !m-0',
+                              title: '!pt-6',
+                              actions: 'w-full !m-0 !p-0 border-t border-gray-100',
+                              confirmButton: 'w-full bg-ios-blue hover:bg-blue-600 text-white font-bold py-4 rounded-none transition-colors !m-0 border-none outline-none focus:outline-none focus:ring-0'
+                            }
+                          });
+                        }}
+                        className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer active:scale-[0.98]"
+                      >
+                        <div className="flex items-center gap-3 w-2/3">
+                          <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                          </div>
+                          <div className="overflow-hidden w-full">
+                            <p className="text-xs font-mono text-ios-darkText font-bold truncate">{claim.address.substring(0, 5)}...{claim.address.substring(claim.address.length - 4)}</p>
+                            <p className="text-[10px] text-gray-400 mt-0.5 truncate">{claim.date}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end flex-shrink-0">
+                          <span className="text-sm font-bold text-ios-blue">{claim.amount.toFixed(2)} XLM</span>
+                          <span className="text-[10px] font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-full uppercase mt-1">{t.approved}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Pagination */}
+                <div className="flex justify-center items-center gap-2 mt-4 pt-4 mb-4 border-t border-gray-100">
+                  <button 
+                    onClick={() => setClaimHistoryPage(p => Math.max(1, p - 1))}
+                    disabled={claimHistoryPage === 1}
+                    className="p-1 rounded-full text-gray-400 hover:text-ios-blue disabled:opacity-30 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  </button>
+                  <span className="text-xs font-bold text-ios-darkGray">{claimHistoryPage} / {totalClaimPages}</span>
+                  <button 
+                    onClick={() => setClaimHistoryPage(p => Math.min(totalClaimPages, p + 1))}
+                    disabled={claimHistoryPage === totalClaimPages || totalClaimPages === 0}
+                    className="p-1 rounded-full text-gray-400 hover:text-ios-blue disabled:opacity-30 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  </button>
+                </div>
+              </div>
             </div>
           </section>
         )}
@@ -1430,45 +1843,44 @@ export default function App() {
                 
                 return (
                   <div key={camp.id} className="bg-white rounded-2xl p-6 shadow-ios border border-ios-lightGray/30 ios-transition hover:shadow-md">
-                    <div className="flex justify-between items-start gap-4 mb-2">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-ios-blue bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
-                            {t.campaignIdLabel}{camp.id}
-                          </span>
-                          
-                          <button 
-                            onClick={() => handleTranslate(camp)}
-                            disabled={translated?.loading}
-                            title={translated ? t.showOriginal : t.translateBtn}
-                            className={`px-2 py-0.5 rounded-full border transition-colors flex items-center gap-1 text-[10px] font-bold ${translated ? 'bg-blue-100 border-blue-200 text-blue-600' : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'}`}
-                          >
-                            {translated?.loading ? (
-                              <span className="spinner w-3 h-3 border-2 border-blue-500 inline-block rounded-full"></span>
-                            ) : (
-                              <>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-                                {translated ? (t.translatedBtn || 'Translated') : (t.translateBtn || 'Translate')}
-                              </>
-                            )}
-                          </button>
-
-                          {isOwner && (
-                            <button onClick={() => handleUpdateCampaign(camp)} className="text-[10px] font-bold text-ios-darkText bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full hover:bg-gray-200 transition-colors flex items-center gap-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                              {t.editBtn || 'Edit'}
-                            </button>
+                    <div className="flex justify-between items-start gap-4 mb-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-ios-blue bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                          {t.campaignIdLabel}{camp.id}
+                        </span>
+                        
+                        <button 
+                          onClick={() => handleTranslate(camp)}
+                          disabled={translated?.loading}
+                          title={translated ? t.showOriginal : t.translateBtn}
+                          className={`px-2 py-0.5 rounded-full border transition-colors flex items-center gap-1 text-[10px] font-bold ${translated ? 'bg-blue-100 border-blue-200 text-blue-600' : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'}`}
+                        >
+                          {translated?.loading ? (
+                            <span className="spinner w-3 h-3 border-2 border-blue-500 inline-block rounded-full"></span>
+                          ) : (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+                              {translated ? (t.translatedBtn || 'Translated') : (t.translateBtn || 'Translate')}
+                            </>
                           )}
-                        </div>
-                        <div className="flex items-start sm:items-center gap-2 mt-2">
-                          <h3 className="font-bold text-lg text-ios-darkText leading-tight">{activeTitle} {!camp.active && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-2 align-middle">Inactive</span>}</h3>
-                        </div>
+                        </button>
+
+                        {isOwner && (
+                          <button onClick={() => handleUpdateCampaign(camp)} className="text-[10px] font-bold text-ios-darkText bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full hover:bg-gray-200 transition-colors flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                            {t.editBtn || 'Edit'}
+                          </button>
+                        )}
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex-shrink-0">
                         <span className="text-sm font-bold text-ios-blue">{percent}%</span>
                         <span className="text-xs text-ios-darkGray block font-medium">{t.raised}</span>
                       </div>
                     </div>
+
+                    <h3 className="font-bold text-xl text-ios-darkText leading-tight mb-2">
+                      {activeTitle} {!camp.active && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-2 align-middle">Inactive</span>}
+                    </h3>
 
                     <p className={`text-sm text-ios-secondaryText leading-relaxed whitespace-pre-wrap ${shouldTruncate ? 'mb-1' : 'mb-4'}`}>
                       {displayDesc}
@@ -1504,11 +1916,11 @@ export default function App() {
                           <div className="relative flex-grow flex items-center">
                             <input 
                               type="number" 
-                              min="0.1" 
-                              step="0.1"
+                              min="0.05" 
+                              step="0.05"
                               value={donateAmounts[camp.id] || ''}
                               onChange={(e) => setDonateAmounts({ ...donateAmounts, [camp.id]: e.target.value })}
-                              placeholder="10.00" 
+                              placeholder={t.placeholderTarget}
                               className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl px-4 py-3 font-semibold text-sm outline-none focus:border-ios-blue transition-all"
                             />
                             <span className="absolute right-4 font-bold text-xs text-ios-blue">XLM</span>
@@ -1524,17 +1936,21 @@ export default function App() {
                         </div>
 
                         {/* Quick select chips */}
-                        <div className="flex gap-2 flex-wrap">
-                          {[5, 10, 25, 50].map((amt) => (
+                        <div className="flex gap-2 flex-wrap mb-2">
+                          {[0.05, 0.1, 5, 10, 25].map((amt) => (
                             <button 
                               key={amt} 
                               onClick={() => selectQuickAmount(camp.id, amt)}
                               className="px-3 py-1.5 rounded-full border border-ios-lightGray text-[11px] font-bold text-ios-secondaryText hover:bg-gray-50 active:scale-95 transition-all"
                             >
-                              +{amt} XLM
+                              +{amt} <span className="hidden sm:inline">XLM</span>
                             </button>
                           ))}
                         </div>
+                        <p className="text-[10px] text-gray-400 italic flex items-center gap-1.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-amber-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                          {t.donationFeeNote}
+                        </p>
                       </div>
                     ) : (
                       <div className="bg-ios-bg p-3 rounded-xl border border-ios-lightGray/30 text-center text-xs font-semibold text-ios-secondaryText">
@@ -1612,7 +2028,7 @@ export default function App() {
             </div>
 
             {/* Connection Information */}
-            <div className="bg-white rounded-2xl p-6 shadow-ios border border-ios-lightGray/30">
+            <div className="bg-white rounded-2xl p-6 shadow-ios border border-ios-lightGray/30 mb-6">
               <h2 className="text-lg font-bold tracking-tight text-ios-darkText mb-4 flex items-center gap-3">
                 <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
@@ -1639,6 +2055,7 @@ export default function App() {
                   </button>
                 </li>
 
+
                 {userAddress && (
                   <li className="flex justify-between">
                     <span className="text-ios-darkGray font-medium">{t.walletBalance}</span>
@@ -1648,22 +2065,221 @@ export default function App() {
               </ul>
             </div>
 
+            {/* User Transactions */}
+            {userAddress && (
+              <div className="bg-white rounded-2xl p-6 shadow-ios border border-ios-lightGray/30 mb-6">
+                <h2 className="text-lg font-bold tracking-tight text-ios-darkText mb-3 flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  </div>
+                  {t.myTransactions}
+                </h2>
+                <div className="relative mb-4">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  </div>
+                  <input 
+                    type="text" 
+                    placeholder={t.searchHash}
+                    value={userTxSearch}
+                    onChange={(e) => setUserTxSearch(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-ios-blue transition-all"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  {currentUserTxs.length === 0 ? (
+                    <div className="text-center py-6 text-xs text-gray-400 bg-gray-50 rounded-2xl border border-gray-100">
+                      {t.noTransactions}
+                    </div>
+                  ) : (
+                    currentUserTxs.map(tx => (
+                      <div 
+                        key={tx.id}
+                        onClick={() => {
+                          SwalOrig.fire({
+                            title: t.transactionDetail,
+                            html: `
+                              <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
+                                <strong style="color: #111827;">${t.transactionHash}:</strong><br/>
+                                <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">${tx.hash}</span><br/>
+                                <strong style="color: #111827;">${t.fromSender}:</strong><br/>
+                                <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">${tx.wallet}</span><br/>
+                                <strong style="color: #111827;">${t.toReceiver}:</strong><br/>
+                                <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">${tx.to}</span><br/>
+                                <strong style="color: #111827;">${t.amountLabel}:</strong> ${tx.amount.toFixed(2)} XLM<br/><br/>
+                                <strong style="color: #111827;">${t.dateLabel}:</strong> ${tx.date}<br/><br/>
+                                <strong style="color: #111827;">${t.statusLabel}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.successful.toUpperCase()}</span>
+                              </div>
+                            `,
+                            icon: 'success',
+                            confirmButtonText: t.close,
+                            buttonsStyling: false,
+                            customClass: { 
+                              popup: 'rounded-2xl overflow-hidden !p-0',
+                              htmlContainer: '!p-0 !m-0',
+                              title: '!pt-6',
+                              actions: 'w-full !m-0 !p-0 border-t border-gray-100',
+                              confirmButton: 'w-full bg-ios-blue hover:bg-blue-600 text-white font-bold py-4 rounded-none transition-colors !m-0 border-none outline-none focus:outline-none focus:ring-0'
+                            }
+                          });
+                        }}
+                        className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer active:scale-[0.98]"
+                      >
+                        <div className="flex items-center gap-3 w-2/3">
+                          <div className="w-10 h-10 rounded-full bg-green-50 border border-green-100 flex items-center justify-center flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                          </div>
+                          <div className="overflow-hidden w-full">
+                            <p className="text-xs font-mono text-ios-darkText font-bold truncate">{tx.hash.substring(0, 8)}...{tx.hash.substring(tx.hash.length - 8)}</p>
+                            <p className="text-[10px] text-gray-400 mt-0.5 truncate">{tx.date}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end flex-shrink-0">
+                          <span className="text-sm font-bold text-ios-blue">{tx.amount.toFixed(2)} XLM</span>
+                          <span className="text-[10px] font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-full uppercase mt-1">Success</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {totalUserTxPages > 1 && (
+                  <div className="flex justify-center items-center gap-2 mt-4 pt-4 border-t border-gray-100">
+                    <button 
+                      onClick={() => setUserTxPage(p => Math.max(1, p - 1))}
+                      disabled={userTxPage === 1}
+                      className="p-1 rounded-full text-gray-400 hover:text-ios-blue disabled:opacity-30 transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <span className="text-xs font-bold text-ios-darkGray">{userTxPage} / {totalUserTxPages}</span>
+                    <button 
+                      onClick={() => setUserTxPage(p => Math.min(totalUserTxPages, p + 1))}
+                      disabled={userTxPage === totalUserTxPages}
+                      className="p-1 rounded-full text-gray-400 hover:text-ios-blue disabled:opacity-30 transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* User Claim Rewards */}
+            {userAddress && (
+              <div className="bg-white rounded-2xl p-6 shadow-ios border border-ios-lightGray/30 mb-6">
+                <h2 className="text-lg font-bold tracking-tight text-ios-darkText mb-3 flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-amber-50 flex items-center justify-center border border-amber-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                  </div>
+                  {t.myClaimRewards}
+                </h2>
+                <div className="relative mb-4">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  </div>
+                  <input 
+                    type="text" 
+                    placeholder={t.searchWallet}
+                    value={userClaimSearch}
+                    onChange={(e) => setUserClaimSearch(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-400 transition-all"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  {currentUserClaims.length === 0 ? (
+                    <div className="text-center py-6 text-xs text-gray-400 bg-gray-50 rounded-2xl border border-gray-100">
+                      {t.noClaims}
+                    </div>
+                  ) : (
+                    currentUserClaims.map(claim => (
+                      <div 
+                        key={claim.id}
+                        onClick={() => {
+                          SwalOrig.fire({
+                            title: t.claimRewardDetail,
+                            html: `
+                              <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
+                                <strong style="color: #111827;">${t.toReceiver}:</strong><br/>
+                                <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">${claim.address}</span><br/>
+                                <strong style="color: #111827;">${t.fromSender}:</strong><br/>
+                                <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">${claim.from}</span><br/>
+                                <strong style="color: #111827;">${t.amountLabel}:</strong> ${claim.amount.toFixed(2)} XLM<br/><br/>
+                                <strong style="color: #111827;">${t.dateLabel}:</strong> ${claim.date}<br/><br/>
+                                <strong style="color: #111827;">${t.statusLabel}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.approved.toUpperCase()}</span>
+                              </div>
+                            `,
+                            icon: 'info',
+                            confirmButtonText: t.close,
+                            buttonsStyling: false,
+                            customClass: { 
+                              popup: 'rounded-2xl overflow-hidden !p-0',
+                              htmlContainer: '!p-0 !m-0',
+                              title: '!pt-6',
+                              actions: 'w-full !m-0 !p-0 border-t border-gray-100',
+                              confirmButton: 'w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 rounded-none transition-colors !m-0 border-none outline-none focus:outline-none focus:ring-0'
+                            }
+                          });
+                        }}
+                        className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer active:scale-[0.98]"
+                      >
+                        <div className="flex items-center gap-3 w-2/3">
+                          <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                          </div>
+                          <div className="overflow-hidden w-full">
+                            <p className="text-xs font-mono text-ios-darkText font-bold truncate">{claim.address.substring(0, 5)}...{claim.address.substring(claim.address.length - 4)}</p>
+                            <p className="text-[10px] text-gray-400 mt-0.5 truncate">{claim.date}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end flex-shrink-0">
+                          <span className="text-sm font-bold text-amber-500">{claim.amount.toFixed(2)} XLM</span>
+                          <span className="text-[10px] font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-full uppercase mt-1">{t.approved}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Pagination */}
+                <div className="flex justify-center items-center gap-2 mt-4 pt-4 border-t border-gray-100">
+                  <button 
+                    onClick={() => setUserClaimPage(p => Math.max(1, p - 1))}
+                    disabled={userClaimPage === 1}
+                    className="p-1 rounded-full text-gray-400 hover:text-amber-500 disabled:opacity-30 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  </button>
+                  <span className="text-xs font-bold text-ios-darkGray">{userClaimPage} / {Math.max(1, totalUserClaimPages)}</span>
+                  <button 
+                    onClick={() => setUserClaimPage(p => Math.min(totalUserClaimPages, p + 1))}
+                    disabled={userClaimPage === totalUserClaimPages || totalUserClaimPages === 0}
+                    className="p-1 rounded-full text-gray-400 hover:text-amber-500 disabled:opacity-30 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Contact Provider */}
             <div className="bg-white rounded-2xl p-6 shadow-ios border border-ios-lightGray/30 text-xs text-ios-secondaryText space-y-3">
               <h3 className="font-bold text-sm text-ios-darkText">{t.contactSupport}</h3>
               <p>{t.contactSupportDesc}</p>
               <div className="flex flex-col gap-2 font-semibold">
-                <a href="mailto:support@steldot.org" className="text-ios-blue hover:underline flex items-center gap-2">
+                <a href="mailto:edwinariesto2@gmail.com" className="text-ios-blue hover:underline flex items-center gap-2">
                   <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100">
                     <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                   </div>
-                  support@steldot.org
+                  edwinariesto2@gmail.com
                 </a>
-                <a href="https://github.com/stellar-steldot" target="_blank" rel="noopener noreferrer" className="text-ios-blue hover:underline flex items-center gap-2">
+                <a href="https://github.com/edwinariesto" target="_blank" rel="noopener noreferrer" className="text-ios-blue hover:underline flex items-center gap-2">
                   <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
                     <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-700"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
                   </div>
-                  github.com/stellar-steldot
+                  github.com/edwinariesto
                 </a>
               </div>
             </div>
@@ -1686,9 +2302,9 @@ export default function App() {
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.956-.734L2.02 6.02a.5.5 0 0 1 .798-.518l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg>
               </div>
 
-              <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">VIP Legend Pass</h2>
+              <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">{t.vipPassTitle}</h2>
               <p className="text-xs text-gray-400 mb-8 leading-relaxed px-2">
-                Tunjukkan Barcode Eksklusif ini pada seluruh acara resmi StelDot di seluruh dunia untuk mendapatkan akses VIP Gratis dan penggantian biaya transportasi penuh.
+                {t.vipPassDesc}
               </p>
 
               <div className="bg-white p-4 rounded-2xl shadow-inner mb-6 ring-4 ring-emerald-500/20 relative flex items-center justify-center">
@@ -1701,7 +2317,7 @@ export default function App() {
               </div>
 
               <div className="w-full bg-gray-800/50 rounded-xl p-3 border border-gray-700/50">
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">VIP Wallet Address</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">{t.vipWalletAddress}</p>
                 <p className="font-mono text-xs text-gray-300 break-all">{userAddress}</p>
               </div>
 
@@ -1711,6 +2327,121 @@ export default function App() {
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Ambassador Voucher Modal */}
+        {showAmbassadorBarcode && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <div 
+              className="absolute inset-0 bg-black/70 backdrop-blur-md"
+              onClick={() => setShowAmbassadorBarcode(false)}
+            ></div>
+
+            {/* Modal Content */}
+            <div className="bg-gradient-to-b from-slate-900 to-black w-full max-w-sm rounded-3xl shadow-2xl relative overflow-hidden border border-slate-800 z-10 flex flex-col items-center text-center p-8 animate-ios-fade-in glow-blue">
+              
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyan-400 to-blue-500"></div>
+
+              <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              </div>
+
+              <div className="bg-blue-500/20 text-cyan-300 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest mb-3 border border-blue-500/30">
+                {t.ambassadorDiscount}
+              </div>
+
+              <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">{t.ambassadorPassTitle}</h2>
+              <p className="text-xs text-slate-400 mb-8 leading-relaxed px-2">
+                {t.ambassadorPassDesc}
+              </p>
+
+              <div className="bg-white p-4 rounded-2xl shadow-inner mb-6 ring-4 ring-blue-500/20 relative flex items-center justify-center">
+                <QRCode value={userAddress || 'StelDot-Ambassador'} size={200} level="H" />
+                <div className="absolute bg-white rounded-lg p-1.5 shadow-sm flex items-center justify-center" style={{ width: 44, height: 44 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div className="w-full bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">{t.ambassadorVoucherCode}</p>
+                <p className="font-mono text-2xl font-bold text-cyan-300 tracking-[0.2em]">{userAddress ? userAddress.substring(userAddress.length - 5).toUpperCase() : 'VCH99'}</p>
+              </div>
+
+              <button 
+                onClick={() => setShowAmbassadorBarcode(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 rounded-full p-2 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Helping Angel Referral Modal */}
+        {showAngelReferral && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div 
+              className="absolute inset-0 bg-black/70 backdrop-blur-md"
+              onClick={() => setShowAngelReferral(false)}
+            ></div>
+
+            <div className="bg-gradient-to-b from-slate-900 to-black w-full max-w-md rounded-3xl shadow-2xl relative overflow-hidden border border-fuchsia-900/50 z-10 flex flex-col p-6 animate-ios-fade-in">
+              <button 
+                onClick={() => setShowAngelReferral(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 rounded-full p-2 transition-colors z-20"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 bg-gradient-to-br from-fuchsia-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/30 flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white tracking-tight">{t.angelTitle}</h2>
+                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">{t.angelDesc}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex flex-col items-center justify-center text-center">
+                  <span className="text-3xl font-bold text-fuchsia-400 mb-1">0</span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest">{t.friendsInvited}</span>
+                </div>
+                <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex flex-col items-center justify-center text-center">
+                  <span className="text-3xl font-bold text-purple-400 mb-1 flex items-baseline gap-1">0 <span className="text-sm">XLM</span></span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest">{t.rewardEarned}</span>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => Swal.fire({ title: t.noReferralReward, text: t.noReferralRewardDesc, icon: 'info', confirmButtonColor: '#a855f7', background: '#1f2937', color: '#fff' })}
+                className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 py-3 rounded-xl font-bold text-sm transition-colors mb-6 flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                {t.claimReferral}
+              </button>
+
+              <div className="bg-black/50 p-3 rounded-xl border border-slate-800 flex items-center gap-3">
+                <div className="text-xs font-mono text-slate-300 truncate flex-1 opacity-80 select-all">
+                  {window.location.origin}/?ref={userAddress ? userAddress.substring(0, 8) + '...' + userAddress.substring(userAddress.length - 8) : ''}
+                </div>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/?ref=${userAddress}`);
+                    Swal.fire({ title: t.linkCopied, icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, background: '#1f2937', color: '#fff' });
+                  }}
+                  className="bg-gradient-to-r from-fuchsia-500 to-purple-600 hover:from-fuchsia-400 hover:to-purple-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg shadow-purple-500/20 whitespace-nowrap active:scale-95"
+                >
+                  {t.copyLink}
+                </button>
+              </div>
+
             </div>
           </div>
         )}

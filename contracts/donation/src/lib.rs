@@ -138,9 +138,9 @@ impl StelDotContract {
             panic!("insufficient unclaimed volume: need at least 10 XLM");
         }
 
-        // Reward is 5% of unclaimed volume
-        // e.g. 30 XLM -> 300,000,000 stroops. 5% of 300M is 15M stroops (1.5 XLM)
-        let reward_stroops = points_stroops * 5 / 100;
+        // Reward is 1.5% of unclaimed volume
+        // e.g. 30 XLM -> 300,000,000 stroops. 1.5% of 300M is 4.5M stroops (0.45 XLM)
+        let reward_stroops = points_stroops * 15 / 1000;
 
         // Verify treasury balance
         let token_addr: Address = env.storage().instance().get(&DataKey::Token).unwrap();

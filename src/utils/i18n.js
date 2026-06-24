@@ -50,17 +50,23 @@ export const translations = {
     deploymentFailed: 'Penyebaran Gagal',
     welcomeTitle: 'Selamat datang di StelDot!',
     welcomeDesc: `
-        <div class="text-left text-sm leading-relaxed text-gray-700 font-sans">
-          <p class="mb-3"><strong>StelDot (Stellar Donation)</strong> adalah sistem hadiah loyalitas Donate-to-Earn yang aman yang dibangun di atas Stellar.</p>
+        <div class="text-left text-sm leading-relaxed text-gray-700 font-sans max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+          <p class="mb-3"><strong>StelDot (Stellar Donation)</strong> adalah sistem hadiah loyalitas <strong>Donate-to-Earn</strong> terdesentralisasi yang dibangun di atas Stellar Blockchain menggunakan Soroban Smart Contract.</p>
           <ol class="list-decimal pl-5 space-y-2">
             <li><strong>Hubungkan Dompet:</strong> Tautkan ekstensi dompet Freighter di browser Anda.</li>
-            <li><strong>Dukung Kampanye:</strong> Donasikan sejumlah XLM untuk tujuan komunitas.</li>
-            <li><strong>Dapatkan Poin:</strong> Terima 1 Poin Loyalitas untuk setiap transaksi donasi.</li>
-            <li><strong>Klaim Pembayaran:</strong> Capai 10 poin dan klik "Klaim Reward" untuk mengirimkan klaim yang tertunda.</li>
-            <li><strong>Terima XLM:</strong> Setelah administrator menyetujui, 1.00 XLM dikirim kembali ke dompet Anda!</li>
+            <li><strong>Dukung Kampanye:</strong> Donasikan sejumlah XLM ke kampanye komunitas aktif.</li>
+            <li><strong>Volume Dilacak Otomatis:</strong> Setiap donasi menambah volume akumulasi Anda yang tersimpan langsung di blockchain.</li>
+            <li><strong>Klaim Reward 1.5%:</strong> Setelah total donasi Anda mencapai minimal <strong>10 XLM</strong>, klik "Klaim Reward" — smart contract otomatis mengirimkan <strong>1.5% dari total volume Anda</strong> langsung ke dompet Anda!</li>
+            <li><strong>4 Reward Eksklusif:</strong> Donatur yang loyal mendapatkan 4 manfaat eksklusif terbaik dari StelDot — termasuk akses VIP, voucher diskon, dan program referral berhadiah!</li>
           </ol>
-          <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700">
-            <strong>Peringatan Mode Mock:</strong> Jika dompet Freighter tidak terhubung atau tidak ada ID kontrak yang dikonfigurasi, StelDot berjalan dalam Mode Mock sehingga Anda dapat melihat pratinjau alur lengkap secara offline!
+          <div class="mt-4 p-3 bg-green-50 border border-green-100 rounded-xl text-xs text-green-800">
+            <strong>Sepenuhnya Otomatis:</strong> Tidak perlu menunggu persetujuan admin. Smart contract memproses dan mengirim reward Anda secara instan!
+          </div>
+          <div class="mt-2 p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700">
+            <strong>Mode Mock:</strong> Jika Freighter tidak terhubung, StelDot berjalan dalam Mode Mock agar Anda bisa menjelajahi fitur lengkap secara offline!
+          </div>
+          <div class="mt-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-800">
+            <strong class="animate-pulse">Biaya Ekosistem:</strong> Setiap donasi yang masuk dikenakan potongan <strong>5% untuk biaya operasional dan pengembangan</strong> ekosistem StelDot. Dana tersebut digunakan untuk menjaga keberlangsungan platform, pengembangan fitur, dan dukungan komunitas.
           </div>
         </div>
       `,
@@ -95,7 +101,7 @@ export const translations = {
     activePoints: 'Poin Aktif:',
     connectHistory: 'Hubungkan dompet untuk memuat riwayat',
     claimLoyalty: 'Klaim Hadiah Loyalitas',
-    accumulateDesc: (points) => `Kumpulkan minimal 10 XLM donasi (belum diklaim: <strong class="text-ios-blue">${points.toFixed(2)} XLM</strong>) untuk mencairkan hadiah sebesar <strong>5%</strong>.`,
+    accumulateDesc: (points) => `Kumpulkan minimal 10 XLM donasi (belum diklaim: <strong class="text-ios-blue">${points.toFixed(2)} XLM</strong>) untuk mencairkan hadiah sebesar <strong>1.5%</strong>.`,
     claimRewardBtn: 'Klaim Reward',
     claimPendingBtn: 'Klaim Menunggu Persetujuan...',
     limitReached: '* Batas tercapai: Penuntut tertunda. Klaim ganda dicegah.',
@@ -106,6 +112,7 @@ export const translations = {
     target: 'Target:',
     raisedLabel: 'Terkumpul:',
     donateToThis: 'Donasi ke Kampanye ini',
+    donationFeeNote: '*Catatan: Potongan 5% biaya operasional berlaku untuk setiap donasi.',
     donate: 'Donasi Sekarang',
     connectToDonate: 'Hubungkan dompet untuk mulai berdonasi',
     topContributors: '10 Kontributor Teratas',
@@ -172,7 +179,68 @@ export const translations = {
     certPresentedTo: 'Diberikan dengan bangga kepada:',
     certDesc: 'Atas kontribusi luar biasa sebesar lebih dari 25 XLM untuk kampanye kemanusiaan dan sosial di jaringan Stellar.',
     downloadCert: 'Unduh Sertifikat',
-    close: 'Tutup'
+    close: 'Tutup',
+    vipPassTitle: 'VIP Legend Pass',
+    vipPassDesc: 'Tunjukkan Barcode Eksklusif ini pada seluruh acara resmi StelDot di seluruh dunia untuk mendapatkan akses VIP Gratis dan penggantian biaya transportasi penuh.',
+    vipWalletAddress: 'VIP Wallet Address',
+    ambassadorPassTitle: 'Ambassador Voucher',
+    ambassadorPassDesc: 'Gunakan Barcode ini untuk mendapatkan diskon eksklusif 2% di berbagai Toko, Supermarket, dan Hotel yang bekerja sama dengan StelDot.',
+    ambassadorVoucherCode: 'Kode Voucher Belanja',
+    ambassadorDiscount: 'Diskon 2%',
+    angelTitle: 'Tautan Referral Malaikat',
+    angelDesc: 'Bagikan tautan unik Anda. Setiap teman yang mendaftar dan berdonasi melalui tautan ini akan memberikan Anda 1 XLM secara otomatis!',
+    copyLink: 'Salin Tautan',
+    linkCopied: 'Tautan Berhasil Disalin!',
+    friendsInvited: 'Teman Diundang',
+    rewardEarned: 'XLM Terkumpul',
+    claimReferral: 'Klaim Hadiah',
+    noReferralReward: 'Belum Ada Hadiah',
+    noReferralRewardDesc: 'Anda belum memiliki XLM yang bisa diklaim dari program referral saat ini.',
+    claimHistory: 'Riwayat Klaim Hadiah Seluruh Pengguna',
+    approved: 'Disetujui',
+    myTransactions: 'Transaksi Saya',
+    myClaimRewards: 'Riwayat Klaim Reward Saya',
+    transactionDetail: 'Detail Transaksi',
+    claimRewardDetail: 'Detail Klaim Reward',
+    transactionHash: 'Transaction Hash',
+    searchHash: 'Cari Hash...',
+    searchWallet: 'Cari Wallet...',
+    noTransactions: 'Belum ada transaksi.',
+    noClaims: 'Belum ada klaim reward.',
+    fromSender: 'Dari (Pengirim)',
+    toReceiver: 'Ke (Penerima)',
+    amountLabel: 'Jumlah',
+    dateLabel: 'Tanggal',
+    statusLabel: 'Status',
+    updateCampaign: 'Perbarui Kampanye',
+    updateCampaignSuccess: 'Kampanye berhasil diperbarui di on-chain.',
+    updateCampaignMock: 'Kampanye diperbarui dalam mode mock.',
+    updateFailed: 'Gagal Memperbarui',
+    signatureRejected: 'Tanda tangan ditolak.',
+    withdrawSuccessAlert: 'Penarikan Berhasil!',
+    withdrawMockAlert: 'Dana ditarik dalam mode mock.',
+    errorTitle: 'Kesalahan',
+    certError: 'Gagal membuat gambar sertifikat.',
+    egCampaignId: 'Cth. StelDot-126035',
+    egTitle: 'Selamatkan Satwa Liar',
+    describeCampaign: 'Deskripsikan kampanye pendanaan...',
+    egTarget: 'Cth. 500',
+    egHash: 'C...',
+    placeholderTarget: '10.00',
+    mainnetContractId: 'ID KONTRAK MAINNET',
+    testnetContractId: 'ID KONTRAK TESTNET',
+    autoCampaignId: 'ID KAMPANYE OTOMATIS',
+    setAsActive: 'Setel sebagai Kampanye Aktif',
+    updatingCampaign: 'Memperbarui Kampanye',
+    updatingCampaignDesc: 'Silakan tanda tangani transaksi update_campaign di Freighter.',
+    viewStats: 'Lihat Statistik',
+    monthlyStatsTitle: 'Statistik Klaim Bulanan',
+    downloadImage: 'Unduh Gambar',
+    monthYearLabel: 'Bulan / Tahun',
+    totalClaimedLabel: 'Total Diklaim',
+    noStatsAvailable: 'Belum ada data klaim untuk ditampilkan.',
+    downloadingImage: 'Memproses Gambar...',
+    downloadImageError: 'Gagal mengunduh gambar statistik.'
   },
   en: {
     walletConnected: 'Wallet Connected',
@@ -225,17 +293,23 @@ export const translations = {
     deploymentFailed: 'Deployment Failed',
     welcomeTitle: 'Welcome to StelDot!',
     welcomeDesc: `
-        <div class="text-left text-sm leading-relaxed text-gray-700 font-sans">
-          <p class="mb-3"><strong>StelDot (Stellar Donation)</strong> is a secure Donate-to-Earn loyalty reward system built on Stellar.</p>
+        <div class="text-left text-sm leading-relaxed text-gray-700 font-sans max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+          <p class="mb-3"><strong>StelDot (Stellar Donation)</strong> is a decentralized <strong>Donate-to-Earn</strong> loyalty reward system built on Stellar Blockchain using Soroban Smart Contracts.</p>
           <ol class="list-decimal pl-5 space-y-2">
             <li><strong>Connect Wallet:</strong> Link your browser's Freighter wallet extension.</li>
-            <li><strong>Support Campaigns:</strong> Donate any amount of XLM to community causes.</li>
-            <li><strong>Earn Points:</strong> Receive 1 Loyalty Point for every single donation transaction.</li>
-            <li><strong>Claim Payouts:</strong> Reach 10 points and click "Claim Reward" to submit a pending claim.</li>
-            <li><strong>Receive XLM:</strong> Once the administrator approves, 1.00 XLM is sent back to your wallet!</li>
+            <li><strong>Support Campaigns:</strong> Donate any amount of XLM to active community campaigns.</li>
+            <li><strong>Volume Tracked Automatically:</strong> Every donation adds to your accumulated volume, stored directly on the blockchain.</li>
+            <li><strong>Claim 1.5% Reward:</strong> Once your total donations reach at least <strong>10 XLM</strong>, click "Claim Reward" — the smart contract automatically sends you <strong>1.5% of your total accumulated volume</strong> instantly!</li>
+            <li><strong>4 Exclusive Rewards:</strong> Loyal donors unlock 4 best exclusive benefits from StelDot — including VIP access, discount vouchers, and referral rewards!</li>
           </ol>
-          <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700">
-            <strong>Mock Mode Alert:</strong> If Freighter wallet is not connected or no contract ID is configured, StelDot runs in Mock Mode so you can preview the full flow offline!
+          <div class="mt-4 p-3 bg-green-50 border border-green-100 rounded-xl text-xs text-green-800">
+            <strong>Fully Automatic:</strong> No admin approval needed. The smart contract processes and sends your reward instantly!
+          </div>
+          <div class="mt-2 p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700">
+            <strong>Mock Mode:</strong> If Freighter is not connected, StelDot runs in Mock Mode so you can explore the full feature set offline!
+          </div>
+          <div class="mt-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-800">
+            <strong class="animate-pulse">Ecosystem Fee:</strong> Every incoming donation is subject to a <strong>5% operational and development fee</strong> for the StelDot ecosystem. These funds sustain the platform, support feature development, and fund community growth.
           </div>
         </div>
       `,
@@ -270,7 +344,7 @@ export const translations = {
     activePoints: 'Active Points:',
     connectHistory: 'Connect wallet to load history',
     claimLoyalty: 'Claim Loyalty Rewards',
-    accumulateDesc: (points) => `Accumulate at least 10 XLM in donations (unclaimed: <strong class="text-ios-blue">${points.toFixed(2)} XLM</strong>) to request a <strong>5%</strong> reward.`,
+    accumulateDesc: (points) => `Accumulate at least 10 XLM in donations (unclaimed: <strong class="text-ios-blue">${points.toFixed(2)} XLM</strong>) to request a <strong>1.5%</strong> reward.`,
     claimRewardBtn: 'Claim Reward',
     claimPendingBtn: 'Claim Pending Approval...',
     limitReached: '* Limit reached: Pending claimant. Double-claims prevented.',
@@ -281,6 +355,7 @@ export const translations = {
     target: 'Target:',
     raisedLabel: 'Raised:',
     donateToThis: 'Donate to this Campaign',
+    donationFeeNote: '*Note: A 5% operational fee applies to every donation.',
     donate: 'Donate Now',
     connectToDonate: 'Connect wallet to start donating',
     topContributors: 'Top 10 Contributors',
@@ -347,6 +422,67 @@ export const translations = {
     downloadCert: 'Download Certificate',
     close: 'Close',
     campCompleted: 'Campaign has reached its target',
-    campInactive: 'Campaign is inactive'
+    campInactive: 'Campaign is inactive',
+    vipPassTitle: 'VIP Legend Pass',
+    vipPassDesc: 'Show this Exclusive Barcode at any official StelDot events worldwide to get Free VIP access and full transportation reimbursement.',
+    vipWalletAddress: 'VIP Wallet Address',
+    ambassadorPassTitle: 'Ambassador Voucher',
+    ambassadorPassDesc: 'Use this Barcode to get an exclusive 2% discount at various Shops, Supermarkets, and Hotels partnered with StelDot.',
+    ambassadorVoucherCode: 'Shopping Voucher Code',
+    ambassadorDiscount: '2% Discount',
+    angelTitle: 'Angel Referral Link',
+    angelDesc: 'Share your unique link. You will earn 1 XLM automatically for every friend who connects and donates through this link!',
+    copyLink: 'Copy Link',
+    linkCopied: 'Link Copied Successfully!',
+    friendsInvited: 'Friends Invited',
+    rewardEarned: 'XLM Earned',
+    claimReferral: 'Claim Rewards',
+    noReferralReward: 'No Rewards Yet',
+    noReferralRewardDesc: 'You do not have any XLM to claim from the referral program at this time.',
+    claimHistory: 'Reward Claim History of All Users',
+    approved: 'Approved',
+    myTransactions: 'My Transactions',
+    myClaimRewards: 'My Claim Rewards',
+    transactionDetail: 'Transaction Detail',
+    claimRewardDetail: 'Claim Reward Detail',
+    transactionHash: 'Transaction Hash',
+    searchHash: 'Search Hash...',
+    searchWallet: 'Search Wallet...',
+    noTransactions: 'No transactions yet.',
+    noClaims: 'No claim rewards yet.',
+    fromSender: 'From (Sender)',
+    toReceiver: 'To (Receiver)',
+    amountLabel: 'Amount',
+    dateLabel: 'Date',
+    statusLabel: 'Status',
+    updateCampaign: 'Update Campaign',
+    updateCampaignSuccess: 'Campaign updated successfully on-chain.',
+    updateCampaignMock: 'Campaign updated in mock mode.',
+    updateFailed: 'Update Failed',
+    signatureRejected: 'Signature rejected.',
+    withdrawSuccessAlert: 'Withdrawal Successful!',
+    withdrawMockAlert: 'Withdrawn in mock mode.',
+    errorTitle: 'Error',
+    certError: 'Failed to generate certificate image.',
+    egCampaignId: 'e.g. StelDot-126035',
+    egTitle: 'Save the Wildlife',
+    describeCampaign: 'Describe the funding campaign...',
+    egTarget: 'e.g. 500',
+    egHash: 'C...',
+    placeholderTarget: '10.00',
+    mainnetContractId: 'MAINNET CONTRACT ID',
+    testnetContractId: 'TESTNET CONTRACT ID',
+    autoCampaignId: 'AUTO CAMPAIGN ID',
+    setAsActive: 'Set as Active Campaign',
+    updatingCampaign: 'Updating Campaign',
+    updatingCampaignDesc: 'Please sign the update_campaign transaction in Freighter.',
+    viewStats: 'View Stats',
+    monthlyStatsTitle: 'Monthly Claim Stats',
+    downloadImage: 'Download Image',
+    monthYearLabel: 'Month / Year',
+    totalClaimedLabel: 'Total Claimed',
+    noStatsAvailable: 'No claim data available to display.',
+    downloadingImage: 'Processing Image...',
+    downloadImageError: 'Failed to download statistics image.'
   }
 };

@@ -10,7 +10,7 @@ import {
   xdr,
   Account
 } from '@stellar/stellar-sdk';
-import { isConnected, requestAccess, signTransaction, getNetworkDetails } from '@stellar/freighter-api';
+import { isConnected, requestAccess, signTransaction, getNetworkDetails, getUserInfo } from '@stellar/freighter-api';
 
 export const NETWORKS = {
   TESTNET: {
@@ -72,6 +72,16 @@ export async function getFreighterAddress() {
     return address;
   } catch (err) {
     throw err;
+  }
+}
+
+// Get public key silently
+export async function getFreighterPublicKey() {
+  try {
+    const info = await getUserInfo();
+    return info?.publicKey || null;
+  } catch (err) {
+    return null;
   }
 }
 
@@ -139,17 +149,16 @@ export const getGlobalTopDonors = async (contractId) => {
           const res = await rpcServer.getEvents({
             startLedger,
             filters: [{ type: 'contract', contractIds: [contractId] }],
-            limit: 1000,
-            pagination: pagingToken ? { cursor: pagingToken } : undefined
+            pagination: { cursor: pagingToken, limit: 100 }
           });
           
           if (!res.events || res.events.length === 0) break;
           
-          // Filter out events that are beyond our current chunk's end
           const validEvents = res.events.filter(e => parseInt(e.ledger, 10) <= currentEnd);
           allEvents = allEvents.concat(validEvents);
           
-          pagingToken = res.events[res.events.length - 1].pagingToken;
+          if (res.events.length < 100) break;
+          pagingToken = res.events[res.events.length - 1].id;
           if (parseInt(res.events[res.events.length - 1].ledger, 10) >= currentEnd) break;
         }
       } catch (e) {
@@ -179,6 +188,83 @@ export const getGlobalTopDonors = async (contractId) => {
     
   } catch (err) {
     console.error('Failed to get global events', err);
+    return [];
+  }
+};
+
+export const getGlobalClaims = async (contractId) => {
+  try {
+    let minLedger = 1;
+    try {
+      await rpcServer.getEvents({ startLedger: 1, filters: [], limit: 1 });
+    } catch(err) {
+      const match = err.message.match(/range: (\d+) - (\d+)/);
+      const match2 = err.message.match(/greater than or equal to (\d+)/);
+      if (match) minLedger = parseInt(match[1], 10);
+      else if (match2) minLedger = parseInt(match2[1], 10);
+    }
+    
+    const latest = await rpcServer.getLatestLedger();
+    let currentEnd = latest.sequence;
+    let allEvents = [];
+    
+    for (let i = 0; i < 6; i++) {
+      const startLedger = Math.max(minLedger, currentEnd - 5000);
+      let pagingToken;
+      try {
+        while (true) {
+          const res = await rpcServer.getEvents({
+            startLedger,
+            filters: [{ type: 'contract', contractIds: [contractId] }],
+            pagination: { cursor: pagingToken, limit: 100 }
+          });
+          
+          if (!res.events || res.events.length === 0) break;
+          
+          const validEvents = res.events.filter(e => parseInt(e.ledger, 10) <= currentEnd);
+          allEvents = allEvents.concat(validEvents);
+          
+          if (res.events.length < 100) break;
+          pagingToken = res.events[res.events.length - 1].id;
+          if (parseInt(res.events[res.events.length - 1].ledger, 10) >= currentEnd) break;
+        }
+      } catch (e) {
+        break; 
+      }
+      currentEnd = startLedger - 1;
+      if (currentEnd <= minLedger) break;
+    }
+    
+    const claims = [];
+    console.log('getGlobalClaims fetched allEvents count:', allEvents.length);
+    allEvents.forEach(evt => {
+      try {
+        const topic0 = scValToNative(evt.topic[0]);
+        if (topic0 === 'claim') {
+          const address = scValToNative(evt.topic[1]);
+          const amount = Number(scValToNative(evt.value)) / 10000000;
+          console.log('Parsed claim:', address, amount);
+          claims.push({
+            id: evt.id,
+            address: address,
+            from: contractId,
+            amount: amount,
+            date: new Date(evt.ledgerClosedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' }),
+            status: 'approved'
+          });
+        }
+      } catch(e){
+        console.error('Error parsing event in getGlobalClaims', e);
+      }
+    });
+    
+    // Sort descending by date (using id which contains ledger sequence)
+    claims.sort((a, b) => b.id.localeCompare(a.id));
+    console.log('Final claims data:', claims);
+    return claims;
+    
+  } catch (err) {
+    console.error('Failed to get global claims', err);
     return [];
   }
 };
