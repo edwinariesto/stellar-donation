@@ -32,10 +32,12 @@ jobs:
             contracts/donation/target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install Soroban CLI
+      - name: Install Stellar CLI (Soroban) via Cargo Binstall
         run: |
-          if ! command -v soroban &> /dev/null; then
-            cargo install --locked soroban-cli
+          # Menggunakan binstall agar langsung download binary jadi, tanpa kompilasi berjam-jam
+          if ! command -v stellar &> /dev/null && ! command -v soroban &> /dev/null; then
+            curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install.sh | sh
+            cargo binstall --id stellar-cli --confirm
           fi
 
       - name: Run Contract Tests
