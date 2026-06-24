@@ -74,7 +74,7 @@ Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Total volum
 
 ---
 
-### 🎯 Hackathon Level 3: Insight Utama & Pemenuhan Kriteria
+### 🎯 Insight Utama & Pemenuhan Kriteria
 
 Proyek ini telah memenuhi dan melampaui kriteria kompetisi **Advanced Smart Contracts + Production-Ready dApps**:
 
@@ -91,7 +91,7 @@ Proyek ini telah memenuhi dan melampaui kriteria kompetisi **Advanced Smart Cont
 6. **Writing Tests**
    - Smart contract dilindungi oleh file pengujian `test.rs` yang menguji *end-to-end flow* (Donasi akumulatif -> Klaim instan sukses) serta *Negative Test* (Sistem menggagalkan klaim (Panic) jika poin volume belum mencapai batas minimal).
 
-#### ✅ Hackathon Submission Checklist:
+#### ✅ Submission Checklist:
 - [x] Public GitHub repository
 - [x] README with complete documentation
 - [x] Minimum 10+ meaningful commits
