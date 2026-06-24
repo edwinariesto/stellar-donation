@@ -18,7 +18,8 @@ jobs:
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown
+          toolchain: "1.84.0"
+          targets: wasm32v1-none
           # Menambahkan komponen formatting dan clippy (linter)
           components: rustfmt, clippy 
 
@@ -45,4 +46,4 @@ jobs:
       - name: Build Wasm Release
         working-directory: contracts/donation
         # Memastikan contract benar-benar bisa di-compile menjadi file .wasm
-        run: cargo build --target wasm32-unknown-unknown --release
+        run: cargo build --target wasm32v1-none --release
