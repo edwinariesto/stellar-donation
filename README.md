@@ -262,9 +262,3 @@ https://github.com/edwinariesto/stellar-donation/actions
 
 <img width="1918" height="991" alt="Screenshot 2026-06-24 212045" src="https://github.com/user-attachments/assets/8d519758-0e91-48d3-91b4-344a20f0d20d" />
 
-
-
-   
-   
-   2399f9976e78" />
-
