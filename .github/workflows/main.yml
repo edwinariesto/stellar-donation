@@ -18,7 +18,7 @@ jobs:
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: "1.84.0"
+          toolchain: "nightly"
           targets: wasm32v1-none
           # Menambahkan komponen formatting dan clippy (linter)
           components: rustfmt, clippy 
