@@ -235,7 +235,7 @@ Open `http://localhost:5173`. Clicking on the **Contract ID** link allows you to
 <br>
 <img width="700" alt="Client Add Donation 2" src="https://github.com/user-attachments/assets/3211e77c-d9e5-425c-b3fc-226bf329c378" />
 
-### 🤝 UI Mobile: Show All Features
+### 📱 UI Mobile: Show All Features
 
 <img width="366" height="661" alt="Screenshot 2026-06-24 205518" src="https://github.com/user-attachments/assets/139e4eb2-9779-4b3e-835a-ad7a572d8bf1" />
 <img width="370" height="657" alt="Screenshot 2026-06-24 205622" src="https://github.com/user-attachments/assets/6b0047aa-c567-4730-a4cc-8edba5125fd3" />
@@ -250,17 +250,16 @@ Open `http://localhost:5173`. Clicking on the **Contract ID** link allows you to
 <img width="370" height="658" alt="Screenshot 2026-06-24 210250" src="https://github.com/user-attachments/assets/a2f9a778-700d-40ac-9e75-95e279369132" />
 <img width="368" height="654" alt="Screenshot 2026-06-24 210310" src="https://github.com/user-attachments/assets/70569ee4-ec78-4505-9504-f83d9004248e" />
 
-### 🤝 Cargo test: 2 passed
+### ✅ Cargo test: 2 passed
 
-<img width="1918" height="714" alt="Screenshot 2026-06-24 205359" src="https://github.com/user-attachments/assets/24f54156-e05b-4711-9748-
+<img width="1918" height="714" alt="Screenshot 2026-06-24 205359" src="https://github.com/user-attachments/assets/83b02a39-3442-4771-8ace-a65315579636" />
    
-### 🤝 Action Menu on Github: 2 passed
+### ⚙️ GitHub Actions CI: All Passed
 
-**View on Action on Github**:
+**View Actions on GitHub**:
 https://github.com/edwinariesto/stellar-donation/actions
 
 <img width="1918" height="991" alt="Screenshot 2026-06-24 212045" src="https://github.com/user-attachments/assets/8d519758-0e91-48d3-91b4-344a20f0d20d" />
-
 
 
 
