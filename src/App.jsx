@@ -1674,9 +1674,13 @@ export default function App() {
                             html: `
                               <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
                                 <strong style="color: #111827;">${t.fromSender}:</strong><br/>
-                                <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">${claim.from}</span><br/>
+                                <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
+                                  <a href="https://stellar.expert/explorer/testnet/account/${claim.from}" target="_blank" style="color: #2563eb; text-decoration: underline;">${claim.from}</a>
+                                </span><br/>
                                 <strong style="color: #111827;">${t.toReceiver}:</strong><br/>
-                                <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">${claim.address}</span><br/>
+                                <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">
+                                  <a href="https://stellar.expert/explorer/testnet/account/${claim.address}" target="_blank" style="color: #2563eb; text-decoration: underline;">${claim.address}</a>
+                                </span><br/>
                                 <strong style="color: #111827;">${t.amountLabel}:</strong> ${claim.amount.toFixed(2)} XLM<br/><br/>
                                 <strong style="color: #111827;">${t.dateLabel}:</strong> ${claim.date}<br/><br/>
                                 <strong style="color: #111827;">${t.statusLabel}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.approved.toUpperCase()}</span>
@@ -2046,21 +2050,36 @@ export default function App() {
                 
                 <li className="flex justify-between border-b border-ios-lightGray/20 pb-2">
                   <span className="text-ios-darkGray font-medium">{t.contractId}</span>
-                  <button 
-                    onClick={handleContractIdPrompt}
-                    className="font-mono text-ios-blue underline truncate max-w-[150px] font-bold text-right"
-                    title={contractId}
-                  >
-                    {contractId ? `${contractId.substring(0, 5)}...${contractId.substring(51)}` : 'Set Contract'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={handleContractIdPrompt}
+                      className="font-mono text-gray-500 hover:text-ios-darkText truncate max-w-[100px] text-right text-xs"
+                      title="Set Contract"
+                    >
+                      {contractId ? `${contractId.substring(0, 5)}...${contractId.substring(51)}` : 'Set Contract'}
+                    </button>
+                    {contractId && (
+                      <a href={`https://stellar.expert/explorer/testnet/contract/${contractId}`} target="_blank" className="text-ios-blue hover:text-blue-600" title="View Contract on Stellar Expert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                      </a>
+                    )}
+                  </div>
                 </li>
 
 
                 {userAddress && (
-                  <li className="flex justify-between">
-                    <span className="text-ios-darkGray font-medium">{t.walletBalance}</span>
-                    <span className="font-bold text-ios-darkText">{freighterBalance} XLM</span>
-                  </li>
+                  <>
+                    <li className="flex justify-between border-b border-ios-lightGray/20 pb-2">
+                      <span className="text-ios-darkGray font-medium">Wallet Address</span>
+                      <a href={`https://stellar.expert/explorer/testnet/account/${userAddress}`} target="_blank" className="font-mono text-ios-blue underline truncate max-w-[120px] font-bold text-right hover:text-blue-600" title="View Wallet on Stellar Expert">
+                        {userAddress.substring(0, 5)}...{userAddress.substring(51)}
+                      </a>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className="text-ios-darkGray font-medium">{t.walletBalance}</span>
+                      <span className="font-bold text-ios-darkText">{freighterBalance} XLM</span>
+                    </li>
+                  </>
                 )}
               </ul>
             </div>
@@ -2102,11 +2121,17 @@ export default function App() {
                             html: `
                               <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
                                 <strong style="color: #111827;">${t.transactionHash}:</strong><br/>
-                                <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">${tx.hash}</span><br/>
+                                <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">
+                                  <a href="https://stellar.expert/explorer/testnet/tx/${tx.hash}" target="_blank" style="color: #2563eb; text-decoration: underline;">${tx.hash}</a>
+                                </span><br/>
                                 <strong style="color: #111827;">${t.fromSender}:</strong><br/>
-                                <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">${tx.wallet}</span><br/>
+                                <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
+                                  <a href="https://stellar.expert/explorer/testnet/account/${tx.wallet}" target="_blank" style="color: inherit; text-decoration: underline;">${tx.wallet}</a>
+                                </span><br/>
                                 <strong style="color: #111827;">${t.toReceiver}:</strong><br/>
-                                <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">${tx.to}</span><br/>
+                                <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
+                                  <a href="https://stellar.expert/explorer/testnet/contract/${tx.to}" target="_blank" style="color: inherit; text-decoration: underline;">${tx.to}</a>
+                                </span><br/>
                                 <strong style="color: #111827;">${t.amountLabel}:</strong> ${tx.amount.toFixed(2)} XLM<br/><br/>
                                 <strong style="color: #111827;">${t.dateLabel}:</strong> ${tx.date}<br/><br/>
                                 <strong style="color: #111827;">${t.statusLabel}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.successful.toUpperCase()}</span>
@@ -2203,9 +2228,13 @@ export default function App() {
                             html: `
                               <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
                                 <strong style="color: #111827;">${t.toReceiver}:</strong><br/>
-                                <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">${claim.address}</span><br/>
+                                <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">
+                                  <a href="https://stellar.expert/explorer/testnet/account/${claim.address}" target="_blank" style="color: #2563eb; text-decoration: underline;">${claim.address}</a>
+                                </span><br/>
                                 <strong style="color: #111827;">${t.fromSender}:</strong><br/>
-                                <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">${claim.from}</span><br/>
+                                <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
+                                  <a href="https://stellar.expert/explorer/testnet/contract/${claim.from}" target="_blank" style="color: inherit; text-decoration: underline;">${claim.from}</a>
+                                </span><br/>
                                 <strong style="color: #111827;">${t.amountLabel}:</strong> ${claim.amount.toFixed(2)} XLM<br/><br/>
                                 <strong style="color: #111827;">${t.dateLabel}:</strong> ${claim.date}<br/><br/>
                                 <strong style="color: #111827;">${t.statusLabel}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.approved.toUpperCase()}</span>
