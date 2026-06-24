@@ -1675,7 +1675,7 @@ export default function App() {
                               <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
                                 <strong style="color: #111827;">${t.fromSender}:</strong><br/>
                                 <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
-                                  <a href="https://stellar.expert/explorer/testnet/account/${claim.from}" target="_blank" style="color: #2563eb; text-decoration: underline;">${claim.from}</a>
+                                  <a href="https://stellar.expert/explorer/testnet/contract/${claim.from}" target="_blank" style="color: inherit; text-decoration: underline;">${claim.from}</a>
                                 </span><br/>
                                 <strong style="color: #111827;">${t.toReceiver}:</strong><br/>
                                 <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">
