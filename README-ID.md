@@ -15,8 +15,8 @@ Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Total volum
 
 ### Informasi Smart Contract (Testnet)
 
-- **Deployed Contract Address (ID)**: `CB7EC4T3INCUSZPJDPW25K4YVAIJR7DW6CYJVHIUQK6L24UOAFC5BYBK`
-- **Lihat di Stellar Explorer**: [Tautan Kontrak di Stellar.Expert](https://stellar.expert/explorer/testnet/contract/CB7EC4T3INCUSZPJDPW25K4YVAIJR7DW6CYJVHIUQK6L24UOAFC5BYBK)
+- **Deployed Contract Address (ID)**: `CDQBMFQXXWGG2H6WELWFHHA476WQTZIXYOPTYADBVBC4LRJOROCKPXK2`
+- **Lihat di Stellar Explorer**: [Tautan Kontrak di Stellar.Expert](https://stellar.expert/explorer/testnet/contract/CDQBMFQXXWGG2H6WELWFHHA476WQTZIXYOPTYADBVBC4LRJOROCKPXK2)
 - **Asset/Token Address (Native XLM SAC)**: `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
 - **Contoh Hash Transaksi (Contract Call)**: [`8d4dbacad4807e9ef67f1d94779df2aa4ae8d674c5d06b2191b10a333e547f30`](https://stellar.expert/explorer/testnet/tx/8d4dbacad4807e9ef67f1d94779df2aa4ae8d674c5d06b2191b10a333e547f30)
 
