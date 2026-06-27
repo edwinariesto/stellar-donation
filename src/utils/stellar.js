@@ -413,6 +413,17 @@ export const getReferralHistory = async (contractId, referrerAddress) => {
       if (currentEnd <= minLedger) break;
     }
     
+    const donateAmounts = {};
+    allEvents.forEach(evt => {
+      try {
+        const topic0 = scValToNative(evt.topic[0]);
+        if (topic0 === 'donate') {
+           const amount = Number(scValToNative(evt.value)) / 10000000;
+           donateAmounts[evt.txHash || evt.id.substring(0, 16)] = amount;
+        }
+      } catch(e) {}
+    });
+
     const referrals = [];
     allEvents.forEach(evt => {
       try {
@@ -421,9 +432,13 @@ export const getReferralHistory = async (contractId, referrerAddress) => {
           const referrer = scValToNative(evt.topic[1]);
           if (referrer === referrerAddress) {
             const donorAddress = scValToNative(evt.value);
+            const txHashKey = evt.txHash || evt.id.substring(0, 16);
+            const amount = donateAmounts[txHashKey] || 0;
             referrals.push({
               id: evt.id,
               donorAddress,
+              amount,
+              hash: evt.txHash,
               date: new Date(evt.ledgerClosedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })
             });
           }

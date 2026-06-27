@@ -200,7 +200,13 @@ impl StelDotContract {
             .publish((Symbol::short("donate"), donor), amount);
     }
 
-    pub fn donate_with_referral(env: Env, donor: Address, campaign_id: u32, amount: i128, referrer: Address) {
+    pub fn donate_with_referral(
+        env: Env,
+        donor: Address,
+        campaign_id: u32,
+        amount: i128,
+        referrer: Address,
+    ) {
         if amount <= 0 {
             panic!("donation amount must be positive");
         }
@@ -267,32 +273,44 @@ impl StelDotContract {
             .instance()
             .set(&DataKey::TotalRaised, &(total_raised + amount));
 
-        env.events()
-            .publish((Symbol::short("donate"), donor.clone(), campaign_id), amount);
+        env.events().publish(
+            (Symbol::short("donate"), donor.clone(), campaign_id),
+            amount,
+        );
 
         // REFERRAL LOGIC
         let has_donated_key = DataKey::HasDonated(donor.clone());
-        let has_donated: bool = env.storage().persistent().get(&has_donated_key).unwrap_or(false);
-        
+        let has_donated: bool = env
+            .storage()
+            .persistent()
+            .get(&has_donated_key)
+            .unwrap_or(false);
+
         if !has_donated {
             // First time donating!
             // Mark as donated
             env.storage().persistent().set(&has_donated_key, &true);
-            env.storage().persistent().extend_ttl(&has_donated_key, 5000, 10000);
+            env.storage()
+                .persistent()
+                .extend_ttl(&has_donated_key, 5000, 10000);
 
             // Reward is 0.5% of donation
             let reward_stroops = amount * 5 / 1000;
-            
+
             let ref_reward_key = DataKey::ReferralReward(referrer.clone());
-            let current_ref_reward: i128 = env.storage().persistent().get(&ref_reward_key).unwrap_or(0);
-            env.storage().persistent().set(&ref_reward_key, &(current_ref_reward + reward_stroops));
-            env.storage().persistent().extend_ttl(&ref_reward_key, 5000, 10000);
+            let current_ref_reward: i128 =
+                env.storage().persistent().get(&ref_reward_key).unwrap_or(0);
+            env.storage()
+                .persistent()
+                .set(&ref_reward_key, &(current_ref_reward + reward_stroops));
+            env.storage()
+                .persistent()
+                .extend_ttl(&ref_reward_key, 5000, 10000);
 
             env.events()
                 .publish((Symbol::short("referral"), referrer), donor);
         }
     }
-
 
     pub fn claim_reward(env: Env, donor: Address) {
         donor.require_auth();
@@ -359,11 +377,7 @@ impl StelDotContract {
         referrer.require_auth();
 
         let ref_reward_key = DataKey::ReferralReward(referrer.clone());
-        let reward_stroops: i128 = env
-            .storage()
-            .persistent()
-            .get(&ref_reward_key)
-            .unwrap_or(0);
+        let reward_stroops: i128 = env.storage().persistent().get(&ref_reward_key).unwrap_or(0);
 
         if reward_stroops <= 0 {
             panic!("no referral rewards to claim");

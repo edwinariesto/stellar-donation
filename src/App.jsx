@@ -132,6 +132,12 @@ export default function App() {
   // Referral State
   const [referralBalance, setReferralBalance] = useState(0);
   const [referralHistory, setReferralHistory] = useState([]);
+  const [referralPage, setReferralPage] = useState(1);
+  const [referralSearch, setReferralSearch] = useState('');
+  const REFERRALS_PER_PAGE = 5;
+  const filteredReferrals = referralHistory.filter(r => r.donorAddress.toLowerCase().includes(referralSearch.toLowerCase()));
+  const totalReferralPages = Math.max(1, Math.ceil(filteredReferrals.length / REFERRALS_PER_PAGE));
+  const currentReferrals = filteredReferrals.slice((referralPage - 1) * REFERRALS_PER_PAGE, referralPage * REFERRALS_PER_PAGE);
   const searchParams = new URLSearchParams(window.location.search);
   const refParam = searchParams.get('ref');
   const partnerAddress = (refParam && refParam.startsWith('G') && refParam.length === 56) ? refParam : null;
@@ -2818,25 +2824,77 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="mb-6 flex-1 min-h-[150px] max-h-[300px] overflow-y-auto">
-                <h3 className="text-sm font-bold text-slate-200 mb-3">{t.referralHistoryTitle || 'Daftar Teman Berdonasi'}</h3>
-                {referralHistory.length > 0 ? (
-                  <div className="space-y-2">
-                    {referralHistory.map((ref, idx) => (
-                      <div key={idx} className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50 flex justify-between items-center">
-                        <div>
-                          <p className="text-xs font-mono text-slate-300">{ref.donorAddress.substring(0, 8)}...{ref.donorAddress.substring(48)}</p>
-                          <p className="text-[10px] text-slate-500 mt-0.5">{ref.date}</p>
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-sm font-bold text-slate-200">{t.referralHistoryTitle || 'Daftar Teman Berdonasi'}</h3>
+                  <input
+                    type="text"
+                    placeholder="Search address..."
+                    value={referralSearch}
+                    onChange={(e) => { setReferralSearch(e.target.value); setReferralPage(1); }}
+                    className="bg-slate-800/80 border border-slate-700/50 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-purple-500/50 w-32 sm:w-40 transition-colors"
+                  />
+                </div>
+                <div className="flex-1 min-h-[150px] max-h-[220px] overflow-y-auto custom-scrollbar">
+                  {currentReferrals.length > 0 ? (
+                    <div className="space-y-2">
+                      {currentReferrals.map((ref, idx) => (
+                        <div 
+                          key={idx} 
+                          className="bg-slate-800/80 hover:bg-slate-700/80 cursor-pointer transition-colors rounded-xl p-3 border border-slate-700/50 flex justify-between items-center"
+                          onClick={() => {
+                            SwalOrig.fire({
+                              title: t.claimDetailTitle || 'Detail Transaksi',
+                              html: `
+                                <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
+                                  <strong style="color: #111827;">Teman (Donor):</strong><br/>
+                                  <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
+                                    <a href="${getExplorerLink(ref.donorAddress)}" target="_blank" style="color: #2563eb; text-decoration: underline;">${ref.donorAddress}</a>
+                                  </span><br/>
+                                  <strong style="color: #111827;">Jumlah Donasi (XLM):</strong> ${ref.amount.toFixed(2)} XLM<br/><br/>
+                                  <strong style="color: #111827;">Tanggal:</strong> ${ref.date}<br/><br/>
+                                  <strong style="color: #111827;">Status:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">SUKSES</span>
+                                </div>
+                              `,
+                              icon: 'info',
+                              confirmButtonText: t.close || 'Tutup',
+                              buttonsStyling: false,
+                              customClass: { 
+                                popup: 'rounded-2xl overflow-hidden !p-0',
+                                htmlContainer: '!p-0 !m-0',
+                                title: '!pt-6',
+                                actions: 'w-full !m-0 !p-0 border-t border-gray-100',
+                                confirmButton: 'w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-none transition-colors !m-0 border-none outline-none focus:outline-none focus:ring-0'
+                              }
+                            });
+                          }}
+                        >
+                          <div>
+                            <p className="text-xs font-mono text-slate-300">{ref.donorAddress.substring(0, 8)}...{ref.donorAddress.substring(48)}</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5">{ref.date}</p>
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <span className="text-[10px] font-bold text-fuchsia-400 mb-0.5">{ref.amount.toFixed(2)} XLM</span>
+                            <span className="text-[9px] font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded-md">+ Sukses</span>
+                          </div>
                         </div>
-                        <div className="text-[10px] font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded-md">
-                          + Sukses
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-slate-800/30 rounded-xl border border-slate-700/30 border-dashed">
-                    <p className="text-sm text-slate-500">{t.noReferralHistory || 'Belum ada teman yang berdonasi menggunakan link Anda.'}</p>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-[120px] text-center p-6 bg-slate-800/30 rounded-xl border border-slate-700/30 border-dashed">
+                      <p className="text-sm text-slate-500">{t.noReferralHistory || 'Belum ada teman yang berdonasi menggunakan link Anda.'}</p>
+                    </div>
+                  )}
+                </div>
+                {totalReferralPages > 1 && (
+                  <div className="flex justify-center items-center gap-2 mt-3 pt-3 border-t border-slate-700/50">
+                    <button onClick={() => setReferralPage(p => Math.max(1, p - 1))} disabled={referralPage === 1} className="p-1 rounded-full text-slate-500 hover:text-fuchsia-400 disabled:opacity-30 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <span className="text-[10px] font-bold text-slate-400">{referralPage} / {Math.max(1, totalReferralPages)}</span>
+                    <button onClick={() => setReferralPage(p => Math.min(totalReferralPages, p + 1))} disabled={referralPage === totalReferralPages || totalReferralPages === 0} className="p-1 rounded-full text-slate-500 hover:text-fuchsia-400 disabled:opacity-30 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
                   </div>
                 )}
               </div>
