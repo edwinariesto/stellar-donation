@@ -18,7 +18,7 @@ Donors can contribute native XLM to community campaigns. Their total donation vo
 - **Deployed Contract Address (ID)**: `CDQBMFQXXWGG2H6WELWFHHA476WQTZIXYOPTYADBVBC4LRJOROCKPXK2`
 - **View on Stellar Explorer**: [Stellar.Expert Contract Link](https://stellar.expert/explorer/testnet/contract/CDQBMFQXXWGG2H6WELWFHHA476WQTZIXYOPTYADBVBC4LRJOROCKPXK2)
 - **Asset/Token Address (Native XLM SAC)**: `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
-- **Example Transaction Hash (Contract Call)**: [`8d4dbacad4807e9ef67f1d94779df2aa4ae8d674c5d06b2191b10a333e547f30`](https://stellar.expert/explorer/testnet/tx/8d4dbacad4807e9ef67f1d94779df2aa4ae8d674c5d06b2191b10a333e547f30)
+- **Example Transaction Hash (Contract Call)**: [`106d12d3a6876e9edd5cd00e7c50bb9dfa57f39e3e381b44a4de5f08433298da`](https://stellar.expert/explorer/testnet/tx/106d12d3a6876e9edd5cd00e7c50bb9dfa57f39e3e381b44a4de5f08433298da)
 
 ---
 
