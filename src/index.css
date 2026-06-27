@@ -48,3 +48,10 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(0,0,0,0.25);
 }
+
+/* SweetAlert Wide Buttons */
+div:where(.swal2-container) div:where(.swal2-popup) { border-radius: 1rem !important; overflow: hidden !important; padding: 0 !important; }
+div:where(.swal2-container) h2:where(.swal2-title) { padding: 1.5rem 1.5rem 0 1.5rem !important; }
+div:where(.swal2-container) div:where(.swal2-html-container) { padding: 1rem 1.5rem 1.5rem 1.5rem !important; }
+div:where(.swal2-container) div:where(.swal2-actions) { width: 100% !important; margin: 0 !important; padding: 0 !important; border-top: 1px solid #f3f4f6 !important; display: flex !important; }
+div:where(.swal2-container) button:where(.swal2-styled) { margin: 0 !important; border-radius: 0 !important; width: 100% !important; padding: 1rem !important; font-weight: 700 !important; flex: 1 !important; outline: none !important; box-shadow: none !important; }
