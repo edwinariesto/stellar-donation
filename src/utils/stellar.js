@@ -50,7 +50,8 @@ const wc = new WalletConnectModule({
     description: 'Decentralized Donate-to-Earn Platform on Stellar',
     url: window.location.origin,
     icons: [window.location.origin + '/favicon.svg']
-  }
+  },
+  allowedChains: ['stellar:pubnet', 'stellar:testnet']
 });
 
 function getActiveModule(walletType) {
