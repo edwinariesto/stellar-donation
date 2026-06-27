@@ -140,7 +140,8 @@ export default function App() {
   const currentReferrals = filteredReferrals.slice((referralPage - 1) * REFERRALS_PER_PAGE, referralPage * REFERRALS_PER_PAGE);
   const searchParams = new URLSearchParams(window.location.search);
   const refParam = searchParams.get('ref');
-  const partnerAddress = (refParam && refParam.startsWith('G') && refParam.length === 56) ? refParam : null;
+  const initialPartner = (refParam && refParam.startsWith('G') && refParam.length === 56) ? refParam : null;
+  const [partnerAddress, setPartnerAddress] = useState(initialPartner);
   const [loyaltyPoints, setLoyaltyPoints] = useState(0);
   const [totalDonated, setTotalDonated] = useState(0);
   const [successfulClaims, setSuccessfulClaims] = useState(0);
@@ -401,7 +402,21 @@ export default function App() {
         const donorTotalRes = await callReadOnly(contractId, 'get_donor_total_donated', [
           nativeToScVal(Address.fromString(userAddress))
         ]);
-        setTotalDonated(donorTotalRes ? Number(donorTotalRes) / 10000000 : 0);
+        const total = donorTotalRes ? Number(donorTotalRes) / 10000000 : 0;
+        setTotalDonated(total);
+
+        // Validation for Referral Links: Only for first-time donors
+        if (total > 0 && partnerAddress) {
+            setPartnerAddress(null);
+            const newUrl = window.location.origin + window.location.pathname;
+            window.history.pushState({path:newUrl},'',newUrl);
+            SwalOrig.fire({
+                title: t.invalidReferralTitle || 'Tautan Referral Tidak Berlaku',
+                text: t.invalidReferralDesc || 'Tautan referral hanya dapat digunakan oleh pengguna baru yang belum pernah berdonasi. Tautan telah dihapus dari sesi Anda.',
+                icon: 'warning',
+                confirmButtonColor: '#FF3B30'
+            });
+        }
 
         const statusRes = await callReadOnly(contractId, 'get_donor_successful_claims', [
           nativeToScVal(Address.fromString(userAddress))

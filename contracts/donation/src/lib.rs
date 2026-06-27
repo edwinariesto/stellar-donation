@@ -216,6 +216,18 @@ impl StelDotContract {
             panic!("cannot refer yourself");
         }
 
+        // Enforce first-time donor rule for referrals
+        let donor_total_key = DataKey::DonorTotalDonated(donor.clone());
+        let current_total: i128 = env
+            .storage()
+            .persistent()
+            .get(&donor_total_key)
+            .unwrap_or(0);
+
+        if current_total > 0 {
+            panic!("referral only allowed for first-time donors");
+        }
+
         let mut campaign: Campaign = env
             .storage()
             .instance()
@@ -236,12 +248,6 @@ impl StelDotContract {
             .set(&DataKey::Campaign(campaign_id), &campaign);
 
         // Update donor total donations
-        let donor_total_key = DataKey::DonorTotalDonated(donor.clone());
-        let current_total: i128 = env
-            .storage()
-            .persistent()
-            .get(&donor_total_key)
-            .unwrap_or(0);
         env.storage()
             .persistent()
             .set(&donor_total_key, &(current_total + amount));
