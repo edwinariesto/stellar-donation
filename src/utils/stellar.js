@@ -10,8 +10,12 @@ import {
   xdr,
   Account
 } from '@stellar/stellar-sdk';
-import { isConnected, requestAccess, signTransaction, getNetworkDetails, getUserInfo } from '@stellar/freighter-api';
-import { signAlbedoTransaction } from './albedo';
+import { 
+  StellarWalletsKit, 
+  Networks as WalletNetwork
+} from '@creit.tech/stellar-wallets-kit';
+import { FreighterModule } from '@creit.tech/stellar-wallets-kit/modules/freighter';
+import { WalletConnectModule } from '@creit.tech/stellar-wallets-kit/modules/wallet-connect';
 
 export const NETWORKS = {
   TESTNET: {
@@ -35,52 +39,46 @@ export function setAppNetwork(networkType) {
   if (NETWORKS[networkType]) {
     currentNetwork = NETWORKS[networkType];
     rpcServer = new rpc.Server(currentNetwork.rpc);
+    kit.setNetwork(networkType === 'PUBLIC' ? WalletNetwork.PUBLIC : WalletNetwork.TESTNET);
   }
 }
+
+export const kit = new StellarWalletsKit({
+  network: WalletNetwork.TESTNET,
+  modules: [
+    new FreighterModule(),
+    new WalletConnectModule({
+      projectId: 'ccb6f24ee282461976ae9ec6f70388c6',
+      metadata: {
+        name: 'StelDot Donation',
+        description: 'Decentralized Donate-to-Earn Platform on Stellar',
+        url: window.location.origin,
+        icons: [window.location.origin + '/favicon.svg']
+      }
+    })
+  ]
+});
 
 export async function checkFreighterNetwork() {
-  try {
-    const details = await getNetworkDetails();
-    if (details && (details.network === 'PUBLIC' || details.network === 'TESTNET')) {
-      return details.network;
-    }
-  } catch (err) {
-    console.warn("Failed to get network details from Freighter", err);
-  }
-  return 'TESTNET';
+  return currentNetwork.networkName;
 }
 
-// Check if Freighter is installed
-export async function checkFreighterInstalled() {
-  try {
-    return await isConnected();
-  } catch (err) {
-    return false;
-  }
+export async function checkWalletInstalled() {
+  return true;
 }
 
-// Request address from Freighter
-export async function getFreighterAddress() {
-  const installed = await checkFreighterInstalled();
-  if (!installed) {
-    throw new Error('Freighter wallet extension not detected.');
-  }
-  try {
-    const address = await requestAccess();
-    if (!address) {
-      throw new Error('User declined access or no address returned.');
-    }
-    return address;
-  } catch (err) {
-    throw err;
-  }
+export async function connectWallet(walletType) {
+  return new Promise((resolve, reject) => {
+    kit.setWallet(walletType);
+    kit.getPublicKey()
+      .then(resolve)
+      .catch(reject);
+  });
 }
 
-// Get public key silently
-export async function getFreighterPublicKey() {
+export async function getWalletPublicKey() {
   try {
-    const info = await getUserInfo();
-    return info?.publicKey || null;
+    return await kit.getPublicKey();
   } catch (err) {
     return null;
   }
@@ -297,16 +295,15 @@ export async function executeTransaction(contractId, functionName, args = [], us
   const xdrString = tx.toXDR();
   const walletType = localStorage.getItem('steldot_wallet_type') || 'freighter';
   
-  let finalXdr;
-  if (walletType === 'albedo') {
-    finalXdr = await signAlbedoTransaction(xdrString, currentNetwork.networkName);
-  } else {
-    const signedXdr = await signTransaction(xdrString, {
-      network: currentNetwork.networkName,
-    });
-    finalXdr = typeof signedXdr === 'string' ? signedXdr : signedXdr.signedTxXdr || signedXdr;
-  }
+  kit.setWallet(walletType);
+  const signedResult = await kit.signTx({
+    xdr: xdrString,
+    publicKeys: [account.accountId()],
+    network: currentNetwork.networkName === 'PUBLIC' ? WalletNetwork.PUBLIC : WalletNetwork.TESTNET,
+  });
 
+  const finalXdr = signedResult.result || signedResult.signedTxXdr || signedResult;
+  
   // 5. Submit transaction
   const signedTx = TransactionBuilder.fromXDR(finalXdr, currentNetwork.passphrase);
   let sendResponse = await rpcServer.sendTransaction(signedTx);

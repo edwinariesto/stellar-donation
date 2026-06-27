@@ -15,8 +15,8 @@ const Swal = SwalOrig.mixin({
   }
 });
 import {
-  checkFreighterInstalled,
-  getFreighterAddress,
+  checkWalletInstalled,
+  connectWallet,
   getXlmBalance,
   callReadOnly,
   executeTransaction,
@@ -24,11 +24,12 @@ import {
   getGlobalClaims,
   checkFreighterNetwork,
   setAppNetwork,
-  getFreighterPublicKey
+  getWalletPublicKey
 } from './utils/stellar';
-import { getAlbedoPublicKey } from './utils/albedo';
 import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import bannerImg from './assets/banner.png';
+import frighterIcon from './image/frighter-icon.png';
+import walletConnectIcon from './image/walletconnect-icon.jfif';
 const DEFAULT_CONTRACT_ID = 'CB7EC4T3INCUSZPJDPW25K4YVAIJR7DW6CYJVHIUQK6L24UOAFC5BYBK';
 const NATIVE_XLM_SAC = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
@@ -282,7 +283,7 @@ export default function App() {
   // Initialize Freighter Check and first run check
   useEffect(() => {
     async function initCheck() {
-      const installed = await checkFreighterInstalled();
+      const installed = await checkWalletInstalled();
       setFreighterInstalled(installed);
       
       const savedAddress = localStorage.getItem('steldot_wallet_address');
@@ -340,7 +341,7 @@ export default function App() {
   // Check if Freighter status, network, or account changes
   useEffect(() => {
     const interval = setInterval(async () => {
-      const installed = await checkFreighterInstalled();
+      const installed = await checkWalletInstalled();
       setFreighterInstalled(installed);
       
       if (installed) {
@@ -353,7 +354,7 @@ export default function App() {
 
         // Check account change
         if (userAddress) {
-          const pk = await getFreighterPublicKey();
+          const pk = await getWalletPublicKey();
           if (pk && pk !== userAddress) {
             localStorage.removeItem('steldot_wallet_address');
             window.location.reload();
@@ -558,10 +559,10 @@ export default function App() {
       html: `
         <div class="flex flex-col gap-3 mt-4">
           <button id="btn-freighter" class="w-full bg-[#1e2029] hover:bg-[#2b2d39] text-white rounded-xl py-4 font-bold flex items-center justify-center gap-3 transition-colors border border-gray-700">
-            <span class="text-xl">🦊</span> Freighter (Desktop)
+            <img src="${frighterIcon}" alt="Freighter" class="w-6 h-6 object-contain" /> Freighter (Desktop)
           </button>
-          <button id="btn-albedo" class="w-full bg-[#007AFF] hover:bg-[#0056b3] text-white rounded-xl py-4 font-bold flex items-center justify-center gap-3 transition-colors shadow-md shadow-blue-500/20">
-            <span class="text-xl">🌐</span> Albedo (Web/Mobile)
+          <button id="btn-walletconnect" class="w-full bg-[#3b99fc] hover:bg-[#2a7bce] text-white rounded-xl py-4 font-bold flex items-center justify-center gap-3 transition-colors shadow-md shadow-blue-500/20">
+            <img src="${walletConnectIcon}" alt="WalletConnect" class="w-6 h-6 object-contain rounded-full" /> WalletConnect (Mobile)
           </button>
         </div>
       `,
@@ -572,7 +573,7 @@ export default function App() {
         document.getElementById('btn-freighter').addEventListener('click', async () => {
           Swal.close();
           try {
-            const address = await getFreighterAddress();
+            const address = await connectWallet('freighter');
             setUserAddress(address);
             localStorage.setItem('steldot_wallet_address', address);
             localStorage.setItem('steldot_wallet_type', 'freighter');
@@ -584,13 +585,13 @@ export default function App() {
           }
         });
         
-        document.getElementById('btn-albedo').addEventListener('click', async () => {
+        document.getElementById('btn-walletconnect').addEventListener('click', async () => {
           Swal.close();
           try {
-            const address = await getAlbedoPublicKey();
+            const address = await connectWallet('walletConnect');
             setUserAddress(address);
             localStorage.setItem('steldot_wallet_address', address);
-            localStorage.setItem('steldot_wallet_type', 'albedo');
+            localStorage.setItem('steldot_wallet_type', 'walletConnect');
             const balance = await getXlmBalance(address);
             setFreighterBalance(balance);
             Swal.fire({ title: t.walletConnected, text: `${t.address}: ${address.substring(0, 6)}...${address.substring(50)}`, icon: 'success', confirmButtonColor: '#007AFF' });

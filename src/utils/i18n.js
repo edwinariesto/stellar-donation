@@ -3,7 +3,7 @@ export const translations = {
     walletConnected: 'Dompet Terhubung',
     address: 'Alamat',
     connError: 'Kesalahan Koneksi',
-    connErrorDesc: 'Otentikasi Freighter gagal.',
+    connErrorDesc: 'Otentikasi Wallet gagal.',
     invalidAmount: 'Jumlah Tidak Valid',
     invalidAmountDesc: 'Jumlah donasi harus lebih besar dari nol.',
     donationSuccess: 'Donasi Berhasil!',
@@ -11,7 +11,7 @@ export const translations = {
     donationExceedsTarget: 'Target Terlampaui',
     donationExceedsTargetDesc: (remaining) => `Donasi Anda melebihi target yang tersisa. Maksimal yang bisa Anda donasikan adalah ${remaining} XLM.`,
     confirmSignature: 'Konfirmasi Tanda Tangan',
-    confirmDonate: 'Silakan konfirmasi transaksi donasi di ekstensi dompet Freighter Anda.',
+    confirmDonate: 'Silakan konfirmasi transaksi donasi di dompet Anda.',
     donationProcessed: (amount, hash, net = 'testnet') => `Donasi sebesar ${amount} XLM berhasil diproses. Anda mendapatkan 1 poin!<br><br><a href="https://stellar.expert/explorer/${net.toLowerCase()}/tx/${hash}" target="_blank" class="text-ios-blue underline">Lihat di Explorer</a>`,
     txFailed: 'Transaksi Gagal',
     txFailedDesc: 'Tanda tangan ditolak atau kesalahan on-chain.',
@@ -21,7 +21,7 @@ export const translations = {
     claimPendingDesc: 'Anda sudah memiliki klaim hadiah yang tertunda. Klaim ganda dicegah.',
     rewardRequested: 'Hadiah Diminta!',
     rewardRequestedDesc: 'Klaim hadiah Anda telah dikirimkan ke antrean. Tunggu persetujuan administrator.',
-    confirmClaim: 'Silakan konfirmasi transaksi permintaan klaim di Freighter.',
+    confirmClaim: 'Silakan konfirmasi transaksi permintaan klaim di dompet Anda.',
     claimSubmitted: 'Klaim Dikirimkan!',
     claimSubmittedDesc: 'Klaim berhasil diminta. Pemilik telah diberitahu.',
     requestFailed: 'Permintaan Gagal',
@@ -53,7 +53,7 @@ export const translations = {
         <div class="text-left text-sm leading-relaxed text-gray-700 font-sans max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
           <p class="mb-3"><strong>StelDot (Stellar Donation)</strong> adalah sistem hadiah loyalitas <strong>Donate-to-Earn</strong> terdesentralisasi yang dibangun di atas Stellar Blockchain menggunakan Soroban Smart Contract.</p>
           <ol class="list-decimal pl-5 space-y-2">
-            <li><strong>Hubungkan Dompet:</strong> Tautkan ekstensi dompet Freighter di browser Anda.</li>
+            <li><strong>Hubungkan Dompet:</strong> Tautkan dompet Stellar Anda.</li>
             <li><strong>Dukung Kampanye:</strong> Donasikan sejumlah XLM ke kampanye komunitas aktif.</li>
             <li><strong>Volume Dilacak Otomatis:</strong> Setiap donasi menambah volume akumulasi Anda yang tersimpan langsung di blockchain.</li>
             <li><strong>Klaim Reward 1.5%:</strong> Setelah total donasi Anda mencapai minimal <strong>10 XLM</strong>, klik "Klaim Reward" — smart contract otomatis mengirimkan <strong>1.5% dari total volume Anda</strong> langsung ke dompet Anda!</li>
@@ -77,10 +77,10 @@ export const translations = {
     contractInvalid: 'Format tidak valid. Harus dimulai dengan C dan memiliki 56 karakter.',
     updated: 'Diperbarui',
     updatedDesc: 'Mencoba mengambil data on-chain untuk kontrak baru...',
-    walletNotDetected: 'Ekstensi Freighter Wallet tidak terdeteksi!',
-    installFreighter: 'Instal Freighter Wallet',
+    walletNotDetected: 'Dompet tidak terdeteksi!',
+    installFreighter: 'Instal Dompet',
     sync: 'Sinkronisasi',
-    connectFreighter: 'Hubungkan Freighter',
+    connectFreighter: 'Hubungkan Wallet',
     mockModeAlert: 'Mode Pratinjau Tiruan:',
     mockModeDesc: 'Tidak terhubung ke smart contract yang aktif. Transaksi disimulasikan di sisi klien.',
     setContractId: 'Atur ID Kontrak',
@@ -246,7 +246,7 @@ export const translations = {
     walletConnected: 'Wallet Connected',
     address: 'Address',
     connError: 'Connection Error',
-    connErrorDesc: 'Freighter authentication failed.',
+    connErrorDesc: 'Wallet authentication failed.',
     invalidAmount: 'Invalid Amount',
     invalidAmountDesc: 'Donation amount must be greater than zero.',
     donationSuccess: 'Donation Successful!',
@@ -254,7 +254,7 @@ export const translations = {
     donationExceedsTarget: 'Target Exceeded',
     donationExceedsTargetDesc: (remaining) => `Your donation exceeds the remaining target. The maximum you can donate is ${remaining} XLM.`,
     confirmSignature: 'Confirm Signature',
-    confirmDonate: 'Please confirm the donation transaction in your Freighter wallet extension.',
+    confirmDonate: 'Please confirm the donation transaction in your wallet.',
     donationProcessed: (amount, hash, net = 'testnet') => `Donation of ${amount} XLM processed successfully. You earned 1 point!<br><br><a href="https://stellar.expert/explorer/${net.toLowerCase()}/tx/${hash}" target="_blank" class="text-ios-blue underline">View on Explorer</a>`,
     txFailed: 'Transaction Failed',
     txFailedDesc: 'Signature rejected or on-chain error.',
@@ -296,7 +296,7 @@ export const translations = {
         <div class="text-left text-sm leading-relaxed text-gray-700 font-sans max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
           <p class="mb-3"><strong>StelDot (Stellar Donation)</strong> is a decentralized <strong>Donate-to-Earn</strong> loyalty reward system built on Stellar Blockchain using Soroban Smart Contracts.</p>
           <ol class="list-decimal pl-5 space-y-2">
-            <li><strong>Connect Wallet:</strong> Link your browser's Freighter wallet extension.</li>
+            <li><strong>Connect Wallet:</strong> Link your Stellar wallet.</li>
             <li><strong>Support Campaigns:</strong> Donate any amount of XLM to active community campaigns.</li>
             <li><strong>Volume Tracked Automatically:</strong> Every donation adds to your accumulated volume, stored directly on the blockchain.</li>
             <li><strong>Claim 1.5% Reward:</strong> Once your total donations reach at least <strong>10 XLM</strong>, click "Claim Reward" — the smart contract automatically sends you <strong>1.5% of your total accumulated volume</strong> instantly!</li>
@@ -320,8 +320,8 @@ export const translations = {
     contractInvalid: 'Invalid format. It should start with C and have 56 characters.',
     updated: 'Updated',
     updatedDesc: 'Attempting to fetch on-chain data for new contract...',
-    walletNotDetected: 'Freighter Wallet extension not detected!',
-    installFreighter: 'Install Freighter Wallet',
+    walletNotDetected: 'Wallet not detected!',
+    installFreighter: 'Install Wallet',
     sync: 'Sync',
     connectFreighter: 'Connect Wallet',
     mockModeAlert: 'Mock Preview Mode:',
