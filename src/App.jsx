@@ -26,6 +26,7 @@ import {
   setAppNetwork,
   getFreighterPublicKey
 } from './utils/stellar';
+import { getAlbedoPublicKey } from './utils/albedo';
 import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import bannerImg from './assets/banner.png';
 const DEFAULT_CONTRACT_ID = 'CB7EC4T3INCUSZPJDPW25K4YVAIJR7DW6CYJVHIUQK6L24UOAFC5BYBK';
@@ -550,29 +551,55 @@ export default function App() {
     setSuccessfulClaims(0);
   };
 
-  // Connect Wallet Action
+  // Connect Wallet Modal
   const handleConnectWallet = async () => {
-    try {
-      const address = await getFreighterAddress();
-      setUserAddress(address);
-      localStorage.setItem('steldot_wallet_address', address);
-      const balance = await getXlmBalance(address);
-      setFreighterBalance(balance);
-      
-      Swal.fire({
-        title: t.walletConnected,
-        text: `${t.address}: ${address.substring(0, 6)}...${address.substring(50)}`,
-        icon: 'success',
-        confirmButtonColor: '#007AFF'
-      });
-    } catch (err) {
-      Swal.fire({
-        title: t.connError,
-        text: err.message || t.connErrorDesc,
-        icon: 'error',
-        confirmButtonColor: '#FF3B30'
-      });
-    }
+    Swal.fire({
+      title: 'Connect Wallet',
+      html: `
+        <div class="flex flex-col gap-3 mt-4">
+          <button id="btn-freighter" class="w-full bg-[#1e2029] hover:bg-[#2b2d39] text-white rounded-xl py-4 font-bold flex items-center justify-center gap-3 transition-colors border border-gray-700">
+            <span class="text-xl">🦊</span> Freighter (Desktop)
+          </button>
+          <button id="btn-albedo" class="w-full bg-[#007AFF] hover:bg-[#0056b3] text-white rounded-xl py-4 font-bold flex items-center justify-center gap-3 transition-colors shadow-md shadow-blue-500/20">
+            <span class="text-xl">🌐</span> Albedo (Web/Mobile)
+          </button>
+        </div>
+      `,
+      showConfirmButton: false,
+      showCancelButton: true,
+      cancelButtonText: t.close || 'Close',
+      didOpen: () => {
+        document.getElementById('btn-freighter').addEventListener('click', async () => {
+          Swal.close();
+          try {
+            const address = await getFreighterAddress();
+            setUserAddress(address);
+            localStorage.setItem('steldot_wallet_address', address);
+            localStorage.setItem('steldot_wallet_type', 'freighter');
+            const balance = await getXlmBalance(address);
+            setFreighterBalance(balance);
+            Swal.fire({ title: t.walletConnected, text: `${t.address}: ${address.substring(0, 6)}...${address.substring(50)}`, icon: 'success', confirmButtonColor: '#007AFF' });
+          } catch (err) {
+            Swal.fire({ title: t.connError, text: err.message || t.connErrorDesc, icon: 'error', confirmButtonColor: '#FF3B30' });
+          }
+        });
+        
+        document.getElementById('btn-albedo').addEventListener('click', async () => {
+          Swal.close();
+          try {
+            const address = await getAlbedoPublicKey();
+            setUserAddress(address);
+            localStorage.setItem('steldot_wallet_address', address);
+            localStorage.setItem('steldot_wallet_type', 'albedo');
+            const balance = await getXlmBalance(address);
+            setFreighterBalance(balance);
+            Swal.fire({ title: t.walletConnected, text: `${t.address}: ${address.substring(0, 6)}...${address.substring(50)}`, icon: 'success', confirmButtonColor: '#007AFF' });
+          } catch (err) {
+            Swal.fire({ title: t.connError, text: err.message || t.connErrorDesc, icon: 'error', confirmButtonColor: '#FF3B30' });
+          }
+        });
+      }
+    });
   };
 
   // Handle Donation

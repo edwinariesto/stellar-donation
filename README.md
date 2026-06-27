@@ -79,11 +79,11 @@ Donors can contribute native XLM to community campaigns. Their total donation vo
 This project meets and exceeds the requirements for the **Advanced Smart Contracts + Production-Ready dApps** hackathon:
 
 1. **Advanced Smart Contract Development & Architecture**
-   - StelDot features autonomous economic logic (Autonomous Tokenomics). We track accumulated donation volume permanently using `persistent storage` in *stroops* (`i128`).
+   - StelDot features autonomous economic logic (Autonomous Tokenomics). We track accumulated donation volume permanently using `persistent storage` in _stroops_ (`i128`).
 2. **Inter-contract Communication**
    - The smart contract performs seamless cross-contract communication with the Native Stellar Asset Contract (SAC) to verify treasury balances and execute XLM `transfer`s.
 3. **Event Streaming & Real-time Updates**
-   - Every critical action (`donate`, `claim`, `camp_cre`) emits *Soroban Events* (`env.events().publish()`), allowing third-party indexers to track analytics in real-time.
+   - Every critical action (`donate`, `claim`, `camp_cre`) emits _Soroban Events_ (`env.events().publish()`), allowing third-party indexers to track analytics in real-time.
 4. **CI/CD Pipeline Setup**
    - The repository is equipped with GitHub Actions. Every `push` triggers an automated pipeline running the Rust Linter (`clippy`), formatter (`rustfmt`), unit tests (`cargo test`), and WebAssembly build compilation (`wasm32v1-none`).
 5. **Mobile Responsive & Error Handling**

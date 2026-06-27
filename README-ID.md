@@ -79,19 +79,20 @@ Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Total volum
 Proyek ini telah memenuhi dan melampaui kriteria kompetisi **Advanced Smart Contracts + Production-Ready dApps**:
 
 1. **Advanced Smart Contract Development & Architecture**
-   - StelDot memiliki logika ekonomi mandiri (Autonomous Tokenomics). Kami melacak akumulasi volume donasi secara permanen (`persistent storage`) menggunakan satuan *stroops* (`i128`).
+   - StelDot memiliki logika ekonomi mandiri (Autonomous Tokenomics). Kami melacak akumulasi volume donasi secara permanen (`persistent storage`) menggunakan satuan _stroops_ (`i128`).
 2. **Inter-contract Communication**
-   - Smart Contract StelDot melakukan komunikasi lintas-kontrak (*cross-contract call*) secara mulus dengan Native Stellar Asset Contract (SAC) untuk memverifikasi saldo kas dan memproses `transfer` XLM.
+   - Smart Contract StelDot melakukan komunikasi lintas-kontrak (_cross-contract call_) secara mulus dengan Native Stellar Asset Contract (SAC) untuk memverifikasi saldo kas dan memproses `transfer` XLM.
 3. **Event Streaming & Real-time Updates**
-   - Setiap aksi kritikal dalam sistem (seperti `donate`, `claim`, `camp_cre`) memancarkan *Soroban Events* (`env.events().publish()`), memungkinkan *indexer* pihak ketiga melacak analitik secara *real-time*.
+   - Setiap aksi kritikal dalam sistem (seperti `donate`, `claim`, `camp_cre`) memancarkan _Soroban Events_ (`env.events().publish()`), memungkinkan _indexer_ pihak ketiga melacak analitik secara _real-time_.
 4. **CI/CD Pipeline Setup**
-   - Repositori dilengkapi dengan GitHub Actions. Setiap `push` memicu *pipeline* otomatis yang menjalankan Rust Linter (`clippy`), *formatter* (`rustfmt`), *unit tests* (`cargo test`), dan kompilasi *build* WebAssembly (`wasm32v1-none`).
+   - Repositori dilengkapi dengan GitHub Actions. Setiap `push` memicu _pipeline_ otomatis yang menjalankan Rust Linter (`clippy`), _formatter_ (`rustfmt`), _unit tests_ (`cargo test`), dan kompilasi _build_ WebAssembly (`wasm32v1-none`).
 5. **Mobile Responsive & Error Handling**
-   - Dibangun dengan arsitektur tangguh berbasis React + Tailwind CSS. UI sangat responsif di layar ponsel. Sistem dilengkapi *Error Handling* canggih untuk 20+ skenario kesalahan, termasuk _fallback_ jika pengguna tidak memiliki ekstensi dompet Freighter.
+   - Dibangun dengan arsitektur tangguh berbasis React + Tailwind CSS. UI sangat responsif di layar ponsel. Sistem dilengkapi _Error Handling_ canggih untuk 20+ skenario kesalahan, termasuk _fallback_ jika pengguna tidak memiliki ekstensi dompet Freighter.
 6. **Writing Tests**
-   - Smart contract dilindungi oleh file pengujian `test.rs` yang menguji *end-to-end flow* (Donasi akumulatif -> Klaim instan sukses) serta *Negative Test* (Sistem menggagalkan klaim (Panic) jika poin volume belum mencapai batas minimal).
+   - Smart contract dilindungi oleh file pengujian `test.rs` yang menguji _end-to-end flow_ (Donasi akumulatif -> Klaim instan sukses) serta _Negative Test_ (Sistem menggagalkan klaim (Panic) jika poin volume belum mencapai batas minimal).
 
 #### ✅ Submission Checklist:
+
 - [x] Public GitHub repository
 - [x] README with complete documentation
 - [x] Minimum 10+ meaningful commits
@@ -251,6 +252,7 @@ Buka browser di `http://localhost:5173` untuk mengakses aplikasi. Anda dapat men
 <img width="368" height="654" alt="Screenshot 2026-06-24 210310" src="https://github.com/user-attachments/assets/70569ee4-ec78-4505-9504-f83d9004248e" />
 
 ### ✅ Cargo test: 2 passed
+
 Screenshot Terminal di VSCode setelah mengetik cargo test (menunjukkan 2 passed).
 
 <img width="1918" height="714" alt="Screenshot 2026-06-24 205359" src="https://github.com/user-attachments/assets/83b02a39-3442-4771-8ace-a65315579636" />
@@ -262,6 +264,4 @@ Menampilkan seluruh Workflow hasil pengecekan compilasi logika.
 https://github.com/edwinariesto/stellar-donation/actions
 
 <img width="1918" height="991" alt="Screenshot 2026-06-24 212045" src="https://github.com/user-attachments/assets/8d519758-0e91-48d3-91b4-344a20f0d20d" />
-
-
 

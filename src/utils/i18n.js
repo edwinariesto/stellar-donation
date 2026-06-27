@@ -323,7 +323,7 @@ export const translations = {
     walletNotDetected: 'Freighter Wallet extension not detected!',
     installFreighter: 'Install Freighter Wallet',
     sync: 'Sync',
-    connectFreighter: 'Connect Freighter',
+    connectFreighter: 'Connect Wallet',
     mockModeAlert: 'Mock Preview Mode:',
     mockModeDesc: 'Not connected to an active smart contract. Transactions are simulated client-side.',
     setContractId: 'Set Deployed Contract ID',

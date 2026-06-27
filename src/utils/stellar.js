@@ -11,6 +11,7 @@ import {
   Account
 } from '@stellar/stellar-sdk';
 import { isConnected, requestAccess, signTransaction, getNetworkDetails, getUserInfo } from '@stellar/freighter-api';
+import { signAlbedoTransaction } from './albedo';
 
 export const NETWORKS = {
   TESTNET: {
@@ -292,14 +293,21 @@ export async function executeTransaction(contractId, functionName, args = [], us
   // 3. Prepare transaction (adds footprint/simulated authorization details)
   tx = await rpcServer.prepareTransaction(tx);
 
-  // 4. Convert to XDR and request Freighter signature
+  // 4. Convert to XDR and request Wallet signature
   const xdrString = tx.toXDR();
-  const signedXdr = await signTransaction(xdrString, {
-    network: currentNetwork.networkName,
-  });
+  const walletType = localStorage.getItem('steldot_wallet_type') || 'freighter';
+  
+  let finalXdr;
+  if (walletType === 'albedo') {
+    finalXdr = await signAlbedoTransaction(xdrString, currentNetwork.networkName);
+  } else {
+    const signedXdr = await signTransaction(xdrString, {
+      network: currentNetwork.networkName,
+    });
+    finalXdr = typeof signedXdr === 'string' ? signedXdr : signedXdr.signedTxXdr || signedXdr;
+  }
 
   // 5. Submit transaction
-  const finalXdr = typeof signedXdr === 'string' ? signedXdr : signedXdr.signedTxXdr || signedXdr;
   const signedTx = TransactionBuilder.fromXDR(finalXdr, currentNetwork.passphrase);
   let sendResponse = await rpcServer.sendTransaction(signedTx);
 
