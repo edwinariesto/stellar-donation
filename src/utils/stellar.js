@@ -39,25 +39,26 @@ export function setAppNetwork(networkType) {
   if (NETWORKS[networkType]) {
     currentNetwork = NETWORKS[networkType];
     rpcServer = new rpc.Server(currentNetwork.rpc);
-    kit.setNetwork(networkType === 'PUBLIC' ? WalletNetwork.PUBLIC : WalletNetwork.TESTNET);
   }
 }
 
-export const kit = new StellarWalletsKit({
-  network: WalletNetwork.TESTNET,
-  modules: [
-    new FreighterModule(),
-    new WalletConnectModule({
-      projectId: 'ccb6f24ee282461976ae9ec6f70388c6',
-      metadata: {
-        name: 'StelDot Donation',
-        description: 'Decentralized Donate-to-Earn Platform on Stellar',
-        url: window.location.origin,
-        icons: [window.location.origin + '/favicon.svg']
-      }
-    })
-  ]
+const freighter = new FreighterModule();
+const wc = new WalletConnectModule({
+  projectId: 'ccb6f24ee282461976ae9ec6f70388c6',
+  metadata: {
+    name: 'StelDot Donation',
+    description: 'Decentralized Donate-to-Earn Platform on Stellar',
+    url: window.location.origin,
+    icons: [window.location.origin + '/favicon.svg']
+  }
 });
+
+function getActiveModule(walletType) {
+  if (walletType === 'wallet_connect' || walletType === 'walletConnect') {
+    return wc;
+  }
+  return freighter;
+}
 
 export async function checkFreighterNetwork() {
   return currentNetwork.networkName;
@@ -69,16 +70,23 @@ export async function checkWalletInstalled() {
 
 export async function connectWallet(walletType) {
   return new Promise((resolve, reject) => {
-    kit.setWallet(walletType);
-    kit.getPublicKey()
-      .then(resolve)
-      .catch(reject);
+    try {
+      const module = getActiveModule(walletType);
+      module.getAddress()
+        .then((res) => resolve(res.address || res))
+        .catch(reject);
+    } catch (e) {
+      reject(e);
+    }
   });
 }
 
 export async function getWalletPublicKey() {
   try {
-    return await kit.getPublicKey();
+    const walletType = localStorage.getItem('steldot_wallet_type') || 'freighter';
+    const module = getActiveModule(walletType);
+    const res = await module.getAddress();
+    return res.address || res;
   } catch (err) {
     return null;
   }
@@ -295,11 +303,10 @@ export async function executeTransaction(contractId, functionName, args = [], us
   const xdrString = tx.toXDR();
   const walletType = localStorage.getItem('steldot_wallet_type') || 'freighter';
   
-  kit.setWallet(walletType);
-  const signedResult = await kit.signTx({
-    xdr: xdrString,
-    publicKeys: [account.accountId()],
-    network: currentNetwork.networkName === 'PUBLIC' ? WalletNetwork.PUBLIC : WalletNetwork.TESTNET,
+  const module = getActiveModule(walletType);
+  const signedResult = await module.signTransaction(xdrString, {
+    networkPassphrase: currentNetwork.passphrase,
+    address: account.accountId()
   });
 
   const finalXdr = signedResult.result || signedResult.signedTxXdr || signedResult;

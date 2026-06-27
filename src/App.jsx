@@ -557,12 +557,12 @@ export default function App() {
     Swal.fire({
       title: 'Connect Wallet',
       html: `
-        <div class="flex flex-col gap-3 mt-4">
-          <button id="btn-freighter" class="w-full bg-[#1e2029] hover:bg-[#2b2d39] text-white rounded-xl py-4 font-bold flex items-center justify-center gap-3 transition-colors border border-gray-700">
-            <img src="${frighterIcon}" alt="Freighter" class="w-6 h-6 object-contain" /> Freighter (Desktop)
+        <div class="flex flex-col gap-4 mt-2">
+          <button id="btn-freighter" class="w-full bg-[#1e1e1e] hover:bg-[#121212] text-white rounded-xl py-4 font-bold flex items-center justify-center gap-3 transition-colors shadow-md">
+            <img src="${frighterIcon}" alt="Freighter" class="w-6 h-6 object-contain rounded-full bg-white p-0.5" /> ${t.freighterWeb || 'Freighter (Web)'}
           </button>
           <button id="btn-walletconnect" class="w-full bg-[#3b99fc] hover:bg-[#2a7bce] text-white rounded-xl py-4 font-bold flex items-center justify-center gap-3 transition-colors shadow-md shadow-blue-500/20">
-            <img src="${walletConnectIcon}" alt="WalletConnect" class="w-6 h-6 object-contain rounded-full" /> WalletConnect (Mobile)
+            <img src="${walletConnectIcon}" alt="WalletConnect" class="w-6 h-6 object-contain rounded-full" /> ${t.walletConnectMobile || 'WalletConnect (Mobile)'}
           </button>
         </div>
       `,
@@ -570,6 +570,14 @@ export default function App() {
       showCancelButton: true,
       cancelButtonText: t.close || 'Close',
       didOpen: () => {
+        const getTranslatedError = (errMessage) => {
+          if (!errMessage) return t.connErrorDesc;
+          const msg = String(errMessage).toLowerCase();
+          if (msg.includes('no wallet') || msg.includes('not connected') || msg.includes('not allow')) return t.errNoWallet;
+          if (msg.includes('decline') || msg.includes('reject')) return t.errUserDeclined;
+          return errMessage;
+        };
+
         document.getElementById('btn-freighter').addEventListener('click', async () => {
           Swal.close();
           try {
@@ -581,22 +589,22 @@ export default function App() {
             setFreighterBalance(balance);
             Swal.fire({ title: t.walletConnected, text: `${t.address}: ${address.substring(0, 6)}...${address.substring(50)}`, icon: 'success', confirmButtonColor: '#007AFF' });
           } catch (err) {
-            Swal.fire({ title: t.connError, text: err.message || t.connErrorDesc, icon: 'error', confirmButtonColor: '#FF3B30' });
+            Swal.fire({ title: t.connError, text: getTranslatedError(err.message || err), icon: 'error', confirmButtonColor: '#FF3B30' });
           }
         });
         
         document.getElementById('btn-walletconnect').addEventListener('click', async () => {
           Swal.close();
           try {
-            const address = await connectWallet('walletConnect');
+            const address = await connectWallet('wallet_connect');
             setUserAddress(address);
             localStorage.setItem('steldot_wallet_address', address);
-            localStorage.setItem('steldot_wallet_type', 'walletConnect');
+            localStorage.setItem('steldot_wallet_type', 'wallet_connect');
             const balance = await getXlmBalance(address);
             setFreighterBalance(balance);
             Swal.fire({ title: t.walletConnected, text: `${t.address}: ${address.substring(0, 6)}...${address.substring(50)}`, icon: 'success', confirmButtonColor: '#007AFF' });
           } catch (err) {
-            Swal.fire({ title: t.connError, text: err.message || t.connErrorDesc, icon: 'error', confirmButtonColor: '#FF3B30' });
+            Swal.fire({ title: t.connError, text: getTranslatedError(err.message || err), icon: 'error', confirmButtonColor: '#FF3B30' });
           }
         });
       }
