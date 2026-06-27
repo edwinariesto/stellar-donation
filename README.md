@@ -120,7 +120,6 @@ Provides user-friendly `SweetAlert` pop-ups to prevent bad data before reaching 
 - **Invalid Inputs**: Missing required fields when creating/editing campaigns.
 - **Deployment Failed**: Failure creating a new campaign.
 - **Treasury Deficit**: Smart contract balance is below the required 1.5% payout amount.
-- **Invalid Contract Format**: Contract ID pasted is not 56 characters long.
 - **Translation Failed**: Google Translate API network error.
 
 #### 2. Smart Contract On-Chain Guards (10 Panic States)

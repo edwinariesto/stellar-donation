@@ -24,6 +24,8 @@ enum DataKey {
     DonorSuccessfulClaims(Address),
     TotalRaised,
     TotalClaimsApproved,
+    HasDonated(Address),
+    ReferralReward(Address),
 }
 
 #[contract]
@@ -195,8 +197,102 @@ impl StelDotContract {
             .set(&DataKey::TotalRaised, &(total_raised + amount));
 
         env.events()
-            .publish((Symbol::short("donate"), donor, campaign_id), amount);
+            .publish((Symbol::short("donate"), donor), amount);
     }
+
+    pub fn donate_with_referral(env: Env, donor: Address, campaign_id: u32, amount: i128, referrer: Address) {
+        if amount <= 0 {
+            panic!("donation amount must be positive");
+        }
+        donor.require_auth();
+
+        if donor == referrer {
+            panic!("cannot refer yourself");
+        }
+
+        let mut campaign: Campaign = env
+            .storage()
+            .instance()
+            .get(&DataKey::Campaign(campaign_id))
+            .expect("campaign not found");
+        if !campaign.active {
+            panic!("campaign is inactive");
+        }
+
+        let token_addr: Address = env.storage().instance().get(&DataKey::Token).unwrap();
+        let token_client = token::Client::new(&env, &token_addr);
+        token_client.transfer(&donor, &env.current_contract_address(), &amount);
+
+        // Update campaign raised amount
+        campaign.raised += amount;
+        env.storage()
+            .instance()
+            .set(&DataKey::Campaign(campaign_id), &campaign);
+
+        // Update donor total donations
+        let donor_total_key = DataKey::DonorTotalDonated(donor.clone());
+        let current_total: i128 = env
+            .storage()
+            .persistent()
+            .get(&donor_total_key)
+            .unwrap_or(0);
+        env.storage()
+            .persistent()
+            .set(&donor_total_key, &(current_total + amount));
+        env.storage()
+            .persistent()
+            .extend_ttl(&donor_total_key, 5000, 10000);
+
+        // Update donor unclaimed volume (points = stroops donated)
+        let donor_points_key = DataKey::DonorPoints(donor.clone());
+        let current_points: i128 = env
+            .storage()
+            .persistent()
+            .get(&donor_points_key)
+            .unwrap_or(0);
+        env.storage()
+            .persistent()
+            .set(&donor_points_key, &(current_points + amount));
+        env.storage()
+            .persistent()
+            .extend_ttl(&donor_points_key, 5000, 10000);
+
+        // Update global totals
+        let total_raised: i128 = env
+            .storage()
+            .instance()
+            .get(&DataKey::TotalRaised)
+            .unwrap_or(0);
+        env.storage()
+            .instance()
+            .set(&DataKey::TotalRaised, &(total_raised + amount));
+
+        env.events()
+            .publish((Symbol::short("donate"), donor.clone(), campaign_id), amount);
+
+        // REFERRAL LOGIC
+        let has_donated_key = DataKey::HasDonated(donor.clone());
+        let has_donated: bool = env.storage().persistent().get(&has_donated_key).unwrap_or(false);
+        
+        if !has_donated {
+            // First time donating!
+            // Mark as donated
+            env.storage().persistent().set(&has_donated_key, &true);
+            env.storage().persistent().extend_ttl(&has_donated_key, 5000, 10000);
+
+            // Reward is 0.5% of donation
+            let reward_stroops = amount * 5 / 1000;
+            
+            let ref_reward_key = DataKey::ReferralReward(referrer.clone());
+            let current_ref_reward: i128 = env.storage().persistent().get(&ref_reward_key).unwrap_or(0);
+            env.storage().persistent().set(&ref_reward_key, &(current_ref_reward + reward_stroops));
+            env.storage().persistent().extend_ttl(&ref_reward_key, 5000, 10000);
+
+            env.events()
+                .publish((Symbol::short("referral"), referrer), donor);
+        }
+    }
+
 
     pub fn claim_reward(env: Env, donor: Address) {
         donor.require_auth();
@@ -257,6 +353,38 @@ impl StelDotContract {
 
         env.events()
             .publish((Symbol::short("claim"), donor), reward_stroops);
+    }
+
+    pub fn claim_referral_reward(env: Env, referrer: Address) {
+        referrer.require_auth();
+
+        let ref_reward_key = DataKey::ReferralReward(referrer.clone());
+        let reward_stroops: i128 = env
+            .storage()
+            .persistent()
+            .get(&ref_reward_key)
+            .unwrap_or(0);
+
+        if reward_stroops <= 0 {
+            panic!("no referral rewards to claim");
+        }
+
+        // Verify treasury balance
+        let token_addr: Address = env.storage().instance().get(&DataKey::Token).unwrap();
+        let token_client = token::Client::new(&env, &token_addr);
+        let balance = token_client.balance(&env.current_contract_address());
+        if balance < reward_stroops {
+            panic!("insufficient treasury balance to payout reward");
+        }
+
+        // Transfer XLM
+        token_client.transfer(&env.current_contract_address(), &referrer, &reward_stroops);
+
+        // Reset unclaimed referral volume to 0
+        env.storage().persistent().set(&ref_reward_key, &0i128);
+
+        env.events()
+            .publish((Symbol::short("clm_ref"), referrer), reward_stroops);
     }
 
     pub fn withdraw(env: Env, owner: Address, amount: i128) {
@@ -343,6 +471,20 @@ impl StelDotContract {
             .instance()
             .get(&DataKey::Campaign(id))
             .expect("campaign not found")
+    }
+
+    pub fn has_donated(env: Env, donor: Address) -> bool {
+        env.storage()
+            .persistent()
+            .get(&DataKey::HasDonated(donor))
+            .unwrap_or(false)
+    }
+
+    pub fn get_referral_reward(env: Env, referrer: Address) -> i128 {
+        env.storage()
+            .persistent()
+            .get(&DataKey::ReferralReward(referrer))
+            .unwrap_or(0)
     }
 }
 

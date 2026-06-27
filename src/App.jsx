@@ -22,6 +22,7 @@ import {
   executeTransaction,
   getGlobalTopDonors,
   getGlobalClaims,
+  getGlobalTransactions,
   checkFreighterNetwork,
   setAppNetwork,
   getWalletPublicKey
@@ -30,7 +31,7 @@ import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import bannerImg from './assets/banner.png';
 import frighterIcon from './image/frighter-icon.png';
 import walletConnectIcon from './image/walletconnect-icon.jfif';
-const DEFAULT_CONTRACT_ID = 'CB7EC4T3INCUSZPJDPW25K4YVAIJR7DW6CYJVHIUQK6L24UOAFC5BYBK';
+const DEFAULT_CONTRACT_ID = 'CDQBMFQXXWGG2H6WELWFHHA476WQTZIXYOPTYADBVBC4LRJOROCKPXK2';
 const NATIVE_XLM_SAC = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
 const initialNet = localStorage.getItem('steldot_last_network') || 'TESTNET';
@@ -126,12 +127,20 @@ export default function App() {
   const [networkMode, setNetworkMode] = useState(initialNet);
 
   // Platform & Contract State
-  const [campaigns, setCampaigns] = useState([]);
+  const [myClaims, setMyClaims] = useState([]);
+  
+  // Referral State
+  const [referralBalance, setReferralBalance] = useState(0);
+  const [referralHistory, setReferralHistory] = useState([]);
+  const searchParams = new URLSearchParams(window.location.search);
+  const refParam = searchParams.get('ref');
+  const partnerAddress = (refParam && refParam.startsWith('G') && refParam.length === 56) ? refParam : null;
   const [loyaltyPoints, setLoyaltyPoints] = useState(0);
   const [totalDonated, setTotalDonated] = useState(0);
   const [successfulClaims, setSuccessfulClaims] = useState(0);
   const [totalRaised, setTotalRaised] = useState(0);
   const [totalClaimsApproved, setTotalClaimsApproved] = useState(0);
+  const [campaigns, setCampaigns] = useState([]);
   const [contractBalance, setContractBalance] = useState(0);
   const [topDonors, setTopDonors] = useState([]);
   const [ownerAddress, setOwnerAddress] = useState('');
@@ -169,11 +178,21 @@ export default function App() {
   const [userTxSearch, setUserTxSearch] = useState('');
   const USER_TX_PER_PAGE = 3;
   const [userTxData, setUserTxData] = useState([]);
+  
+  // My Transactions
   const filteredUserTxs = userTxData
     .filter(tx => tx.wallet === userAddress || tx.to === userAddress)
     .filter(tx => tx.hash.toLowerCase().includes(userTxSearch.toLowerCase()));
   const totalUserTxPages = Math.max(1, Math.ceil(filteredUserTxs.length / USER_TX_PER_PAGE));
   const currentUserTxs = filteredUserTxs.slice((userTxPage - 1) * USER_TX_PER_PAGE, userTxPage * USER_TX_PER_PAGE);
+
+  // All Transactions
+  const [allTxPage, setAllTxPage] = useState(1);
+  const [allTxSearch, setAllTxSearch] = useState('');
+  const filteredAllTxs = userTxData
+    .filter(tx => tx.hash.toLowerCase().includes(allTxSearch.toLowerCase()));
+  const totalAllTxPages = Math.max(1, Math.ceil(filteredAllTxs.length / USER_TX_PER_PAGE));
+  const currentAllTxs = filteredAllTxs.slice((allTxPage - 1) * USER_TX_PER_PAGE, allTxPage * USER_TX_PER_PAGE);
 
   const [userClaimPage, setUserClaimPage] = useState(1);
   const [userClaimSearch, setUserClaimSearch] = useState('');
@@ -185,50 +204,16 @@ export default function App() {
   const totalUserClaimPages = Math.max(1, Math.ceil(filteredUserClaims.length / USER_CLAIMS_PER_PAGE));
   const currentUserClaims = filteredUserClaims.slice((userClaimPage - 1) * USER_CLAIMS_PER_PAGE, userClaimPage * USER_CLAIMS_PER_PAGE);
 
-  // Fetch Realtime Data from Horizon
+  // Fetch Realtime Data
   useEffect(() => {
     const fetchTxs = async () => {
-      if (!userAddress) {
+      if (!contractId) {
         setUserTxData([]);
         setUserClaimData([]);
         return;
       }
       try {
-        const res = await fetch(`https://horizon-testnet.stellar.org/accounts/${userAddress}/payments?limit=200&order=desc`);
-        if (!res.ok) throw new Error('Horizon fetch failed');
-        const data = await res.json();
-        
-        let txs = [];
-        for (let r of data._embedded.records) {
-          let amount = 0, from = '', to = '';
-          if (r.type === 'payment' || r.type === 'path_payment_strict_receive' || r.type === 'path_payment_strict_send') {
-            amount = parseFloat(r.amount);
-            from = r.from;
-            to = r.to;
-          } else if (r.type === 'create_account') {
-            amount = parseFloat(r.starting_balance);
-            from = r.funder;
-            to = r.account;
-          } else if (r.type === 'invoke_host_function' && r.asset_balance_changes) {
-             const transfer = r.asset_balance_changes.find(c => c.type === 'transfer' && c.asset_type === 'native');
-             if (transfer) {
-               amount = parseFloat(transfer.amount);
-               from = transfer.from;
-               to = transfer.to;
-             }
-          }
-          if (amount > 0) {
-            txs.push({
-              id: r.id,
-              hash: r.transaction_hash,
-              wallet: from,
-              to: to,
-              amount: amount,
-              date: new Date(r.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' }),
-              status: r.transaction_successful ? 'success' : 'failed'
-            });
-          }
-        }
+        const txs = await getGlobalTransactions(contractId);
         setUserTxData(txs);
         
         // My Claim Rewards: Transactions received from the Smart Contract
@@ -251,18 +236,23 @@ export default function App() {
 
   // Admin Claim History Fetch
   useEffect(() => {
-    const fetchAdminClaims = async () => {
+    const fetchClaims = async () => {
       if (!contractId) return;
       try {
         const claims = await getGlobalClaims(contractId);
         setClaimHistoryData(claims);
       } catch (err) {
-        console.error("Failed to fetch admin claims", err);
+        console.error("Failed to fetch claims", err);
       }
     };
-    fetchAdminClaims();
+    fetchClaims();
   }, [contractId]);
 
+  const getExplorerLink = (address) => {
+    if (!address) return '#';
+    const type = address.startsWith('C') ? 'contract' : 'account';
+    return `https://stellar.expert/explorer/${networkMode.toLowerCase()}/${type}/${address}`;
+  };
 
   useEffect(() => {
     setCurrentPage(1);
@@ -411,6 +401,11 @@ export default function App() {
           nativeToScVal(Address.fromString(userAddress))
         ]);
         setSuccessfulClaims(Number(statusRes || 0));
+
+        import('./utils/stellar').then(stellar => {
+          stellar.getReferralRewardBalance(contractId, userAddress).then(bal => setReferralBalance(bal));
+          stellar.getReferralHistory(contractId, userAddress).then(history => setReferralHistory(history));
+        });
       }
 
       // Fetch all campaigns
@@ -689,7 +684,22 @@ export default function App() {
         const campaignSc = nativeToScVal(campaignId, { type: 'u32' });
         const amountSc = nativeToScVal(amountStroops, { type: 'i128' });
 
-        const txRes = await executeTransaction(contractId, 'donate', [donorSc, campaignSc, amountSc], userAddress);
+        let funcName = 'donate';
+        let args = [donorSc, campaignSc, amountSc];
+        
+        const searchParams = new URLSearchParams(window.location.search);
+        const refParam = searchParams.get('ref');
+        
+        if (refParam && refParam.startsWith('G') && refParam.length === 56 && refParam !== userAddress) {
+          try {
+            args.push(nativeToScVal(Address.fromString(refParam)));
+            funcName = 'donate_with_referral';
+          } catch(e) {
+            console.error('Invalid ref address', e);
+          }
+        }
+
+        const txRes = await executeTransaction(contractId, funcName, args, userAddress);
         
         setDonateAmounts(prev => ({ ...prev, [campaignId]: '' }));
         await refreshData();
@@ -708,6 +718,74 @@ export default function App() {
         Swal.fire({
           title: t.txFailed,
           text: err.message || t.txFailedDesc,
+          icon: 'error',
+          confirmButtonColor: '#FF3B30'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  // Claim Referral Rewards
+  const handleClaimReferral = async () => {
+    if (referralBalance <= 0) {
+      Swal.fire({
+        title: t.pointsInsufficient,
+        text: 'No referral balance to claim',
+        icon: 'warning',
+        confirmButtonColor: '#007AFF'
+      });
+      return;
+    }
+
+    if (contractBalance < referralBalance) {
+      Swal.fire({
+        title: t.treasuryDeficit,
+        text: typeof t.treasuryDeficitDesc === 'function' ? t.treasuryDeficitDesc(contractBalance.toFixed(2)) : t.treasuryDeficitDesc,
+        icon: 'error',
+        confirmButtonColor: '#FF3B30'
+      });
+      return;
+    }
+
+    if (isMockMode) {
+      setIsLoading(true);
+      setTimeout(() => {
+        setFreighterBalance(prev => (parseFloat(prev) + parseFloat(referralBalance)).toFixed(2));
+        setReferralBalance(0);
+        setIsLoading(false);
+        Swal.fire({
+          title: 'Claim Successful',
+          text: `You have successfully claimed your referral reward.`,
+          icon: 'success',
+          confirmButtonColor: '#007AFF'
+        });
+      }, 1500);
+    } else {
+      try {
+        setIsLoading(true);
+        Swal.fire({
+          title: t.confirmSignature,
+          text: 'Please confirm the claim transaction in your wallet.',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        const txRes = await executeTransaction(contractId, 'claim_referral_reward', [nativeToScVal(Address.fromString(userAddress))], userAddress);
+        
+        await refreshData();
+        Swal.fire({
+          title: 'Claim Successful',
+          html: `<a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/tx/${txRes.hash}" target="_blank" class="text-ios-blue underline">View on Explorer</a>`,
+          icon: 'success',
+          confirmButtonColor: '#007AFF'
+        });
+      } catch (err) {
+        console.error('Failed to claim referral reward', err);
+        Swal.fire({
+          title: t.txFailed,
+          text: getTranslatedError(err.message || err),
           icon: 'error',
           confirmButtonColor: '#FF3B30'
         });
@@ -1052,11 +1130,11 @@ export default function App() {
         const testnetVal = document.getElementById('swal-input-testnet').value.trim();
         
         if (mainnetVal && (!mainnetVal.startsWith('C') || mainnetVal.length !== 56)) {
-          Swal.showValidationMessage('Mainnet Contract ID is invalid');
+          Swal.showValidationMessage(`Mainnet Contract ID is invalid (Length: ${mainnetVal.length}, Must be 56)`);
           return false;
         }
         if (testnetVal && (!testnetVal.startsWith('C') || testnetVal.length !== 56)) {
-          Swal.showValidationMessage('Testnet Contract ID is invalid');
+          Swal.showValidationMessage(`Testnet Contract ID is invalid (Length: ${testnetVal.length}, Must be 56)`);
           return false;
         }
         return { mainnet: mainnetVal, testnet: testnetVal };
@@ -1324,6 +1402,24 @@ export default function App() {
         </div>
         
 
+        {/* Partner Box (Shown if visited via ?ref=) */}
+        {partnerAddress && partnerAddress !== userAddress && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 mb-6 flex items-center shadow-sm">
+            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-4 border border-blue-200 overflow-hidden">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 opacity-80"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <div>
+              <h4 className="font-bold text-ios-blue text-sm">{t.partnerTitle || 'Mitra Pengundang'}</h4>
+              <p className="text-xs text-ios-secondaryText mt-0.5">{t.partnerDesc || 'Anda diundang oleh malaikat kebaikan. Donasi pertama Anda akan memberikan bonus untuk mereka.'}</p>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-gray-200 text-gray-500">
+                  {partnerAddress.substring(0, 8)}...{partnerAddress.substring(48)}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header Cards Row (Heading Metrics) */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           
@@ -1405,6 +1501,64 @@ export default function App() {
                 }`}
               >
                 {t.claimRewardBtn} {(loyaltyPoints >= 10) && `(${(loyaltyPoints * 0.015).toFixed(2)} XLM)`}
+              </button>
+            </div>
+            
+          </section>
+        )}
+
+        {/* Helping Angel (Referral) Claims & Actions */}
+        {userAddress && (totalDonated > 100 || isOwner) && (
+          <section className="bg-white rounded-2xl p-6 shadow-ios border border-ios-lightGray/30 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 glow-blue">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-ios-blue"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"></path></svg>
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">{t.helpingAngelTitle || 'Malaikat Penolong (Referral)'}</h3>
+                <p className="text-sm text-ios-secondaryText mt-0.5">
+                  <span dangerouslySetInnerHTML={{ __html: (typeof t.helpingAngelDesc === 'function' ? t.helpingAngelDesc(referralBalance) : '') || `Saldo referral Anda: <strong>${referralBalance} XLM</strong>.` }}></span>
+                </p>
+                <div className="mt-2">
+                  <button 
+                    onClick={() => setShowAngelReferral(true)}
+                    className="text-xs text-ios-blue hover:underline font-medium"
+                  >
+                    {t.referralHistoryTitle || 'Lihat Daftar Teman Berdonasi'} &rarr;
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-end gap-2 w-full md:w-auto">
+              <button 
+                onClick={handleClaimReferral}
+                disabled={referralBalance <= 0 || isLoading}
+                className={`ios-transition ios-active-scale px-8 py-3.5 rounded-2xl text-sm font-bold w-full md:w-auto ${
+                  referralBalance > 0
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-md shadow-blue-500/20'
+                    : 'bg-ios-lightGray text-ios-darkGray cursor-not-allowed shadow-none'
+                }`}
+              >
+                {t.claimReferralBtn || 'Klaim Reward Referral'}
+              </button>
+              
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}${window.location.pathname}?ref=${userAddress}`;
+                  navigator.clipboard.writeText(url);
+                  Swal.fire({
+                    title: t.linkCopied || 'Link Tersalin!',
+                    text: t.shareLinkDesc || 'Ajak teman berdonasi dan dapatkan 0.5% dari donasi pertama mereka.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                  });
+                }}
+                className="text-[11px] text-ios-blue hover:bg-blue-50 px-3 py-1 rounded-full ios-transition border border-blue-100 flex items-center gap-1 mt-1"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                {t.copyLink || 'Salin Link Referral'}
               </button>
             </div>
             
@@ -2158,15 +2312,15 @@ export default function App() {
                               <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
                                 <strong style="color: #111827;">${t.transactionHash}:</strong><br/>
                                 <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">
-                                  <a href="https://stellar.expert/explorer/testnet/tx/${tx.hash}" target="_blank" style="color: #2563eb; text-decoration: underline;">${tx.hash}</a>
+                                  <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/tx/${tx.hash}" target="_blank" style="color: #2563eb; text-decoration: underline;">${tx.hash}</a>
                                 </span><br/>
                                 <strong style="color: #111827;">${t.fromSender}:</strong><br/>
                                 <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
-                                  <a href="https://stellar.expert/explorer/testnet/account/${tx.wallet}" target="_blank" style="color: inherit; text-decoration: underline;">${tx.wallet}</a>
+                                  <a href="${getExplorerLink(tx.wallet)}" target="_blank" style="color: inherit; text-decoration: underline;">${tx.wallet}</a>
                                 </span><br/>
                                 <strong style="color: #111827;">${t.toReceiver}:</strong><br/>
                                 <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
-                                  <a href="https://stellar.expert/explorer/testnet/contract/${tx.to}" target="_blank" style="color: inherit; text-decoration: underline;">${tx.to}</a>
+                                  <a href="${getExplorerLink(tx.to)}" target="_blank" style="color: inherit; text-decoration: underline;">${tx.to}</a>
                                 </span><br/>
                                 <strong style="color: #111827;">${t.amountLabel}:</strong> ${tx.amount.toFixed(2)} XLM<br/><br/>
                                 <strong style="color: #111827;">${t.dateLabel}:</strong> ${tx.date}<br/><br/>
@@ -2260,23 +2414,27 @@ export default function App() {
                         key={claim.id}
                         onClick={() => {
                           SwalOrig.fire({
-                            title: t.claimRewardDetail,
+                            title: t.claimDetailTitle,
                             html: `
                               <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
-                                <strong style="color: #111827;">${t.toReceiver}:</strong><br/>
-                                <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">
-                                  <a href="https://stellar.expert/explorer/testnet/account/${claim.address}" target="_blank" style="color: #2563eb; text-decoration: underline;">${claim.address}</a>
+                                <strong style="color: #111827;">${t.claimId}:</strong><br/>
+                                <span style="color: #4b5563; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">
+                                  ${claim.id}
                                 </span><br/>
-                                <strong style="color: #111827;">${t.fromSender}:</strong><br/>
+                                <strong style="color: #111827;">${t.claimerAddress}:</strong><br/>
                                 <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
-                                  <a href="https://stellar.expert/explorer/testnet/contract/${claim.from}" target="_blank" style="color: inherit; text-decoration: underline;">${claim.from}</a>
+                                  <a href="${getExplorerLink(claim.address)}" target="_blank" style="color: #2563eb; text-decoration: underline;">${claim.address}</a>
+                                </span><br/>
+                                <strong style="color: #111827;">${t.contractSource}:</strong><br/>
+                                <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
+                                  <a href="${getExplorerLink(claim.from)}" target="_blank" style="color: inherit; text-decoration: underline;">${claim.from}</a>
                                 </span><br/>
                                 <strong style="color: #111827;">${t.amountLabel}:</strong> ${claim.amount.toFixed(2)} XLM<br/><br/>
                                 <strong style="color: #111827;">${t.dateLabel}:</strong> ${claim.date}<br/><br/>
                                 <strong style="color: #111827;">${t.statusLabel}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.approved.toUpperCase()}</span>
                               </div>
                             `,
-                            icon: 'info',
+                            icon: 'success',
                             confirmButtonText: t.close,
                             buttonsStyling: false,
                             customClass: { 
@@ -2328,6 +2486,182 @@ export default function App() {
                 </div>
               </div>
             )}
+
+            {/* All Transactions (Transparent for everyone) */}
+            <div className="bg-white rounded-2xl p-6 shadow-ios border border-ios-lightGray/30 mb-6 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -mr-16 -mt-16 opacity-50 pointer-events-none transition-transform group-hover:scale-110"></div>
+              <h2 className="text-lg font-bold tracking-tight text-ios-darkText mb-3 flex items-center gap-3">
+                <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
+                {t.allTransactions || 'All Transactions'}
+              </h2>
+              <div className="relative mb-4">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </div>
+                <input 
+                  type="text" 
+                  placeholder={t.searchHash || 'Search Hash...'}
+                  value={allTxSearch}
+                  onChange={(e) => setAllTxSearch(e.target.value)}
+                  className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-ios-blue transition-all"
+                />
+              </div>
+              <div className="space-y-3">
+                {currentAllTxs.length === 0 ? (
+                  <div className="text-center py-6 text-xs text-gray-400 bg-gray-50 rounded-2xl border border-gray-100">
+                    {t.noTransactions || 'No transactions found.'}
+                  </div>
+                ) : (
+                  currentAllTxs.map(tx => (
+                    <div key={tx.id} onClick={() => {
+                        SwalOrig.fire({
+                          title: t.transactionDetail || 'Transaction Details',
+                          html: `
+                            <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
+                              <strong style="color: #111827;">${t.transactionHash || 'Hash'}:</strong><br/>
+                              <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">
+                                <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/tx/${tx.hash}" target="_blank" style="color: #2563eb; text-decoration: underline;">${tx.hash}</a>
+                              </span><br/>
+                              <strong style="color: #111827;">${t.fromSender || 'From'}:</strong><br/>
+                              <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
+                                <a href="${getExplorerLink(tx.wallet)}" target="_blank" style="color: inherit; text-decoration: underline;">${tx.wallet}</a>
+                              </span><br/>
+                              <strong style="color: #111827;">${t.toReceiver || 'To'}:</strong><br/>
+                              <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
+                                <a href="${getExplorerLink(tx.to)}" target="_blank" style="color: inherit; text-decoration: underline;">${tx.to}</a>
+                              </span><br/>
+                              <strong style="color: #111827;">${t.amountLabel || 'Amount'}:</strong> ${tx.amount.toFixed(2)} XLM<br/><br/>
+                              <strong style="color: #111827;">${t.dateLabel || 'Date'}:</strong> ${tx.date}<br/><br/>
+                              <strong style="color: #111827;">${t.statusLabel || 'Status'}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.successful || 'SUCCESS'}</span>
+                            </div>
+                          `,
+                          icon: 'success',
+                          confirmButtonText: t.close || 'Close',
+                          buttonsStyling: false,
+                          customClass: { 
+                            popup: 'rounded-2xl overflow-hidden !p-0', htmlContainer: '!p-0 !m-0', title: '!pt-6', actions: 'w-full !m-0 !p-0 border-t border-gray-100', confirmButton: 'w-full bg-ios-blue hover:bg-blue-600 text-white font-bold py-4 rounded-none transition-colors !m-0 border-none outline-none focus:outline-none focus:ring-0'
+                          }
+                        });
+                      }}
+                      className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer active:scale-[0.98]"
+                    >
+                      <div className="flex items-center gap-3 w-2/3">
+                        <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        </div>
+                        <div className="overflow-hidden w-full">
+                          <p className="text-xs font-mono text-ios-darkText font-bold truncate">{tx.hash.substring(0, 8)}...{tx.hash.substring(tx.hash.length - 8)}</p>
+                          <p className="text-[10px] text-gray-400 mt-0.5 truncate">{tx.date}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end flex-shrink-0">
+                        <span className="text-sm font-bold text-ios-darkText">{tx.amount.toFixed(2)} XLM</span>
+                        <span className="text-[10px] font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-full uppercase mt-1">{t.successful || 'SUCCESS'}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              {totalAllTxPages > 1 && (
+                <div className="flex justify-center items-center gap-2 mt-4 pt-4 border-t border-gray-100">
+                  <button onClick={() => setAllTxPage(p => Math.max(1, p - 1))} disabled={allTxPage === 1} className="p-1 rounded-full text-gray-400 hover:text-ios-blue disabled:opacity-30 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  </button>
+                  <span className="text-xs font-bold text-ios-darkGray">{allTxPage} / {totalAllTxPages}</span>
+                  <button onClick={() => setAllTxPage(p => Math.min(totalAllTxPages, p + 1))} disabled={allTxPage === totalAllTxPages} className="p-1 rounded-full text-gray-400 hover:text-ios-blue disabled:opacity-30 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* All Claim Rewards (Transparent for everyone) */}
+            <div className="bg-white rounded-2xl p-6 shadow-ios border border-ios-lightGray/30 mb-6 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-bl-full -mr-16 -mt-16 opacity-50 pointer-events-none transition-transform group-hover:scale-110"></div>
+              <h2 className="text-lg font-bold tracking-tight text-ios-darkText mb-3 flex items-center gap-3">
+                <div className="w-7 h-7 rounded-full bg-amber-50 flex items-center justify-center border border-amber-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                </div>
+                {t.allClaimRewards || 'All Claim Rewards'}
+              </h2>
+              <div className="relative mb-4">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </div>
+                <input 
+                  type="text" 
+                  placeholder={t.searchWallet || 'Search Wallet...'}
+                  value={claimHistorySearch}
+                  onChange={(e) => setClaimHistorySearch(e.target.value)}
+                  className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-400 transition-all"
+                />
+              </div>
+              <div className="space-y-3">
+                {currentClaims.length === 0 ? (
+                  <div className="text-center py-6 text-xs text-gray-400 bg-gray-50 rounded-2xl border border-gray-100">
+                    {t.noTransactions || 'No claims found.'}
+                  </div>
+                ) : (
+                  currentClaims.map(claim => (
+                    <div key={claim.id} onClick={() => {
+                        SwalOrig.fire({
+                          title: t.claimDetailTitle || 'Claim Details',
+                          html: `
+                            <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
+                              <strong style="color: #111827;">${t.claimId || 'Claim ID'}:</strong><br/>
+                              <span style="color: #4b5563; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">${claim.id}</span><br/>
+                              <strong style="color: #111827;">${t.claimerAddress || 'Claimer Address'}:</strong><br/>
+                              <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
+                                <a href="${getExplorerLink(claim.address)}" target="_blank" style="color: #2563eb; text-decoration: underline;">${claim.address}</a>
+                              </span><br/>
+                              <strong style="color: #111827;">${t.contractSource || 'Contract Source'}:</strong><br/>
+                              <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
+                                <a href="${getExplorerLink(claim.from)}" target="_blank" style="color: inherit; text-decoration: underline;">${claim.from}</a>
+                              </span><br/>
+                              <strong style="color: #111827;">${t.amountLabel || 'Amount'}:</strong> ${claim.amount.toFixed(2)} XLM<br/><br/>
+                              <strong style="color: #111827;">${t.dateLabel || 'Date'}:</strong> ${claim.date}<br/><br/>
+                              <strong style="color: #111827;">${t.statusLabel || 'Status'}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.approved ? t.approved.toUpperCase() : 'APPROVED'}</span>
+                            </div>
+                          `,
+                          icon: 'success',
+                          confirmButtonText: t.close || 'Close',
+                          buttonsStyling: false,
+                          customClass: { popup: 'rounded-2xl overflow-hidden !p-0', htmlContainer: '!p-0 !m-0', title: '!pt-6', actions: 'w-full !m-0 !p-0 border-t border-gray-100', confirmButton: 'w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 rounded-none transition-colors !m-0 border-none outline-none focus:outline-none focus:ring-0' }
+                        });
+                      }}
+                      className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer active:scale-[0.98]"
+                    >
+                      <div className="flex items-center gap-3 w-2/3">
+                        <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        </div>
+                        <div className="overflow-hidden w-full">
+                          <p className="text-xs font-mono text-ios-darkText font-bold truncate">{claim.address.substring(0, 5)}...{claim.address.substring(claim.address.length - 4)}</p>
+                          <p className="text-[10px] text-gray-400 mt-0.5 truncate">{claim.date}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end flex-shrink-0">
+                        <span className="text-sm font-bold text-amber-500">{claim.amount.toFixed(2)} XLM</span>
+                        <span className="text-[10px] font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-full uppercase mt-1">{t.approved || 'APPROVED'}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              {totalClaimPages > 1 && (
+                <div className="flex justify-center items-center gap-2 mt-4 pt-4 border-t border-gray-100">
+                  <button onClick={() => setClaimHistoryPage(p => Math.max(1, p - 1))} disabled={claimHistoryPage === 1} className="p-1 rounded-full text-gray-400 hover:text-amber-500 disabled:opacity-30 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  </button>
+                  <span className="text-xs font-bold text-ios-darkGray">{claimHistoryPage} / {Math.max(1, totalClaimPages)}</span>
+                  <button onClick={() => setClaimHistoryPage(p => Math.min(totalClaimPages, p + 1))} disabled={claimHistoryPage === totalClaimPages || totalClaimPages === 0} className="p-1 rounded-full text-gray-400 hover:text-amber-500 disabled:opacity-30 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Contact Provider */}
             <div className="bg-white rounded-2xl p-6 shadow-ios border border-ios-lightGray/30 text-xs text-ios-secondaryText space-y-3">
@@ -2475,22 +2809,37 @@ export default function App() {
 
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex flex-col items-center justify-center text-center">
-                  <span className="text-3xl font-bold text-fuchsia-400 mb-1">0</span>
-                  <span className="text-[10px] text-slate-400 uppercase tracking-widest">{t.friendsInvited}</span>
+                  <span className="text-3xl font-bold text-fuchsia-400 mb-1">{referralHistory.length}</span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest">{t.friendsInvited || 'Teman Diundang'}</span>
                 </div>
                 <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex flex-col items-center justify-center text-center">
-                  <span className="text-3xl font-bold text-purple-400 mb-1 flex items-baseline gap-1">0 <span className="text-sm">XLM</span></span>
-                  <span className="text-[10px] text-slate-400 uppercase tracking-widest">{t.rewardEarned}</span>
+                  <span className="text-3xl font-bold text-purple-400 mb-1 flex items-baseline gap-1">{referralBalance.toFixed(2)} <span className="text-sm">XLM</span></span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest">{t.rewardEarned || 'Reward XLM'}</span>
                 </div>
               </div>
 
-              <button 
-                onClick={() => Swal.fire({ title: t.noReferralReward, text: t.noReferralRewardDesc, icon: 'info', confirmButtonColor: '#a855f7', background: '#1f2937', color: '#fff' })}
-                className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 py-3 rounded-xl font-bold text-sm transition-colors mb-6 flex items-center justify-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                {t.claimReferral}
-              </button>
+              <div className="mb-6 flex-1 min-h-[150px] max-h-[300px] overflow-y-auto">
+                <h3 className="text-sm font-bold text-slate-200 mb-3">{t.referralHistoryTitle || 'Daftar Teman Berdonasi'}</h3>
+                {referralHistory.length > 0 ? (
+                  <div className="space-y-2">
+                    {referralHistory.map((ref, idx) => (
+                      <div key={idx} className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50 flex justify-between items-center">
+                        <div>
+                          <p className="text-xs font-mono text-slate-300">{ref.donorAddress.substring(0, 8)}...{ref.donorAddress.substring(48)}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">{ref.date}</p>
+                        </div>
+                        <div className="text-[10px] font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded-md">
+                          + Sukses
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-slate-800/30 rounded-xl border border-slate-700/30 border-dashed">
+                    <p className="text-sm text-slate-500">{t.noReferralHistory || 'Belum ada teman yang berdonasi menggunakan link Anda.'}</p>
+                  </div>
+                )}
+              </div>
 
               <div className="bg-black/50 p-3 rounded-xl border border-slate-800 flex items-center gap-3">
                 <div className="text-xs font-mono text-slate-300 truncate flex-1 opacity-80 select-all">

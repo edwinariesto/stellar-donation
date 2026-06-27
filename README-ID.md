@@ -37,12 +37,16 @@ Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Total volum
 - **Riwayat Transaksi Real-time**: Pantau transaksi masuk dan keluar Anda secara instan yang ditarik langsung dari Stellar Horizon API.
 - **Riwayat Klaim Reward**: Bagian khusus untuk memantau semua pembayaran hadiah sukses yang dikirimkan oleh smart contract ke dompet Anda.
 - **Tambahan 4 Manfaat Eksklusif**: Donatur yang loyalitas akan mendapatkan 4 manfaat Eksklusif terbaik dan menguntungkan dari StelDot.
+- **Dasbor Donatur**: Pengguna dapat melacak donasi mereka sendiri, melihat progres target, dan melihat donatur teratas secara global.
+- **Malaikat Penolong (Sistem Referral)**: Pengguna yang telah berdonasi >100 XLM dapat membuat tautan referral unik. Mereka akan mendapat hadiah 0.5% otomatis ke dompet mereka saat teman yang mereka undang berdonasi untuk pertama kalinya!
+- **Transparansi Transaksi**: Semua riwayat transaksi dan klaim dapat dilihat oleh publik di dasbor dan dilacak langsung ke *blockchain explorer* (Stellar Expert).
 
 #### Fitur Owner (Administrator)
 
 - **Dashboard Admin Premium**: Panel kontrol eksklusif di posisi atas untuk mengelola keseluruhan aplikasi.
 - **Konfigurasi Smart Contract**: Terdapat tombol pengatur koneksi Smart Contract yang tertanam secara elegan di Dashboard Owner.
 - **Buka Kampanye**: Tambahkan kampanye baru dengan ID unik, judul, deskripsi, dan target dana.
+- **Target Dinamis**: Pemilik proyek dapat menambahkan kampanye baru, menetapkan target dana khusus, dan menerjemahkan deskripsi langsung dari antarmuka pengguna.
 - **Edit Kampanye**: Perbarui detail kampanye yang sudah berjalan (seperti memperbaiki salah ketik, mengubah target, atau menonaktifkan kampanye).
 - **Tampilan Saldo Kas (Treasury)**: Saldo XLM kas kontrak ditampilkan secara real-time di panel admin.
 - **Validasi Saldo**: Kontrak akan membatalkan transaksi otomatis jika saldo kas tidak mencukupi untuk membayar reward **1.5%** milik donatur.

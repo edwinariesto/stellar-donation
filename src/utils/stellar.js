@@ -132,6 +132,15 @@ export const callReadOnly = async (contractId, method, args = []) => {
   }
 };
 
+export const getReferralRewardBalance = async (contractId, userAddress) => {
+  try {
+    const val = await callReadOnly(contractId, 'get_referral_reward', [nativeToScVal(userAddress, { type: 'address' })]);
+    return Number(val) / 10000000;
+  } catch (err) {
+    return 0;
+  }
+};
+
 export const getGlobalTopDonors = async (contractId) => {
   try {
     let minLedger = 1;
@@ -248,7 +257,7 @@ export const getGlobalClaims = async (contractId) => {
     allEvents.forEach(evt => {
       try {
         const topic0 = scValToNative(evt.topic[0]);
-        if (topic0 === 'claim') {
+        if (topic0 === 'claim' || topic0 === 'clm_ref') {
           const address = scValToNative(evt.topic[1]);
           const amount = Number(scValToNative(evt.value)) / 10000000;
           console.log('Parsed claim:', address, amount);
@@ -273,6 +282,169 @@ export const getGlobalClaims = async (contractId) => {
     
   } catch (err) {
     console.error('Failed to get global claims', err);
+    return [];
+  }
+};
+
+export const getGlobalTransactions = async (contractId) => {
+  try {
+    let minLedger = 1;
+    try {
+      await rpcServer.getEvents({ startLedger: 1, filters: [], limit: 1 });
+    } catch(err) {
+      const match = err.message.match(/range: (\d+) - (\d+)/);
+      const match2 = err.message.match(/greater than or equal to (\d+)/);
+      if (match) minLedger = parseInt(match[1], 10);
+      else if (match2) minLedger = parseInt(match2[1], 10);
+    }
+    
+    const latest = await rpcServer.getLatestLedger();
+    let currentEnd = latest.sequence;
+    let allEvents = [];
+    
+    for (let i = 0; i < 6; i++) {
+      const startLedger = Math.max(minLedger, currentEnd - 5000);
+      let pagingToken;
+      try {
+        while (true) {
+          const res = await rpcServer.getEvents({
+            startLedger,
+            filters: [{ type: 'contract', contractIds: [contractId] }],
+            pagination: { cursor: pagingToken, limit: 100 }
+          });
+          
+          if (!res.events || res.events.length === 0) break;
+          
+          const validEvents = res.events.filter(e => parseInt(e.ledger, 10) <= currentEnd);
+          allEvents = allEvents.concat(validEvents);
+          
+          if (res.events.length < 100) break;
+          pagingToken = res.events[res.events.length - 1].id;
+          if (parseInt(res.events[res.events.length - 1].ledger, 10) >= currentEnd) break;
+        }
+      } catch (e) {
+        break; 
+      }
+      currentEnd = startLedger - 1;
+      if (currentEnd <= minLedger) break;
+    }
+    
+    const txs = [];
+    allEvents.forEach(evt => {
+      try {
+        const topic0 = scValToNative(evt.topic[0]);
+        if (topic0 === 'donate') {
+          const donor = scValToNative(evt.topic[1]);
+          const amount = Number(scValToNative(evt.value)) / 10000000;
+          txs.push({
+            id: evt.id,
+            hash: evt.txHash || evt.id.substring(0, 16),
+            wallet: donor,
+            to: contractId,
+            amount: amount,
+            date: new Date(evt.ledgerClosedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' }),
+            status: 'success'
+          });
+        } else if (topic0 === 'claim' || topic0 === 'clm_ref') {
+          const address = scValToNative(evt.topic[1]);
+          const amount = Number(scValToNative(evt.value)) / 10000000;
+          txs.push({
+            id: evt.id,
+            hash: evt.txHash || evt.id.substring(0, 16),
+            wallet: contractId,
+            to: address,
+            amount: amount,
+            date: new Date(evt.ledgerClosedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' }),
+            status: 'success'
+          });
+        }
+      } catch(e) {}
+    });
+    
+    txs.sort((a, b) => b.id.localeCompare(a.id));
+    return txs;
+    
+  } catch (err) {
+    console.error('Failed to get global txs', err);
+    return [];
+  }
+};
+
+export const getReferralHistory = async (contractId, referrerAddress) => {
+  try {
+    let minLedger = 1;
+    try {
+      await rpcServer.getEvents({ startLedger: 1, filters: [], limit: 1 });
+    } catch(err) {
+      const match = err.message.match(/range: (\d+) - (\d+)/);
+      const match2 = err.message.match(/greater than or equal to (\d+)/);
+      if (match) minLedger = parseInt(match[1], 10);
+      else if (match2) minLedger = parseInt(match2[1], 10);
+    }
+    
+    const latest = await rpcServer.getLatestLedger();
+    let currentEnd = latest.sequence;
+    let allEvents = [];
+    
+    for (let i = 0; i < 6; i++) {
+      const startLedger = Math.max(minLedger, currentEnd - 5000);
+      let pagingToken;
+      try {
+        while (true) {
+          const res = await rpcServer.getEvents({
+            startLedger,
+            filters: [{ type: 'contract', contractIds: [contractId] }],
+            pagination: { cursor: pagingToken, limit: 100 }
+          });
+          
+          if (!res.events || res.events.length === 0) break;
+          
+          const validEvents = res.events.filter(e => parseInt(e.ledger, 10) <= currentEnd);
+          allEvents = allEvents.concat(validEvents);
+          
+          if (res.events.length < 100) break;
+          pagingToken = res.events[res.events.length - 1].id;
+          if (parseInt(res.events[res.events.length - 1].ledger, 10) >= currentEnd) break;
+        }
+      } catch (e) {
+        break; 
+      }
+      currentEnd = startLedger - 1;
+      if (currentEnd <= minLedger) break;
+    }
+    
+    const referrals = [];
+    allEvents.forEach(evt => {
+      try {
+        const topic0 = scValToNative(evt.topic[0]);
+        if (topic0 === 'referral') {
+          const referrer = scValToNative(evt.topic[1]);
+          if (referrer === referrerAddress) {
+            const donorAddress = scValToNative(evt.value);
+            referrals.push({
+              id: evt.id,
+              donorAddress,
+              date: new Date(evt.ledgerClosedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })
+            });
+          }
+        }
+      } catch(e) {}
+    });
+    
+    referrals.sort((a, b) => b.id.localeCompare(a.id));
+    
+    const uniqueReferrals = [];
+    const seen = new Set();
+    for (const ref of referrals) {
+      if (!seen.has(ref.donorAddress)) {
+        seen.add(ref.donorAddress);
+        uniqueReferrals.push(ref);
+      }
+    }
+    
+    return uniqueReferrals;
+  } catch (err) {
+    console.error('Failed to get referral history', err);
     return [];
   }
 };
