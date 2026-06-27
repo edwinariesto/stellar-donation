@@ -242,7 +242,7 @@ Open `http://localhost:5173`. Clicking on the **Contract ID** link allows you to
 <img width="370" height="658" alt="Screenshot 2026-06-24 205739" src="https://github.com/user-attachments/assets/bd6d667a-b5a8-4070-879f-83ca2a4c43de" />
 <img width="369" height="658" alt="Screenshot 2026-06-24 205811" src="https://github.com/user-attachments/assets/41d77496-7ef2-4d3c-a584-a9a1709a4493" />
 <img width="370" height="661" alt="Screenshot 2026-06-24 210436" src="https://github.com/user-attachments/assets/47d359c0-08b5-4081-8eba-517d6c882fc4" />
-<img width="370" height="657" alt="Screenshot 2026-06-24 205926" src="https://github.com/user-attachments/assets/e9b02081-0ebd-4d4e-9696-8b9910c229fd" />
+<img width="369" height="658" alt="Screenshot 2026-06-27 174150" src="https://github.com/user-attachments/assets/628767da-e677-4318-8bf7-82b9a7c1032b" />
 <img width="368" height="660" alt="Screenshot 2026-06-24 205953" src="https://github.com/user-attachments/assets/33c92751-a321-4024-b1da-b1aa9db07e27" />
 <img width="370" height="654" alt="Screenshot 2026-06-24 210058" src="https://github.com/user-attachments/assets/a07405b3-3f29-4561-b634-496e718cf8f4" />
 <img width="366" height="661" alt="Screenshot 2026-06-24 210214" src="https://github.com/user-attachments/assets/47c6a5d4-c31a-4ccf-8e23-28db16b67410" />
