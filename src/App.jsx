@@ -1881,20 +1881,20 @@ export default function App() {
                         key={claim.id}
                         onClick={() => {
                           SwalOrig.fire({
-                            title: t.claimHistory,
+                            title: t.transactionDetail,
                             html: `
                               <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
-                                <strong style="color: #111827;">${t.fromSender}:</strong><br/>
+                                <strong style="color: #111827;">${t.contractSource}:</strong><br/>
                                 <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
-                                  <a href="https://stellar.expert/explorer/testnet/contract/${claim.from}" target="_blank" style="color: inherit; text-decoration: underline;">${claim.from}</a>
+                                  <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/contract/${claim.from}" target="_blank" style="color: inherit; text-decoration: underline;">${claim.from}</a>
                                 </span><br/>
-                                <strong style="color: #111827;">${t.toReceiver}:</strong><br/>
+                                <strong style="color: #111827;">${t.fromSender}:</strong><br/>
                                 <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">
-                                  <a href="https://stellar.expert/explorer/testnet/account/${claim.address}" target="_blank" style="color: #2563eb; text-decoration: underline;">${claim.address}</a>
+                                  <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/account/${claim.address}" target="_blank" style="color: #2563eb; text-decoration: underline;">${claim.address}</a>
                                 </span><br/>
                                 <strong style="color: #111827;">${t.amountLabel}:</strong> ${claim.amount.toFixed(2)} XLM<br/><br/>
                                 <strong style="color: #111827;">${t.dateLabel}:</strong> ${claim.date}<br/><br/>
-                                <strong style="color: #111827;">${t.statusLabel}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.approved.toUpperCase()}</span>
+                                <strong style="color: #111827;">${t.statusLabel}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.successful.toUpperCase()}</span>
                               </div>
                             `,
                             icon: 'info',
@@ -1921,8 +1921,8 @@ export default function App() {
                           </div>
                         </div>
                         <div className="flex flex-col items-end flex-shrink-0">
-                          <span className="text-sm font-bold text-ios-blue">{claim.amount.toFixed(2)} XLM</span>
-                          <span className="text-[10px] font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-full uppercase mt-1">{t.approved}</span>
+                          <span className="text-sm font-bold text-ios-blue">${claim.amount.toFixed(2)} XLM</span>
+                          <span className="text-[10px] font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-full uppercase mt-1">${t.successful}</span>
                         </div>
                       </div>
                     ))
@@ -2515,7 +2515,7 @@ export default function App() {
                 <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 </div>
-                {t.allTransactions || 'All Transactions'}
+                {t.allTransactions}
               </h2>
               <div className="relative mb-4">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -2523,7 +2523,7 @@ export default function App() {
                 </div>
                 <input 
                   type="text" 
-                  placeholder={t.searchHash || 'Search Hash...'}
+                  placeholder={t.searchHash}
                   value={allTxSearch}
                   onChange={(e) => setAllTxSearch(e.target.value)}
                   className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-ios-blue transition-all"
@@ -2532,34 +2532,34 @@ export default function App() {
               <div className="space-y-3">
                 {currentAllTxs.length === 0 ? (
                   <div className="text-center py-6 text-xs text-gray-400 bg-gray-50 rounded-2xl border border-gray-100">
-                    {t.noTransactions || 'No transactions found.'}
+                    {t.noTransactions}
                   </div>
                 ) : (
                   currentAllTxs.map(tx => (
                     <div key={tx.id} onClick={() => {
                         SwalOrig.fire({
-                          title: t.transactionDetail || 'Transaction Details',
+                          title: t.transactionDetail,
                           html: `
                             <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
-                              <strong style="color: #111827;">${t.transactionHash || 'Hash'}:</strong><br/>
+                              <strong style="color: #111827;">${t.transactionHash}:</strong><br/>
                               <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">
                                 <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/tx/${tx.hash}" target="_blank" style="color: #2563eb; text-decoration: underline;">${tx.hash}</a>
                               </span><br/>
-                              <strong style="color: #111827;">${t.fromSender || 'From'}:</strong><br/>
+                              <strong style="color: #111827;">${t.fromSender}:</strong><br/>
                               <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
                                 <a href="${getExplorerLink(tx.wallet)}" target="_blank" style="color: inherit; text-decoration: underline;">${tx.wallet}</a>
                               </span><br/>
-                              <strong style="color: #111827;">${t.toReceiver || 'To'}:</strong><br/>
+                              <strong style="color: #111827;">${t.toReceiver}:</strong><br/>
                               <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
                                 <a href="${getExplorerLink(tx.to)}" target="_blank" style="color: inherit; text-decoration: underline;">${tx.to}</a>
                               </span><br/>
-                              <strong style="color: #111827;">${t.amountLabel || 'Amount'}:</strong> ${tx.amount.toFixed(2)} XLM<br/><br/>
-                              <strong style="color: #111827;">${t.dateLabel || 'Date'}:</strong> ${tx.date}<br/><br/>
-                              <strong style="color: #111827;">${t.statusLabel || 'Status'}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.successful || 'SUCCESS'}</span>
+                              <strong style="color: #111827;">${t.amountLabel}:</strong> ${tx.amount.toFixed(2)} XLM<br/><br/>
+                              <strong style="color: #111827;">${t.dateLabel}:</strong> ${tx.date}<br/><br/>
+                              <strong style="color: #111827;">${t.statusLabel}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.successful.toUpperCase()}</span>
                             </div>
                           `,
                           icon: 'success',
-                          confirmButtonText: t.close || 'Close',
+                          confirmButtonText: t.close,
                           buttonsStyling: false,
                           customClass: { 
                             popup: 'rounded-2xl overflow-hidden !p-0', htmlContainer: '!p-0 !m-0', title: '!pt-6', actions: 'w-full !m-0 !p-0 border-t border-gray-100', confirmButton: 'w-full bg-ios-blue hover:bg-blue-600 text-white font-bold py-4 rounded-none transition-colors !m-0 border-none outline-none focus:outline-none focus:ring-0'
@@ -2579,7 +2579,7 @@ export default function App() {
                       </div>
                       <div className="flex flex-col items-end flex-shrink-0">
                         <span className="text-sm font-bold text-ios-darkText">{tx.amount.toFixed(2)} XLM</span>
-                        <span className="text-[10px] font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-full uppercase mt-1">{t.successful || 'SUCCESS'}</span>
+                        <span className="text-[10px] font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-full uppercase mt-1">{t.successful}</span>
                       </div>
                     </div>
                   ))
@@ -2605,7 +2605,7 @@ export default function App() {
                 <div className="w-7 h-7 rounded-full bg-amber-50 flex items-center justify-center border border-amber-100">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 </div>
-                {t.allClaimRewards || 'All Claim Rewards'}
+                {t.allClaimRewards}
               </h2>
               <div className="relative mb-4">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -2613,7 +2613,7 @@ export default function App() {
                 </div>
                 <input 
                   type="text" 
-                  placeholder={t.searchWallet || 'Search Wallet...'}
+                  placeholder={t.searchWallet}
                   value={claimHistorySearch}
                   onChange={(e) => setClaimHistorySearch(e.target.value)}
                   className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-400 transition-all"
@@ -2622,34 +2622,40 @@ export default function App() {
               <div className="space-y-3">
                 {currentClaims.length === 0 ? (
                   <div className="text-center py-6 text-xs text-gray-400 bg-gray-50 rounded-2xl border border-gray-100">
-                    {t.noTransactions || 'No claims found.'}
+                    {t.noClaims}
                   </div>
                 ) : (
                   currentClaims.map(claim => (
                     <div key={claim.id} onClick={() => {
                         SwalOrig.fire({
-                          title: t.claimDetailTitle || 'Claim Details',
+                          title: t.claimRewardDetail,
                           html: `
                             <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
-                              <strong style="color: #111827;">${t.claimId || 'Claim ID'}:</strong><br/>
+                              <strong style="color: #111827;">${t.claimId}:</strong><br/>
                               <span style="color: #4b5563; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">${claim.id}</span><br/>
-                              <strong style="color: #111827;">${t.claimerAddress || 'Claimer Address'}:</strong><br/>
+                              <strong style="color: #111827;">${t.claimerAddress}:</strong><br/>
                               <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
                                 <a href="${getExplorerLink(claim.address)}" target="_blank" style="color: #2563eb; text-decoration: underline;">${claim.address}</a>
                               </span><br/>
-                              <strong style="color: #111827;">${t.contractSource || 'Contract Source'}:</strong><br/>
+                              <strong style="color: #111827;">${t.contractSource}:</strong><br/>
                               <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
                                 <a href="${getExplorerLink(claim.from)}" target="_blank" style="color: inherit; text-decoration: underline;">${claim.from}</a>
                               </span><br/>
-                              <strong style="color: #111827;">${t.amountLabel || 'Amount'}:</strong> ${claim.amount.toFixed(2)} XLM<br/><br/>
-                              <strong style="color: #111827;">${t.dateLabel || 'Date'}:</strong> ${claim.date}<br/><br/>
-                              <strong style="color: #111827;">${t.statusLabel || 'Status'}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.approved ? t.approved.toUpperCase() : 'APPROVED'}</span>
+                              <strong style="color: #111827;">${t.amountLabel}:</strong> ${claim.amount.toFixed(2)} XLM<br/><br/>
+                              <strong style="color: #111827;">${t.dateLabel}:</strong> ${claim.date}<br/><br/>
+                              <strong style="color: #111827;">${t.statusLabel}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.approved.toUpperCase()}</span>
                             </div>
                           `,
                           icon: 'success',
-                          confirmButtonText: t.close || 'Close',
+                          confirmButtonText: t.close,
                           buttonsStyling: false,
-                          customClass: { popup: 'rounded-2xl overflow-hidden !p-0', htmlContainer: '!p-0 !m-0', title: '!pt-6', actions: 'w-full !m-0 !p-0 border-t border-gray-100', confirmButton: 'w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 rounded-none transition-colors !m-0 border-none outline-none focus:outline-none focus:ring-0' }
+                          customClass: { 
+                            popup: 'rounded-2xl overflow-hidden !p-0',
+                            htmlContainer: '!p-0 !m-0',
+                            title: '!pt-6',
+                            actions: 'w-full !m-0 !p-0 border-t border-gray-100',
+                            confirmButton: 'w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 rounded-none transition-colors !m-0 border-none outline-none focus:outline-none focus:ring-0'
+                          }
                         });
                       }}
                       className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer active:scale-[0.98]"
