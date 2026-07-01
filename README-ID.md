@@ -11,6 +11,9 @@
 StelDot adalah Aplikasi Terdesentralisasi (dApp) yang dibangun di atas jaringan Stellar menggunakan smart contract Soroban. Proyek ini menerapkan model loyalitas **Donate-to-Earn**.
 Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Total volume donasi mereka dilacak secara real-time. Ketika total donasi yang belum diberi hadiah mencapai batas minimal **10 XLM**, donatur berhak mengklaim hadiah sebesar **1.5% dari total donasinya tersebut**. Pembayaran diproses secara instan dan otomatis oleh _smart contract_, lalu nominal volume donasinya di-reset menjadi 0 (riwayat akumulasi donasi seumur hidup tetap tersimpan utuh di blockchain). Catatan: setiap donasi yang masuk dikenakan **potongan 5% untuk biaya operasional dan pengembangan** ekosistem StelDot.
 
+### Demo Video - StelDOt
+[![StelDot (Demo Project) - Donation Project for Humanity and Tranparency Transcation](https://youtube.com)](https://www.youtube.com/watch?v=82_UiT9p0gQ)
+
 ---
 
 ### Informasi Smart Contract (Testnet)
