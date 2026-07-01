@@ -13,7 +13,7 @@ Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Total volum
 
 ### Demo Video - StelDOt
 [![StelDot (Demo Project) - Donation Project for Humanity and Tranparency Transcation](https://img.youtube.com/vi/82_UiT9p0gQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=82_UiT9p0gQ)
-
+[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=82_UiT9p0gQ)
 ---
 
 ### Informasi Smart Contract (Testnet)
