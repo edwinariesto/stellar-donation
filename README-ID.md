@@ -12,8 +12,8 @@ StelDot adalah Aplikasi Terdesentralisasi (dApp) yang dibangun di atas jaringan 
 Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Total volume donasi mereka dilacak secara real-time. Ketika total donasi yang belum diberi hadiah mencapai batas minimal **10 XLM**, donatur berhak mengklaim hadiah sebesar **1.5% dari total donasinya tersebut**. Pembayaran diproses secara instan dan otomatis oleh _smart contract_, lalu nominal volume donasinya di-reset menjadi 0 (riwayat akumulasi donasi seumur hidup tetap tersimpan utuh di blockchain). Catatan: setiap donasi yang masuk dikenakan **potongan 5% untuk biaya operasional dan pengembangan** ekosistem StelDot.
 
 ### Demo Video - StelDOt
-[![StelDot (Demo Project) - Donation Project for Humanity and Tranparency Transcation](https://img.youtube.com/vi/82_UiT9p0gQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=82_UiT9p0gQ)
 [![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=82_UiT9p0gQ)
+[![StelDot (Demo Project) - Donation Project for Humanity and Tranparency Transcation](https://img.youtube.com/vi/82_UiT9p0gQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=82_UiT9p0gQ)
 ---
 
 ### Informasi Smart Contract (Testnet)
