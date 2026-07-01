@@ -14,8 +14,7 @@ StelDot is a Decentralized Application (dApp) built on the Stellar network using
 Donors can contribute native XLM to community campaigns. Their total donation volume is tracked continuously. Once a donor accumulates at least 10 XLM in donations, they can instantly claim a reward worth **1.5% of their accumulated volume**. The payout is processed instantly by the smart contract, and the tracked volume resets to 0 (historic total donations are safely persisted on the blockchain forever). Note: a **5% operational and development fee** is deducted from every incoming donation to sustain the StelDot ecosystem.
 
 ### Demo Video - StelDOt
-[![StelDot (Demo Project) - Donation Project for Humanity and Tranparency Transcation](https://youtube.com)](https://www.youtube.com/watch?v=82_UiT9p0gQ)
-
+[![StelDot (Demo Project) - Donation Project for Humanity and Tranparency Transcation](https://img.youtube.com/vi/82_UiT9p0gQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=82_UiT9p0gQ)
 
 ---
 
