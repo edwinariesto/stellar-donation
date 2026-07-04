@@ -109,26 +109,34 @@ export async function getXlmBalance(address) {
 
 // Call Read-only contract function
 export const callReadOnly = async (contractId, method, args = []) => {
-  try {
-    // We use a predefined account that will execute the simulation
-    // Using the hardcoded address for read-only simulations to avoid auth failures on pure views
-    const mockSource = 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O'; 
-    const account = new Account(mockSource, '1');
+  let attempts = 0;
+  while (attempts < 3) {
+    try {
+      // We use a predefined account that will execute the simulation
+      // Using the hardcoded address for read-only simulations to avoid auth failures on pure views
+      const mockSource = 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O'; 
+      const account = new Account(mockSource, '1');
 
-    const contractObj = new Contract(contractId);
-    let tx = new TransactionBuilder(account, { fee: '100', networkPassphrase: currentNetwork.passphrase })
-      .addOperation(contractObj.call(method, ...args))
-      .setTimeout(30)
-      .build();
+      const contractObj = new Contract(contractId);
+      let tx = new TransactionBuilder(account, { fee: '100', networkPassphrase: currentNetwork.passphrase })
+        .addOperation(contractObj.call(method, ...args))
+        .setTimeout(30)
+        .build();
 
-    const sim = await rpcServer.simulateTransaction(tx);
-    if (!sim || !sim.result || !sim.result.retval) {
-      throw new Error('Simulation failed or returned no result.');
+      const sim = await rpcServer.simulateTransaction(tx);
+      if (!sim || !sim.result || !sim.result.retval) {
+        throw new Error('Simulation failed or returned no result.');
+      }
+      return scValToNative(sim.result.retval);
+    } catch (e) {
+      attempts++;
+      if (attempts >= 3) {
+        console.warn(`Read-only call failed for ${method}:`, e);
+        throw e;
+      }
+      // Wait before retrying (rate limit / intermittent RPC errors)
+      await new Promise(resolve => setTimeout(resolve, 500 * attempts));
     }
-    return scValToNative(sim.result.retval);
-  } catch (e) {
-    console.warn(`Read-only call failed for ${method}:`, e);
-    throw e;
   }
 };
 
