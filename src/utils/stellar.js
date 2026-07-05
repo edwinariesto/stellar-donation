@@ -149,52 +149,40 @@ export const getReferralRewardBalance = async (contractId, userAddress) => {
   }
 };
 
+const fetchAllEventsFromExpert = async (contractId) => {
+  let allEvents = [];
+  try {
+    let url = `https://api.stellar.expert/explorer/testnet/contract/${contractId}/events?limit=100`;
+    while (url) {
+      const res = await fetch(url).then(r => r.json());
+      if (!res._embedded || !res._embedded.records || res._embedded.records.length === 0) break;
+      
+      const records = res._embedded.records.map(evt => {
+        return {
+          id: evt.id,
+          ledgerClosedAt: evt.ts * 1000,
+          txHash: evt.id.split('-')[0],
+          topic: evt.topicsXdr.map(t => xdr.ScVal.fromXDR(t, 'base64')),
+          value: xdr.ScVal.fromXDR(evt.bodyXdr, 'base64')
+        };
+      });
+      allEvents = allEvents.concat(records);
+      
+      if (res._links && res._links.next && res._links.next.href) {
+        url = 'https://api.stellar.expert' + res._links.next.href;
+      } else {
+        break;
+      }
+    }
+  } catch(e) {
+    console.error('Error fetching events from Stellar Expert:', e);
+  }
+  return allEvents;
+};
+
 export const getGlobalTopDonors = async (contractId) => {
   try {
-    let minLedger = 1;
-    try {
-      await rpcServer.getEvents({ startLedger: 1, filters: [], limit: 1 });
-    } catch(err) {
-      const match = err.message.match(/range: (\d+) - (\d+)/);
-      const match2 = err.message.match(/greater than or equal to (\d+)/);
-      if (match) minLedger = parseInt(match[1], 10);
-      else if (match2) minLedger = parseInt(match2[1], 10);
-    }
-    
-    const latest = await rpcServer.getLatestLedger();
-    let currentEnd = latest.sequence;
-    let allEvents = [];
-    
-    // Scan backwards in chunks of 5000 ledgers to prevent Soroban RPC from silently dropping events
-    for (let i = 0; i < 6; i++) {
-      const startLedger = Math.max(minLedger, currentEnd - 5000);
-      let pagingToken;
-      try {
-        while (true) {
-          const res = await rpcServer.getEvents({
-            startLedger,
-            filters: [{ type: 'contract', contractIds: [contractId] }],
-            pagination: { cursor: pagingToken, limit: 100 }
-          });
-          
-          if (!res.events || res.events.length === 0) break;
-          
-          const validEvents = res.events.filter(e => parseInt(e.ledger, 10) <= currentEnd);
-          allEvents = allEvents.concat(validEvents);
-          
-          if (res.events.length < 100) break;
-          pagingToken = res.events[res.events.length - 1].id;
-          if (parseInt(res.events[res.events.length - 1].ledger, 10) >= currentEnd) break;
-        }
-      } catch (e) {
-        console.warn('RPC retention limit reached while scanning older ledgers:', e.message);
-        break; // Stop scanning older chunks, but keep allEvents collected so far!
-      }
-      
-      currentEnd = startLedger - 1;
-      if (currentEnd <= minLedger) break;
-    }
-    
+    const allEvents = await fetchAllEventsFromExpert(contractId);
     const donorTotals = {};
     allEvents.forEach(evt => {
       try {
@@ -219,56 +207,14 @@ export const getGlobalTopDonors = async (contractId) => {
 
 export const getGlobalClaims = async (contractId) => {
   try {
-    let minLedger = 1;
-    try {
-      await rpcServer.getEvents({ startLedger: 1, filters: [], limit: 1 });
-    } catch(err) {
-      const match = err.message.match(/range: (\d+) - (\d+)/);
-      const match2 = err.message.match(/greater than or equal to (\d+)/);
-      if (match) minLedger = parseInt(match[1], 10);
-      else if (match2) minLedger = parseInt(match2[1], 10);
-    }
-    
-    const latest = await rpcServer.getLatestLedger();
-    let currentEnd = latest.sequence;
-    let allEvents = [];
-    
-    for (let i = 0; i < 6; i++) {
-      const startLedger = Math.max(minLedger, currentEnd - 5000);
-      let pagingToken;
-      try {
-        while (true) {
-          const res = await rpcServer.getEvents({
-            startLedger,
-            filters: [{ type: 'contract', contractIds: [contractId] }],
-            pagination: { cursor: pagingToken, limit: 100 }
-          });
-          
-          if (!res.events || res.events.length === 0) break;
-          
-          const validEvents = res.events.filter(e => parseInt(e.ledger, 10) <= currentEnd);
-          allEvents = allEvents.concat(validEvents);
-          
-          if (res.events.length < 100) break;
-          pagingToken = res.events[res.events.length - 1].id;
-          if (parseInt(res.events[res.events.length - 1].ledger, 10) >= currentEnd) break;
-        }
-      } catch (e) {
-        break; 
-      }
-      currentEnd = startLedger - 1;
-      if (currentEnd <= minLedger) break;
-    }
-    
+    const allEvents = await fetchAllEventsFromExpert(contractId);
     const claims = [];
-    console.log('getGlobalClaims fetched allEvents count:', allEvents.length);
     allEvents.forEach(evt => {
       try {
         const topic0 = scValToNative(evt.topic[0]);
         if (topic0 === 'claim' || topic0 === 'clm_ref') {
           const address = scValToNative(evt.topic[1]);
           const amount = Number(scValToNative(evt.value)) / 10000000;
-          console.log('Parsed claim:', address, amount);
           claims.push({
             id: evt.id,
             address: address,
@@ -278,16 +224,11 @@ export const getGlobalClaims = async (contractId) => {
             status: 'approved'
           });
         }
-      } catch(e){
-        console.error('Error parsing event in getGlobalClaims', e);
-      }
+      } catch(e){}
     });
     
-    // Sort descending by date (using id which contains ledger sequence)
     claims.sort((a, b) => b.id.localeCompare(a.id));
-    console.log('Final claims data:', claims);
     return claims;
-    
   } catch (err) {
     console.error('Failed to get global claims', err);
     return [];
@@ -296,47 +237,7 @@ export const getGlobalClaims = async (contractId) => {
 
 export const getGlobalTransactions = async (contractId) => {
   try {
-    let minLedger = 1;
-    try {
-      await rpcServer.getEvents({ startLedger: 1, filters: [], limit: 1 });
-    } catch(err) {
-      const match = err.message.match(/range: (\d+) - (\d+)/);
-      const match2 = err.message.match(/greater than or equal to (\d+)/);
-      if (match) minLedger = parseInt(match[1], 10);
-      else if (match2) minLedger = parseInt(match2[1], 10);
-    }
-    
-    const latest = await rpcServer.getLatestLedger();
-    let currentEnd = latest.sequence;
-    let allEvents = [];
-    
-    for (let i = 0; i < 6; i++) {
-      const startLedger = Math.max(minLedger, currentEnd - 5000);
-      let pagingToken;
-      try {
-        while (true) {
-          const res = await rpcServer.getEvents({
-            startLedger,
-            filters: [{ type: 'contract', contractIds: [contractId] }],
-            pagination: { cursor: pagingToken, limit: 100 }
-          });
-          
-          if (!res.events || res.events.length === 0) break;
-          
-          const validEvents = res.events.filter(e => parseInt(e.ledger, 10) <= currentEnd);
-          allEvents = allEvents.concat(validEvents);
-          
-          if (res.events.length < 100) break;
-          pagingToken = res.events[res.events.length - 1].id;
-          if (parseInt(res.events[res.events.length - 1].ledger, 10) >= currentEnd) break;
-        }
-      } catch (e) {
-        break; 
-      }
-      currentEnd = startLedger - 1;
-      if (currentEnd <= minLedger) break;
-    }
-    
+    const allEvents = await fetchAllEventsFromExpert(contractId);
     const txs = [];
     allEvents.forEach(evt => {
       try {
@@ -371,7 +272,6 @@ export const getGlobalTransactions = async (contractId) => {
     
     txs.sort((a, b) => b.id.localeCompare(a.id));
     return txs;
-    
   } catch (err) {
     console.error('Failed to get global txs', err);
     return [];
@@ -380,47 +280,7 @@ export const getGlobalTransactions = async (contractId) => {
 
 export const getReferralHistory = async (contractId, referrerAddress) => {
   try {
-    let minLedger = 1;
-    try {
-      await rpcServer.getEvents({ startLedger: 1, filters: [], limit: 1 });
-    } catch(err) {
-      const match = err.message.match(/range: (\d+) - (\d+)/);
-      const match2 = err.message.match(/greater than or equal to (\d+)/);
-      if (match) minLedger = parseInt(match[1], 10);
-      else if (match2) minLedger = parseInt(match2[1], 10);
-    }
-    
-    const latest = await rpcServer.getLatestLedger();
-    let currentEnd = latest.sequence;
-    let allEvents = [];
-    
-    for (let i = 0; i < 6; i++) {
-      const startLedger = Math.max(minLedger, currentEnd - 5000);
-      let pagingToken;
-      try {
-        while (true) {
-          const res = await rpcServer.getEvents({
-            startLedger,
-            filters: [{ type: 'contract', contractIds: [contractId] }],
-            pagination: { cursor: pagingToken, limit: 100 }
-          });
-          
-          if (!res.events || res.events.length === 0) break;
-          
-          const validEvents = res.events.filter(e => parseInt(e.ledger, 10) <= currentEnd);
-          allEvents = allEvents.concat(validEvents);
-          
-          if (res.events.length < 100) break;
-          pagingToken = res.events[res.events.length - 1].id;
-          if (parseInt(res.events[res.events.length - 1].ledger, 10) >= currentEnd) break;
-        }
-      } catch (e) {
-        break; 
-      }
-      currentEnd = startLedger - 1;
-      if (currentEnd <= minLedger) break;
-    }
-    
+    const allEvents = await fetchAllEventsFromExpert(contractId);
     const donateAmounts = {};
     allEvents.forEach(evt => {
       try {

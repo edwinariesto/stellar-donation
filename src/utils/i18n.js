@@ -448,8 +448,8 @@ export const translations = {
     linkCopied: 'Link Tersalin!',
     invalidReferralTitle: 'Tautan Referral Tidak Berlaku',
     invalidReferralDesc: 'Tautan referral hanya dapat digunakan oleh pengguna baru yang belum pernah berdonasi. Tautan telah dihapus dari sesi Anda.',
-    allTransactions: 'Semua Transaksi',
-    allClaimRewards: 'Semua Klaim Hadiah',
+    allTransactions: 'Semua Transaksi Pengguna',
+    allClaimRewards: 'Semua Klaim Hadiah Pengguna',
     claimId: 'ID Klaim',
     claimerAddress: 'Alamat Pengklaim',
     contractSource: 'Sumber Kontrak'
@@ -711,8 +711,8 @@ export const translations = {
     linkCopied: 'Link Copied!',
     invalidReferralTitle: 'Invalid Referral Link',
     invalidReferralDesc: 'Referral links can only be used by new users who have never donated before. The link has been removed from your session.',
-    allTransactions: 'All Transactions',
-    allClaimRewards: 'All Claim Rewards',
+    allTransactions: 'All Users Donations',
+    allClaimRewards: 'All Users Claim Rewards',
     claimId: 'Claim ID',
     claimerAddress: 'Claimer Address',
     contractSource: 'Contract Source'
