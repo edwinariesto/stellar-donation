@@ -4,8 +4,6 @@
 
 ---
 
-
-
 ## 🇺🇸 English Version
 
 ### Description
@@ -14,7 +12,7 @@ StelDot is a Decentralized Application (dApp) built on the Stellar network using
 Donors can contribute native XLM to community campaigns. Their total donation volume is tracked continuously. Once a donor accumulates at least 10 XLM in donations, they can instantly claim a reward worth **1.5% of their accumulated volume**. The payout is processed instantly by the smart contract, and the tracked volume resets to 0 (historic total donations are safely persisted on the blockchain forever). Note: a **5% operational and development fee** is deducted from every incoming donation to sustain the StelDot ecosystem.
 
 ### Demo Video - StelDOt
-[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=82_UiT9p0gQ)
+
 [![StelDot (Demo Project) - Donation Project for Humanity and Tranparency Transcation](https://img.youtube.com/vi/82_UiT9p0gQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=82_UiT9p0gQ)
 
 ---
@@ -98,6 +96,7 @@ This project meets and exceeds the requirements for the **Advanced Smart Contrac
    - The contract is protected by `test.rs` which verifies the end-to-end flow (Accumulative donations -> Instant successful claims) and Negative Tests (Panicking and failing claims if volume is below the threshold).
 
 #### ✅ Submission Checklist:
+
 - [x] Public GitHub repository
 - [x] README with complete documentation
 - [x] Minimum 10+ meaningful commits
@@ -148,7 +147,7 @@ Acts as the final line of defense against malicious transactions directly on the
 - **Smart Contract**: Rust, Soroban SDK (v26)
 - **Frontend Framework**: React (Vite)
 - **Styling**: Tailwind CSS (Apple iOS-style Design System)
-- **Wallet Connection**: `@stellar/freighter-api`
+- **Wallet Connection**: `@stellar/freighter-api` and WalletConnect API
 - **Notification alerts**: `sweetalert2`
 - **Translation Engine**: Google Translate API (Client-side fetch)
 - **Image Export**: `html2canvas` (Certificate & Statistics download as PNG)
@@ -266,4 +265,3 @@ All workflows. Showing runs from all workflows
 https://github.com/edwinariesto/stellar-donation/actions
 
 <img width="1918" height="991" alt="Screenshot 2026-06-24 212045" src="https://github.com/user-attachments/assets/8d519758-0e91-48d3-91b4-344a20f0d20d" />
-

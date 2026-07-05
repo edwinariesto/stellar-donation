@@ -12,8 +12,9 @@ StelDot adalah Aplikasi Terdesentralisasi (dApp) yang dibangun di atas jaringan 
 Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Total volume donasi mereka dilacak secara real-time. Ketika total donasi yang belum diberi hadiah mencapai batas minimal **10 XLM**, donatur berhak mengklaim hadiah sebesar **1.5% dari total donasinya tersebut**. Pembayaran diproses secara instan dan otomatis oleh _smart contract_, lalu nominal volume donasinya di-reset menjadi 0 (riwayat akumulasi donasi seumur hidup tetap tersimpan utuh di blockchain). Catatan: setiap donasi yang masuk dikenakan **potongan 5% untuk biaya operasional dan pengembangan** ekosistem StelDot.
 
 ### Demo Video - StelDOt
-[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=82_UiT9p0gQ)
+
 [![StelDot (Demo Project) - Donation Project for Humanity and Tranparency Transcation](https://img.youtube.com/vi/82_UiT9p0gQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=82_UiT9p0gQ)
+
 ---
 
 ### Informasi Smart Contract (Testnet)
@@ -42,7 +43,7 @@ Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Total volum
 - **Tambahan 4 Manfaat Eksklusif**: Donatur yang loyalitas akan mendapatkan 4 manfaat Eksklusif terbaik dan menguntungkan dari StelDot.
 - **Dasbor Donatur**: Pengguna dapat melacak donasi mereka sendiri, melihat progres target, dan melihat donatur teratas secara global.
 - **Malaikat Penolong (Sistem Referral)**: Pengguna yang telah berdonasi >100 XLM dapat membuat tautan referral unik. Mereka akan mendapat hadiah 0.5% otomatis ke dompet mereka saat teman yang mereka undang berdonasi untuk pertama kalinya!
-- **Transparansi Transaksi**: Semua riwayat transaksi dan klaim dapat dilihat oleh publik di dasbor dan dilacak langsung ke *blockchain explorer* (Stellar Expert).
+- **Transparansi Transaksi**: Semua riwayat transaksi dan klaim dapat dilihat oleh publik di dasbor dan dilacak langsung ke _blockchain explorer_ (Stellar Expert).
 
 #### Fitur Owner (Administrator)
 
@@ -151,7 +152,7 @@ Menjadi benteng pertahanan terakhir terhadap manipulasi transaksi langsung di bl
 - **Smart Contract**: Rust, Soroban SDK (v26)
 - **Frontend Framework**: React (Vite)
 - **Styling**: Tailwind CSS (Sistem Desain bergaya Apple iOS)
-- **Wallet Connection**: `@stellar/freighter-api`
+- **Wallet Connection**: `@stellar/freighter-api` dan WalletConnect API
 - **Notifikasi**: `sweetalert2`
 - **Mesin Penerjemah**: Google Translate API (Client-side fetch)
 - **Ekspor Gambar**: `html2canvas` (Unduh sertifikat & statistik dalam format PNG)
@@ -271,4 +272,3 @@ Menampilkan seluruh Workflow hasil pengecekan compilasi logika.
 https://github.com/edwinariesto/stellar-donation/actions
 
 <img width="1918" height="991" alt="Screenshot 2026-06-24 212045" src="https://github.com/user-attachments/assets/8d519758-0e91-48d3-91b4-344a20f0d20d" />
-

@@ -283,7 +283,7 @@ export default function App() {
       const installed = await checkWalletInstalled();
       setFreighterInstalled(installed);
       
-      const savedAddress = localStorage.getItem('steldot_wallet_address');
+      const savedAddress = sessionStorage.getItem('steldot_wallet_address');
       if (savedAddress) setUserAddress(savedAddress);
 
       if (installed) {
@@ -353,7 +353,7 @@ export default function App() {
         if (userAddress) {
           const pk = await getWalletPublicKey();
           if (pk && pk !== userAddress) {
-            localStorage.removeItem('steldot_wallet_address');
+            sessionStorage.removeItem('steldot_wallet_address');
             window.location.reload();
           }
         }
@@ -560,7 +560,7 @@ export default function App() {
 
 
   const handleDisconnectWallet = () => {
-    localStorage.removeItem('steldot_wallet_address');
+    sessionStorage.removeItem('steldot_wallet_address');
     setUserAddress('');
     setFreighterBalance('0.00');
     setLoyaltyPoints(0);
@@ -599,8 +599,8 @@ export default function App() {
           try {
             const address = await connectWallet('freighter');
             setUserAddress(address);
-            localStorage.setItem('steldot_wallet_address', address);
-            localStorage.setItem('steldot_wallet_type', 'freighter');
+            sessionStorage.setItem('steldot_wallet_address', address);
+            sessionStorage.setItem('steldot_wallet_type', 'freighter');
             const balance = await getXlmBalance(address);
             setFreighterBalance(balance);
             Swal.fire({ title: t.walletConnected, text: `${t.address}: ${address.substring(0, 6)}...${address.substring(50)}`, icon: 'success', confirmButtonColor: '#007AFF' });
@@ -614,8 +614,8 @@ export default function App() {
           try {
             const address = await connectWallet('wallet_connect');
             setUserAddress(address);
-            localStorage.setItem('steldot_wallet_address', address);
-            localStorage.setItem('steldot_wallet_type', 'wallet_connect');
+            sessionStorage.setItem('steldot_wallet_address', address);
+            sessionStorage.setItem('steldot_wallet_type', 'wallet_connect');
             const balance = await getXlmBalance(address);
             setFreighterBalance(balance);
             Swal.fire({ title: t.walletConnected, text: `${t.address}: ${address.substring(0, 6)}...${address.substring(50)}`, icon: 'success', confirmButtonColor: '#007AFF' });

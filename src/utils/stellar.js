@@ -84,7 +84,7 @@ export async function connectWallet(walletType) {
 
 export async function getWalletPublicKey() {
   try {
-    const walletType = localStorage.getItem('steldot_wallet_type') || 'freighter';
+    const walletType = sessionStorage.getItem('steldot_wallet_type') || 'freighter';
     const module = getActiveModule(walletType);
     const res = await module.getAddress();
     return res.address || res;
@@ -497,7 +497,7 @@ export async function executeTransaction(contractId, functionName, args = [], us
 
   // 4. Convert to XDR and request Wallet signature
   const xdrString = tx.toXDR();
-  const walletType = localStorage.getItem('steldot_wallet_type') || 'freighter';
+  const walletType = sessionStorage.getItem('steldot_wallet_type') || 'freighter';
   
   const module = getActiveModule(walletType);
   const signedResult = await module.signTransaction(xdrString, {
