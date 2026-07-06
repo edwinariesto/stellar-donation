@@ -1848,10 +1848,15 @@ export default function App() {
               <div className="flex flex-col h-full justify-start">
                 <div className="flex flex-col mb-4 gap-3">
                   <div className="flex justify-between items-center w-full">
-                    <h3 className="font-bold text-sm text-ios-secondaryText uppercase tracking-wider">{t.claimHistory}</h3>
+                    <h3 className="font-bold text-sm text-ios-darkText flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-amber-50 flex items-center justify-center border border-amber-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                      </div>
+                      {t.claimHistory}
+                    </h3>
                     <button 
                       onClick={handleViewClaimStats}
-                      className="p-1.5 bg-ios-blue/10 hover:bg-ios-blue/20 text-ios-blue rounded-lg transition-colors flex items-center justify-center"
+                      className="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-500 rounded-lg transition-colors flex items-center justify-center border border-amber-100"
                       title={t.viewStats}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
@@ -1866,7 +1871,7 @@ export default function App() {
                       placeholder={t.searchWallet}
                       value={claimHistorySearch}
                       onChange={(e) => setClaimHistorySearch(e.target.value)}
-                      className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-ios-blue transition-all"
+                      className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-400 transition-all"
                     />
                   </div>
                 </div>
@@ -1935,15 +1940,15 @@ export default function App() {
                   <button 
                     onClick={() => setClaimHistoryPage(p => Math.max(1, p - 1))}
                     disabled={claimHistoryPage === 1}
-                    className="p-1 rounded-full text-gray-400 hover:text-ios-blue disabled:opacity-30 transition-colors"
+                    className="p-1 rounded-full text-gray-400 hover:text-amber-500 disabled:opacity-30 transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                   </button>
-                  <span className="text-xs font-bold text-ios-darkGray">{claimHistoryPage} / {totalClaimPages}</span>
+                  <span className="text-xs font-bold text-ios-darkGray">{claimHistoryPage} / {Math.max(1, totalClaimPages)}</span>
                   <button 
                     onClick={() => setClaimHistoryPage(p => Math.min(totalClaimPages, p + 1))}
                     disabled={claimHistoryPage === totalClaimPages || totalClaimPages === 0}
-                    className="p-1 rounded-full text-gray-400 hover:text-ios-blue disabled:opacity-30 transition-colors"
+                    className="p-1 rounded-full text-gray-400 hover:text-amber-500 disabled:opacity-30 transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                   </button>
