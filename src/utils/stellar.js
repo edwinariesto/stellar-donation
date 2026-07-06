@@ -149,19 +149,63 @@ export const getReferralRewardBalance = async (contractId, userAddress) => {
   }
 };
 
+const fetchAllEventsFallback = async (contractId) => {
+  let minLedger = 1;
+  try {
+    await rpcServer.getEvents({ startLedger: 1, filters: [], limit: 1 });
+  } catch(err) {
+    const match = err.message.match(/range: (\d+) - (\d+)/);
+    const match2 = err.message.match(/greater than or equal to (\d+)/);
+    if (match) minLedger = parseInt(match[1], 10);
+    else if (match2) minLedger = parseInt(match2[1], 10);
+  }
+  
+  try {
+    const latest = await rpcServer.getLatestLedger();
+    let currentEnd = latest.sequence;
+    let allEvents = [];
+    
+    for (let i = 0; i < 6; i++) {
+      const startLedger = Math.max(minLedger, currentEnd - 5000);
+      let pagingToken;
+      try {
+        while (true) {
+          const res = await rpcServer.getEvents({
+            startLedger,
+            filters: [{ type: 'contract', contractIds: [contractId] }],
+            pagination: { cursor: pagingToken, limit: 100 }
+          });
+          if (!res.events || res.events.length === 0) break;
+          const validEvents = res.events.filter(e => parseInt(e.ledger, 10) <= currentEnd);
+          allEvents = allEvents.concat(validEvents);
+          if (res.events.length < 100) break;
+          pagingToken = res.events[res.events.length - 1].id;
+          if (parseInt(res.events[res.events.length - 1].ledger, 10) >= currentEnd) break;
+        }
+      } catch (e) { break; }
+      currentEnd = startLedger - 1;
+      if (currentEnd <= minLedger) break;
+    }
+    return allEvents;
+  } catch (err) {
+    console.error('RPC Fallback also failed:', err);
+    return [];
+  }
+};
+
 const fetchAllEventsFromExpert = async (contractId) => {
   let allEvents = [];
   try {
     let url = `https://api.stellar.expert/explorer/testnet/contract/${contractId}/events?limit=100`;
     while (url) {
       const res = await fetch(url).then(r => r.json());
-      if (!res._embedded || !res._embedded.records || res._embedded.records.length === 0) break;
+      if (!res || !res._embedded || !res._embedded.records || res._embedded.records.length === 0) break;
       
       const records = res._embedded.records.map(evt => {
         return {
           id: evt.id,
           ledgerClosedAt: evt.ts * 1000,
-          txHash: evt.id.split('-')[0],
+          txHash: evt.txHash || evt.id.split('-')[0],
           topic: evt.topicsXdr.map(t => xdr.ScVal.fromXDR(t, 'base64')),
           value: xdr.ScVal.fromXDR(evt.bodyXdr, 'base64')
         };
@@ -174,10 +218,11 @@ const fetchAllEventsFromExpert = async (contractId) => {
         break;
       }
     }
+    return allEvents;
   } catch(e) {
-    console.error('Error fetching events from Stellar Expert:', e);
+    console.warn('Direct fetch blocked by browser, falling back to RPC...', e.message);
+    return await fetchAllEventsFallback(contractId);
   }
-  return allEvents;
 };
 
 export const getGlobalTopDonors = async (contractId) => {
