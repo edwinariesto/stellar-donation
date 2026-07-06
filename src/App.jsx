@@ -197,6 +197,7 @@ export default function App() {
   const [allTxPage, setAllTxPage] = useState(1);
   const [allTxSearch, setAllTxSearch] = useState('');
   const filteredAllTxs = userTxData
+    .filter(tx => tx.to === contractId)
     .filter(tx => tx.hash.toLowerCase().includes(allTxSearch.toLowerCase()));
   const totalAllTxPages = Math.max(1, Math.ceil(filteredAllTxs.length / USER_TX_PER_PAGE));
   const currentAllTxs = filteredAllTxs.slice((allTxPage - 1) * USER_TX_PER_PAGE, allTxPage * USER_TX_PER_PAGE);
