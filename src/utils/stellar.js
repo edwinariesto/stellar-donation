@@ -193,35 +193,57 @@ const fetchAllEventsFallback = async (contractId) => {
   }
 };
 
+let cachedEventsPromise = null;
+let cachedEventsTime = 0;
+let lastContractId = null;
+
 const fetchAllEventsFromExpert = async (contractId) => {
-  let allEvents = [];
-  try {
-    let url = `https://api.stellar.expert/explorer/testnet/contract/${contractId}/events?limit=100`;
-    while (url) {
-      const res = await fetch(url).then(r => r.json());
-      if (!res || !res._embedded || !res._embedded.records || res._embedded.records.length === 0) break;
-      
-      const records = res._embedded.records.map(evt => {
-        return {
-          id: evt.id,
-          ledgerClosedAt: evt.ts * 1000,
-          txHash: evt.txHash || evt.id.split('-')[0],
-          topic: evt.topicsXdr.map(t => xdr.ScVal.fromXDR(t, 'base64')),
-          value: xdr.ScVal.fromXDR(evt.bodyXdr, 'base64')
-        };
-      });
-      allEvents = allEvents.concat(records);
-      
-      if (res._links && res._links.next && res._links.next.href) {
-        url = 'https://api.stellar.expert' + res._links.next.href;
-      } else {
-        break;
+  const now = Date.now();
+  // Cache for 10 seconds or if contract ID changes
+  if (cachedEventsPromise && lastContractId === contractId && (now - cachedEventsTime < 10000)) {
+    return cachedEventsPromise;
+  }
+  
+  lastContractId = contractId;
+  cachedEventsTime = now;
+  
+  cachedEventsPromise = (async () => {
+    let allEvents = [];
+    try {
+      let url = `https://api.stellar.expert/explorer/testnet/contract/${contractId}/events?limit=100`;
+      while (url) {
+        const res = await fetch(url).then(r => r.json());
+        if (!res || !res._embedded || !res._embedded.records || res._embedded.records.length === 0) break;
+        
+        const records = res._embedded.records.map(evt => {
+          return {
+            id: evt.id,
+            ledgerClosedAt: evt.ts * 1000,
+            txHash: evt.txHash || evt.id.split('-')[0],
+            topic: evt.topicsXdr.map(t => xdr.ScVal.fromXDR(t, 'base64')),
+            value: xdr.ScVal.fromXDR(evt.bodyXdr, 'base64')
+          };
+        });
+        allEvents = allEvents.concat(records);
+        
+        if (res._links && res._links.next && res._links.next.href) {
+          url = 'https://api.stellar.expert' + res._links.next.href;
+        } else {
+          break;
+        }
       }
+      return allEvents;
+    } catch(e) {
+      console.warn('Direct fetch blocked by browser, falling back to RPC...', e.message);
+      return await fetchAllEventsFallback(contractId);
     }
-    return allEvents;
+  })();
+  
+  try {
+    return await cachedEventsPromise;
   } catch(e) {
-    console.warn('Direct fetch blocked by browser, falling back to RPC...', e.message);
-    return await fetchAllEventsFallback(contractId);
+    cachedEventsPromise = null;
+    return [];
   }
 };
 
