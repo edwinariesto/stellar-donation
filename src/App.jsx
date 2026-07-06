@@ -2896,6 +2896,20 @@ export default function App() {
                 </div>
               </div>
 
+              <div className="bg-white p-4 rounded-2xl shadow-inner mb-4 ring-4 ring-blue-500/20 relative flex flex-col items-center justify-center">
+                <QRCode value={userAddress || 'StelDot-Ambassador'} size={180} level="H" />
+                <div className="absolute bg-white rounded-lg p-1.5 shadow-sm flex items-center justify-center" style={{ width: 44, height: 44, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div className="w-full bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 mb-4 text-center">
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">{t.ambassadorVoucherCode}</p>
+                <p className="font-mono text-2xl font-bold text-cyan-300 tracking-[0.2em]">{userAddress ? userAddress.substring(userAddress.length - 5).toUpperCase() : 'VCH99'}</p>
+              </div>
+
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex flex-col items-center justify-center text-center">
                   <span className="text-3xl font-bold text-cyan-400 mb-1">{currentAmbassadorUses} / 5</span>
