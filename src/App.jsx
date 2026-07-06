@@ -1771,7 +1771,7 @@ export default function App() {
               
               {/* Campaign Creation */}
               <div>
-                <h3 className="font-bold text-sm text-ios-secondaryText uppercase tracking-wider mb-4">{t.createNewCampaign}</h3>
+                <h3 className="font-bold text-sm text-ios-secondaryText mb-4">{t.createNewCampaign}</h3>
                 <form onSubmit={handleCreateCampaign} className="space-y-4">
                   <div>
                     <label className="text-[10px] font-bold text-ios-darkGray block mb-1">{t.autoCampaignId || 'AUTO CAMPAIGN ID'}</label>
