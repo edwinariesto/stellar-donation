@@ -138,6 +138,24 @@ export default function App() {
   const filteredReferrals = referralHistory.filter(r => r.donorAddress.toLowerCase().includes(referralSearch.toLowerCase()));
   const totalReferralPages = Math.max(1, Math.ceil(filteredReferrals.length / REFERRALS_PER_PAGE));
   const currentReferrals = filteredReferrals.slice((referralPage - 1) * REFERRALS_PER_PAGE, referralPage * REFERRALS_PER_PAGE);
+  
+  // Ambassador State
+  const [ambassadorHistory, setAmbassadorHistory] = useState(() => {
+    try {
+      const stored = localStorage.getItem('steldot_ambassador_history');
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) { return []; }
+  });
+  const [ambassadorPage, setAmbassadorPage] = useState(1);
+  const [ambassadorSearch, setAmbassadorSearch] = useState('');
+  const [ambassadorTarget, setAmbassadorTarget] = useState('');
+  const [ambassadorAmount, setAmbassadorAmount] = useState('');
+  const AMBASSADOR_PER_PAGE = 5;
+  const filteredAmbassadors = ambassadorHistory.filter(r => r.address.toLowerCase().includes(ambassadorSearch.toLowerCase()));
+  const totalAmbassadorPages = Math.max(1, Math.ceil(filteredAmbassadors.length / AMBASSADOR_PER_PAGE));
+  const currentAmbassadors = filteredAmbassadors.slice((ambassadorPage - 1) * AMBASSADOR_PER_PAGE, ambassadorPage * AMBASSADOR_PER_PAGE);
+  const currentAmbassadorUses = ambassadorHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase()).length;
+
   const searchParams = new URLSearchParams(window.location.search);
   const refParam = searchParams.get('ref');
   const initialPartner = (refParam && refParam.startsWith('G') && refParam.length === 56) ? refParam : null;
@@ -747,6 +765,97 @@ export default function App() {
         setIsLoading(false);
       }
     }
+  };
+
+  // Simulate Ambassador Discount
+  const handleSimulateAmbassadorDiscount = () => {
+    SwalOrig.fire({
+      title: t.simulateDiscount || 'Simulasikan Diskon',
+      html: `
+        <div style="text-align: left; font-size: 13px; color: #374151;">
+          <p style="margin-bottom: 12px; color: #6b7280; font-size: 11px;">
+            ${t.simulateDesc || 'Masukkan alamat dompet dan nominal untuk mensimulasikan potongan 2%. Maksimal 5 kali penggunaan per dompet.'}
+          </p>
+          <label style="font-weight: bold; display: block; margin-bottom: 4px;">${t.targetAddress || 'Alamat Target'}</label>
+          <input type="text" id="ambassador-address" class="swal2-input" value="${userAddress}" style="width: 100%; margin: 0 0 16px 0; font-size: 12px; padding: 0 12px; height: 40px;">
+          
+          <label style="font-weight: bold; display: block; margin-bottom: 4px;">${t.originalAmount || 'Nominal Asli (XLM)'}</label>
+          <input type="number" id="ambassador-amount" class="swal2-input" placeholder="100" style="width: 100%; margin: 0 0 16px 0; font-size: 12px; padding: 0 12px; height: 40px;">
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: t.calculateDiscount || 'Hitung Potongan 2%',
+      cancelButtonText: t.close || 'Tutup',
+      buttonsStyling: false,
+      customClass: {
+        popup: 'rounded-2xl',
+        confirmButton: 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-3 px-6 rounded-xl hover:shadow-lg transition-all mr-2',
+        cancelButton: 'bg-slate-200 text-slate-700 font-bold py-3 px-6 rounded-xl hover:bg-slate-300 transition-all'
+      },
+      preConfirm: () => {
+        const address = SwalOrig.getPopup().querySelector('#ambassador-address').value;
+        const amountStr = SwalOrig.getPopup().querySelector('#ambassador-amount').value;
+        if (!address || !amountStr) {
+          SwalOrig.showValidationMessage(t.invalidInputs || 'Input Tidak Valid');
+          return false;
+        }
+        const amount = parseFloat(amountStr);
+        if (isNaN(amount) || amount <= 0) {
+          SwalOrig.showValidationMessage(t.invalidAmount || 'Jumlah Tidak Valid');
+          return false;
+        }
+        return { address, amount };
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const { address, amount } = result.value;
+        const usesCount = ambassadorHistory.filter(r => r.address.toLowerCase() === address.toLowerCase()).length;
+        
+        if (usesCount >= 5) {
+          SwalOrig.fire({
+            icon: 'error',
+            title: t.limitReached || 'Batas Tercapai',
+            text: t.usageLimitReached || 'Batas penggunaan 5 kali telah tercapai untuk dompet ini.',
+            confirmButtonText: t.close || 'Tutup',
+            buttonsStyling: false,
+            customClass: { confirmButton: 'bg-slate-800 text-white font-bold py-3 w-full rounded-xl' }
+          });
+          return;
+        }
+
+        const discountedAmount = amount * 0.98;
+        const newRecord = {
+          id: 'AMB-' + Math.random().toString(36).substring(2, 9),
+          address: address,
+          originalAmount: amount,
+          discountedAmount: discountedAmount,
+          date: new Date().toLocaleDateString('en-GB')
+        };
+
+        const updatedHistory = [newRecord, ...ambassadorHistory];
+        setAmbassadorHistory(updatedHistory);
+        try {
+          localStorage.setItem('steldot_ambassador_history', JSON.stringify(updatedHistory));
+        } catch (e) {}
+
+        SwalOrig.fire({
+          icon: 'success',
+          title: t.discountApplied || 'Diskon berhasil diterapkan!',
+          html: `
+            <div style="font-size: 14px; text-align: left;">
+              <p><strong>${t.targetAddress || 'Target Address'}:</strong> <br><span style="font-size: 11px; word-break: break-all;">${address}</span></p>
+              <br/>
+              <p><strong>${t.originalAmount || 'Original'}:</strong> ${amount.toFixed(2)} XLM</p>
+              <p style="color: #10b981; font-weight: bold; font-size: 18px; margin-top: 8px;">Pay Only: ${discountedAmount.toFixed(2)} XLM</p>
+              <p style="font-size: 11px; color: #6b7280; margin-top: 12px;">Uses remaining: ${4 - usesCount} / 5</p>
+            </div>
+          `,
+          confirmButtonText: t.close || 'Tutup',
+          buttonsStyling: false,
+          customClass: { confirmButton: 'bg-blue-600 text-white font-bold py-3 w-full rounded-xl hover:bg-blue-700' }
+        });
+      }
+    });
   };
 
   // Claim Referral Rewards
@@ -2764,49 +2873,94 @@ export default function App() {
         {/* Ambassador Voucher Modal */}
         {showAmbassadorBarcode && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            {/* Backdrop */}
             <div 
               className="absolute inset-0 bg-black/70 backdrop-blur-md"
               onClick={() => setShowAmbassadorBarcode(false)}
             ></div>
 
-            {/* Modal Content */}
-            <div className="bg-gradient-to-b from-slate-900 to-black w-full max-w-sm rounded-3xl shadow-2xl relative overflow-hidden border border-slate-800 z-10 flex flex-col items-center text-center p-8 animate-ios-fade-in glow-blue">
-              
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyan-400 to-blue-500"></div>
+            <div className="bg-gradient-to-b from-slate-900 to-black w-full max-w-md rounded-3xl shadow-2xl relative overflow-hidden border border-cyan-900/50 z-10 flex flex-col p-6 animate-ios-fade-in">
+              <button 
+                onClick={() => setShowAmbassadorBarcode(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 rounded-full p-2 transition-colors z-20"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
 
-              <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-              </div>
-
-              <div className="bg-blue-500/20 text-cyan-300 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest mb-3 border border-blue-500/30">
-                {t.ambassadorDiscount}
-              </div>
-
-              <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">{t.ambassadorPassTitle}</h2>
-              <p className="text-xs text-slate-400 mb-8 leading-relaxed px-2">
-                {t.ambassadorPassDesc}
-              </p>
-
-              <div className="bg-white p-4 rounded-2xl shadow-inner mb-6 ring-4 ring-blue-500/20 relative flex items-center justify-center">
-                <QRCode value={userAddress || 'StelDot-Ambassador'} size={200} level="H" />
-                <div className="absolute bg-white rounded-lg p-1.5 shadow-sm flex items-center justify-center" style={{ width: 44, height: 44 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                  </svg>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30 flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white tracking-tight">{t.ambassadorPassTitle}</h2>
+                  <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">{t.ambassadorPassDesc}</p>
                 </div>
               </div>
 
-              <div className="w-full bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">{t.ambassadorVoucherCode}</p>
-                <p className="font-mono text-2xl font-bold text-cyan-300 tracking-[0.2em]">{userAddress ? userAddress.substring(userAddress.length - 5).toUpperCase() : 'VCH99'}</p>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex flex-col items-center justify-center text-center">
+                  <span className="text-3xl font-bold text-cyan-400 mb-1">{currentAmbassadorUses} / 5</span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest">{t.remainingUses || 'Penggunaan'}</span>
+                </div>
+                <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex flex-col items-center justify-center text-center">
+                  <span className="text-3xl font-bold text-blue-400 mb-1">2%</span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest">{t.ambassadorDiscount || 'Diskon'}</span>
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-sm font-bold text-slate-200">{t.discountHistoryTitle || 'Riwayat Penggunaan Diskon'}</h3>
+                  <input
+                    type="text"
+                    placeholder="Search address..."
+                    value={ambassadorSearch}
+                    onChange={(e) => { setAmbassadorSearch(e.target.value); setAmbassadorPage(1); }}
+                    className="bg-slate-800/80 border border-slate-700/50 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-cyan-500/50 w-32 sm:w-40 transition-colors"
+                  />
+                </div>
+                <div className="flex-1 min-h-[150px] max-h-[220px] overflow-y-auto custom-scrollbar">
+                  {currentAmbassadors.length > 0 ? (
+                    <div className="space-y-2">
+                      {currentAmbassadors.map((ref, idx) => (
+                        <div 
+                          key={idx} 
+                          className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50 flex justify-between items-center"
+                        >
+                          <div>
+                            <p className="text-xs font-mono text-slate-300">{ref.address.substring(0, 8)}...{ref.address.substring(ref.address.length - 8)}</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5">{ref.date}</p>
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <span className="text-[10px] font-bold text-cyan-400 mb-0.5"><span className="line-through text-slate-500 mr-1">{ref.originalAmount.toFixed(2)}</span>{ref.discountedAmount.toFixed(2)} XLM</span>
+                            <span className="text-[9px] font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded-md uppercase">+ Sukses</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-[120px] text-center p-6 bg-slate-800/30 rounded-xl border border-slate-700/30 border-dashed">
+                      <p className="text-sm text-slate-500">{t.noDiscountHistory || 'Belum ada riwayat penggunaan diskon.'}</p>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex justify-center items-center gap-2 mt-3 pt-3 border-t border-slate-700/50">
+                  <button onClick={() => setAmbassadorPage(p => Math.max(1, p - 1))} disabled={ambassadorPage === 1} className="p-1 rounded-full text-slate-500 hover:text-cyan-400 disabled:opacity-30 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  </button>
+                  <span className="text-[10px] font-bold text-slate-400">{ambassadorPage} / {Math.max(1, totalAmbassadorPages)}</span>
+                  <button onClick={() => setAmbassadorPage(p => Math.min(totalAmbassadorPages, p + 1))} disabled={ambassadorPage === totalAmbassadorPages || totalAmbassadorPages === 0} className="p-1 rounded-full text-slate-500 hover:text-cyan-400 disabled:opacity-30 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  </button>
+                </div>
               </div>
 
               <button 
-                onClick={() => setShowAmbassadorBarcode(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 rounded-full p-2 transition-colors"
+                onClick={handleSimulateAmbassadorDiscount}
+                className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3.5 rounded-xl mt-2 hover:shadow-lg hover:shadow-cyan-500/20 transition-all flex items-center justify-center gap-2"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                {t.simulateDiscount || 'Simulasikan Diskon'}
               </button>
             </div>
           </div>
