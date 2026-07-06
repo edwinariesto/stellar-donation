@@ -188,7 +188,7 @@ export default function App() {
   
   // My Transactions
   const filteredUserTxs = userTxData
-    .filter(tx => tx.wallet === userAddress || tx.to === userAddress)
+    .filter(tx => tx.wallet === userAddress && tx.to === contractId)
     .filter(tx => tx.hash.toLowerCase().includes(userTxSearch.toLowerCase()));
   const totalUserTxPages = Math.max(1, Math.ceil(filteredUserTxs.length / USER_TX_PER_PAGE));
   const currentUserTxs = filteredUserTxs.slice((userTxPage - 1) * USER_TX_PER_PAGE, userTxPage * USER_TX_PER_PAGE);
