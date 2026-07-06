@@ -2388,7 +2388,6 @@ export default function App() {
                   )}
                 </div>
 
-                {totalUserTxPages > 1 && (
                   <div className="flex justify-center items-center gap-2 mt-4 pt-4 border-t border-gray-100">
                     <button 
                       onClick={() => setUserTxPage(p => Math.max(1, p - 1))}
@@ -2406,7 +2405,6 @@ export default function App() {
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </button>
                   </div>
-                )}
               </div>
             )}
 
@@ -2593,7 +2591,6 @@ export default function App() {
                   ))
                 )}
               </div>
-              {totalAllTxPages > 1 && (
                 <div className="flex justify-center items-center gap-2 mt-4 pt-4 border-t border-gray-100">
                   <button onClick={() => setAllTxPage(p => Math.max(1, p - 1))} disabled={allTxPage === 1} className="p-1 rounded-full text-gray-400 hover:text-ios-blue disabled:opacity-30 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -2603,7 +2600,6 @@ export default function App() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                   </button>
                 </div>
-              )}
             </div>
 
             {/* All Claim Rewards (Transparent for everyone) */}
@@ -2687,7 +2683,6 @@ export default function App() {
                   ))
                 )}
               </div>
-              {totalClaimPages > 1 && (
                 <div className="flex justify-center items-center gap-2 mt-4 pt-4 border-t border-gray-100">
                   <button onClick={() => setClaimHistoryPage(p => Math.max(1, p - 1))} disabled={claimHistoryPage === 1} className="p-1 rounded-full text-gray-400 hover:text-amber-500 disabled:opacity-30 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -2697,7 +2692,6 @@ export default function App() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                   </button>
                 </div>
-              )}
             </div>
 
             {/* Contact Provider */}
