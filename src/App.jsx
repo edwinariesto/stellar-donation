@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import html2canvas from 'html2canvas';
 import QRCode from 'react-qr-code';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import { translations } from './utils/i18n';
 import SwalOrig from 'sweetalert2';
 
@@ -117,6 +118,46 @@ function NeuronCanvas() {
   );
 }
 
+const QRScannerComponent = ({ onScan, onClose }) => {
+  useEffect(() => {
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      "qr-reader",
+      { fps: 10, qrbox: {width: 250, height: 250}, aspectRatio: 1.0 },
+      /* verbose= */ false
+    );
+    html5QrcodeScanner.render(
+      (decodedText) => {
+        html5QrcodeScanner.clear();
+        onScan(decodedText);
+      },
+      (error) => {
+        // Handle scan error if needed quietly
+      }
+    );
+
+    return () => {
+      html5QrcodeScanner.clear().catch(error => {
+        console.error("Failed to clear html5QrcodeScanner. ", error);
+      });
+    };
+  }, [onScan]);
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-black flex flex-col">
+      <div className="flex justify-between items-center p-4 bg-slate-900 text-white">
+        <h3 className="font-bold">Scan QR Code</h3>
+        <button onClick={onClose} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div className="flex-1 flex flex-col items-center justify-center bg-black relative">
+        <div id="qr-reader" className="w-full max-w-sm bg-white"></div>
+        <p className="text-white mt-4 text-xs opacity-70">Arahkan kamera ke QR Code dompet target</p>
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
   // Wallet & Network State
   const [freighterInstalled, setFreighterInstalled] = useState(false);
@@ -150,6 +191,8 @@ export default function App() {
   const [ambassadorSearch, setAmbassadorSearch] = useState('');
   const [ambassadorTarget, setAmbassadorTarget] = useState('');
   const [ambassadorAmount, setAmbassadorAmount] = useState('');
+  const [showSimulateForm, setShowSimulateForm] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
   const AMBASSADOR_PER_PAGE = 5;
   const filteredAmbassadors = ambassadorHistory.filter(r => r.address.toLowerCase().includes(ambassadorSearch.toLowerCase()));
   const totalAmbassadorPages = Math.max(1, Math.ceil(filteredAmbassadors.length / AMBASSADOR_PER_PAGE));
@@ -769,92 +812,62 @@ export default function App() {
 
   // Simulate Ambassador Discount
   const handleSimulateAmbassadorDiscount = () => {
+    setShowSimulateForm(true);
+    setAmbassadorAmount('');
+    setAmbassadorTarget(userAddress);
+  };
+
+  const handleProcessDiscount = () => {
+    if (!ambassadorTarget || !ambassadorAmount) return;
+    const amount = parseFloat(ambassadorAmount);
+    if (isNaN(amount) || amount <= 0) return;
+
+    const usesCount = ambassadorHistory.filter(r => r.address.toLowerCase() === ambassadorTarget.toLowerCase()).length;
+    
+    if (usesCount >= 5) {
+      SwalOrig.fire({
+        icon: 'error',
+        title: t.limitReached || 'Batas Tercapai',
+        text: t.usageLimitReached || 'Batas penggunaan 5 kali telah tercapai untuk dompet ini.',
+        confirmButtonText: t.close || 'Tutup',
+        buttonsStyling: false,
+        customClass: { confirmButton: 'bg-slate-800 text-white font-bold py-3 w-full rounded-xl' }
+      });
+      return;
+    }
+
+    const discountedAmount = amount * 0.98;
+    const newRecord = {
+      id: 'AMB-' + Math.random().toString(36).substring(2, 9),
+      address: ambassadorTarget,
+      originalAmount: amount,
+      discountedAmount: discountedAmount,
+      date: new Date().toLocaleDateString('en-GB')
+    };
+
+    const updatedHistory = [newRecord, ...ambassadorHistory];
+    setAmbassadorHistory(updatedHistory);
+    try {
+      localStorage.setItem('steldot_ambassador_history', JSON.stringify(updatedHistory));
+    } catch (e) {}
+
+    setShowSimulateForm(false);
+    
     SwalOrig.fire({
-      title: t.simulateDiscount || 'Simulasikan Diskon',
+      icon: 'success',
+      title: t.discountApplied || 'Diskon berhasil diterapkan!',
       html: `
-        <div style="text-align: left; font-size: 13px; color: #374151;">
-          <p style="margin-bottom: 12px; color: #6b7280; font-size: 11px;">
-            ${t.simulateDesc || 'Masukkan alamat dompet dan nominal untuk mensimulasikan potongan 2%. Maksimal 5 kali penggunaan per dompet.'}
-          </p>
-          <label style="font-weight: bold; display: block; margin-bottom: 4px;">${t.targetAddress || 'Alamat Target'}</label>
-          <input type="text" id="ambassador-address" class="swal2-input" value="${userAddress}" style="width: 100%; margin: 0 0 16px 0; font-size: 12px; padding: 0 12px; height: 40px;">
-          
-          <label style="font-weight: bold; display: block; margin-bottom: 4px;">${t.originalAmount || 'Nominal Asli (XLM)'}</label>
-          <input type="number" id="ambassador-amount" class="swal2-input" placeholder="100" style="width: 100%; margin: 0 0 16px 0; font-size: 12px; padding: 0 12px; height: 40px;">
+        <div style="font-size: 14px; text-align: left;">
+          <p><strong>${t.targetAddress || 'Target Address'}:</strong> <br><span style="font-size: 11px; word-break: break-all;">${ambassadorTarget}</span></p>
+          <br/>
+          <p><strong>${t.originalAmount || 'Original'}:</strong> ${amount.toFixed(2)} XLM</p>
+          <p style="color: #10b981; font-weight: bold; font-size: 18px; margin-top: 8px;">Pay Only: ${discountedAmount.toFixed(2)} XLM</p>
+          <p style="font-size: 11px; color: #6b7280; margin-top: 12px;">Uses remaining: ${4 - usesCount} / 5</p>
         </div>
       `,
-      showCancelButton: true,
-      confirmButtonText: t.calculateDiscount || 'Hitung Potongan 2%',
-      cancelButtonText: t.close || 'Tutup',
+      confirmButtonText: t.close || 'Tutup',
       buttonsStyling: false,
-      customClass: {
-        popup: 'rounded-2xl',
-        confirmButton: 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-3 px-6 rounded-xl hover:shadow-lg transition-all mr-2',
-        cancelButton: 'bg-slate-200 text-slate-700 font-bold py-3 px-6 rounded-xl hover:bg-slate-300 transition-all'
-      },
-      preConfirm: () => {
-        const address = SwalOrig.getPopup().querySelector('#ambassador-address').value;
-        const amountStr = SwalOrig.getPopup().querySelector('#ambassador-amount').value;
-        if (!address || !amountStr) {
-          SwalOrig.showValidationMessage(t.invalidInputs || 'Input Tidak Valid');
-          return false;
-        }
-        const amount = parseFloat(amountStr);
-        if (isNaN(amount) || amount <= 0) {
-          SwalOrig.showValidationMessage(t.invalidAmount || 'Jumlah Tidak Valid');
-          return false;
-        }
-        return { address, amount };
-      }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const { address, amount } = result.value;
-        const usesCount = ambassadorHistory.filter(r => r.address.toLowerCase() === address.toLowerCase()).length;
-        
-        if (usesCount >= 5) {
-          SwalOrig.fire({
-            icon: 'error',
-            title: t.limitReached || 'Batas Tercapai',
-            text: t.usageLimitReached || 'Batas penggunaan 5 kali telah tercapai untuk dompet ini.',
-            confirmButtonText: t.close || 'Tutup',
-            buttonsStyling: false,
-            customClass: { confirmButton: 'bg-slate-800 text-white font-bold py-3 w-full rounded-xl' }
-          });
-          return;
-        }
-
-        const discountedAmount = amount * 0.98;
-        const newRecord = {
-          id: 'AMB-' + Math.random().toString(36).substring(2, 9),
-          address: address,
-          originalAmount: amount,
-          discountedAmount: discountedAmount,
-          date: new Date().toLocaleDateString('en-GB')
-        };
-
-        const updatedHistory = [newRecord, ...ambassadorHistory];
-        setAmbassadorHistory(updatedHistory);
-        try {
-          localStorage.setItem('steldot_ambassador_history', JSON.stringify(updatedHistory));
-        } catch (e) {}
-
-        SwalOrig.fire({
-          icon: 'success',
-          title: t.discountApplied || 'Diskon berhasil diterapkan!',
-          html: `
-            <div style="font-size: 14px; text-align: left;">
-              <p><strong>${t.targetAddress || 'Target Address'}:</strong> <br><span style="font-size: 11px; word-break: break-all;">${address}</span></p>
-              <br/>
-              <p><strong>${t.originalAmount || 'Original'}:</strong> ${amount.toFixed(2)} XLM</p>
-              <p style="color: #10b981; font-weight: bold; font-size: 18px; margin-top: 8px;">Pay Only: ${discountedAmount.toFixed(2)} XLM</p>
-              <p style="font-size: 11px; color: #6b7280; margin-top: 12px;">Uses remaining: ${4 - usesCount} / 5</p>
-            </div>
-          `,
-          confirmButtonText: t.close || 'Tutup',
-          buttonsStyling: false,
-          customClass: { confirmButton: 'bg-blue-600 text-white font-bold py-3 w-full rounded-xl hover:bg-blue-700' }
-        });
-      }
+      customClass: { confirmButton: 'bg-blue-600 text-white font-bold py-3 w-full rounded-xl hover:bg-blue-700' }
     });
   };
 
@@ -2978,6 +2991,99 @@ export default function App() {
               </button>
             </div>
           </div>
+        )}
+
+        {/* Simulate Discount Form Modal */}
+        {showSimulateForm && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div 
+              className="absolute inset-0 bg-black/70 backdrop-blur-md"
+              onClick={() => setShowSimulateForm(false)}
+            ></div>
+
+            <div className="bg-gradient-to-b from-slate-900 to-black w-full max-w-sm rounded-3xl shadow-2xl relative overflow-hidden border border-cyan-900/50 z-10 flex flex-col p-6 animate-ios-fade-in">
+              <button 
+                onClick={() => setShowSimulateForm(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 rounded-full p-2 transition-colors z-20"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+
+              <h2 className="text-xl font-bold text-white mb-2">{t.simulateDiscount || 'Simulasikan Diskon'}</h2>
+              <p className="text-[11px] text-slate-400 mb-6 leading-relaxed pr-6">
+                {t.simulateDesc || 'Masukkan alamat dompet dan nominal untuk mensimulasikan potongan 2%. Maksimal 5 kali penggunaan per dompet.'}
+              </p>
+
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="text-xs font-bold text-slate-300 mb-1.5 block">{t.targetAddress || 'Alamat Target'}</label>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      value={ambassadorTarget}
+                      onChange={(e) => setAmbassadorTarget(e.target.value)}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-4 pr-12 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+                      placeholder="G..."
+                    />
+                    <button 
+                      onClick={() => setIsScanning(true)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-cyan-400 hover:bg-cyan-900/30 rounded-lg transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-300 mb-1.5 block">{t.originalAmount || 'Nominal Asli (XLM)'}</label>
+                  <input 
+                    type="number" 
+                    value={ambassadorAmount}
+                    onChange={(e) => setAmbassadorAmount(e.target.value)}
+                    placeholder="100"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+                  />
+                </div>
+                
+                <div className="bg-cyan-900/20 border border-cyan-800/50 rounded-xl p-4 flex justify-between items-center">
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">Total Bayar</p>
+                    <p className="text-xl font-bold text-cyan-400">
+                      {ambassadorAmount && !isNaN(parseFloat(ambassadorAmount)) && parseFloat(ambassadorAmount) > 0 
+                        ? (parseFloat(ambassadorAmount) * 0.98).toFixed(2) 
+                        : '0.00'} XLM
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">Potongan (2%)</p>
+                    <p className="text-sm font-bold text-green-400">
+                      {ambassadorAmount && !isNaN(parseFloat(ambassadorAmount)) && parseFloat(ambassadorAmount) > 0 
+                        ? (parseFloat(ambassadorAmount) * 0.02).toFixed(2) 
+                        : '0.00'} XLM
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                onClick={handleProcessDiscount}
+                disabled={!ambassadorTarget || !ambassadorAmount || isNaN(parseFloat(ambassadorAmount)) || parseFloat(ambassadorAmount) <= 0}
+                className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-cyan-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {t.calculateDiscount || 'Hitung Potongan 2%'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isScanning && (
+          <QRScannerComponent 
+            onScan={(text) => {
+              setAmbassadorTarget(text);
+              setIsScanning(false);
+            }} 
+            onClose={() => setIsScanning(false)} 
+          />
         )}
 
         {/* Helping Angel Referral Modal */}
