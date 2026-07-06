@@ -1918,8 +1918,8 @@ export default function App() {
                         className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer active:scale-[0.98]"
                       >
                         <div className="flex items-center gap-3 w-2/3">
-                          <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                          <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
                           </div>
                           <div className="overflow-hidden w-full">
                             <p className="text-xs font-mono text-ios-darkText font-bold truncate">{claim.address.substring(0, 5)}...{claim.address.substring(claim.address.length - 4)}</p>
@@ -1927,8 +1927,10 @@ export default function App() {
                           </div>
                         </div>
                         <div className="flex flex-col items-end flex-shrink-0">
-                          <span className="text-sm font-bold text-ios-blue">${claim.amount.toFixed(2)} XLM</span>
-                          <span className="text-[10px] font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-full uppercase mt-1">${t.successful}</span>
+                          <span className="text-sm font-bold text-amber-500">{claim.amount.toFixed(2)} XLM</span>
+                          <div className="text-[9px] font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded flex items-center justify-center mt-1 uppercase tracking-wider">
+                            {t.approved || 'APPROVED'}
+                          </div>
                         </div>
                       </div>
                     ))
@@ -2668,7 +2670,7 @@ export default function App() {
                     >
                       <div className="flex items-center gap-3 w-2/3">
                         <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
                         </div>
                         <div className="overflow-hidden w-full">
                           <p className="text-xs font-mono text-ios-darkText font-bold truncate">{claim.address.substring(0, 5)}...{claim.address.substring(claim.address.length - 4)}</p>
@@ -2677,7 +2679,9 @@ export default function App() {
                       </div>
                       <div className="flex flex-col items-end flex-shrink-0">
                         <span className="text-sm font-bold text-amber-500">{claim.amount.toFixed(2)} XLM</span>
-                        <span className="text-[10px] font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-full uppercase mt-1">{t.approved || 'APPROVED'}</span>
+                        <div className="text-[9px] font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded flex items-center justify-center mt-1 uppercase tracking-wider">
+                          {t.approved || 'APPROVED'}
+                        </div>
                       </div>
                     </div>
                   ))
