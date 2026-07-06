@@ -183,7 +183,7 @@ export default function App() {
 
   const [userTxPage, setUserTxPage] = useState(1);
   const [userTxSearch, setUserTxSearch] = useState('');
-  const USER_TX_PER_PAGE = 3;
+  const USER_TX_PER_PAGE = 5;
   const [userTxData, setUserTxData] = useState([]);
   
   // My Transactions
