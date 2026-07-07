@@ -16,6 +16,7 @@ import {
 } from '@creit.tech/stellar-wallets-kit';
 import { FreighterModule } from '@creit.tech/stellar-wallets-kit/modules/freighter';
 import { WalletConnectModule } from '@creit.tech/stellar-wallets-kit/modules/wallet-connect';
+import { requestAccess, setAllowed } from '@stellar/freighter-api';
 
 export const NETWORKS = {
   TESTNET: {
@@ -70,8 +71,21 @@ export async function checkWalletInstalled() {
 }
 
 export async function connectWallet(walletType) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
+      if (walletType === 'freighter') {
+        try {
+          await setAllowed();
+        } catch(e) { console.warn("setAllowed failed", e); }
+        
+        try {
+          const access = await requestAccess();
+          if (access && access.error) {
+            return reject(new Error(access.error));
+          }
+        } catch(e) { console.warn("requestAccess failed", e); }
+      }
+      
       const module = getActiveModule(walletType);
       module.getAddress()
         .then((res) => resolve(res.address || res))

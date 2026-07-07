@@ -605,8 +605,8 @@ export default function App() {
     const msg = String(errMessage);
     if (msg === 'WALLETCONNECT_SESSION_EXPIRED') return t.wcSessionExpired;
     const msgLow = msg.toLowerCase();
-    if (msgLow.includes('no wallet') || msgLow.includes('not connected') || msgLow.includes('not allow')) return t.errNoWallet;
-    if (msgLow.includes('decline') || msgLow.includes('reject')) return t.errUserDeclined;
+    if (msgLow.includes('no wallet') || msgLow.includes('not connected') || msgLow.includes('not detected')) return t.errNoWallet;
+    if (msgLow.includes('decline') || msgLow.includes('reject') || msgLow.includes('not allow')) return t.errUserDeclined;
     return errMessage;
   };
 
