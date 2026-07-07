@@ -803,16 +803,11 @@ export default function App() {
     setSimulateVoucherCode('');
   };
 
-  const handleProcessDiscount = () => {
-    if (!ambassadorTarget || !ambassadorAmount || !simulateVoucherCode) return;
-    const amount = parseFloat(ambassadorAmount);
-    if (isNaN(amount) || amount <= 0) return;
-
-    if (simulateVoucherCode !== ambassadorVoucherCode) {
+    if (ambassadorTarget.toLowerCase() !== userAddress.toLowerCase()) {
       SwalOrig.fire({
         icon: 'error',
-        title: t.invalidCode || 'Kode Tidak Valid',
-        text: 'Shopping Voucher Code tidak valid atau sudah kadaluwarsa.',
+        title: 'Auth Error',
+        text: 'Alamat Target harus sama dengan dompet yang terhubung untuk menyimpan transaksi ini ke blockchain.',
         confirmButtonText: t.close || 'Tutup',
         buttonsStyling: false,
         customClass: { confirmButton: 'bg-slate-800 text-white font-bold py-3 w-full rounded-xl' }
@@ -820,59 +815,104 @@ export default function App() {
       return;
     }
 
-    const usesCount = ambassadorHistory.filter(r => r.address.toLowerCase() === ambassadorTarget.toLowerCase()).length;
-    
-    if (usesCount >= 5) {
-      SwalOrig.fire({
-        icon: 'error',
-        title: t.limitReached || 'Batas Tercapai',
-        text: t.usageLimitReached || 'Batas penggunaan 5 kali telah tercapai untuk dompet ini.',
-        confirmButtonText: t.close || 'Tutup',
-        buttonsStyling: false,
-        customClass: { confirmButton: 'bg-slate-800 text-white font-bold py-3 w-full rounded-xl' }
-      });
+    const activeCampaigns = campaigns.filter(c => c.active && c.raised < c.target);
+    if (activeCampaigns.length === 0) {
+      SwalOrig.fire({ icon: 'error', text: 'Tidak ada kampanye aktif untuk diproses ke blockchain.' });
       return;
     }
 
     const discountedAmount = amount * 0.98;
-    const newRecord = {
-      id: 'AMB-' + Math.random().toString(36).substring(2, 9),
-      address: ambassadorTarget,
-      originalAmount: amount,
-      discountedAmount: discountedAmount,
-      date: new Date().toLocaleDateString('en-GB')
-    };
 
-    const updatedHistory = [newRecord, ...ambassadorHistory];
-    setAmbassadorHistory(updatedHistory);
     try {
-      localStorage.setItem('steldot_ambassador_history', JSON.stringify(updatedHistory));
-    } catch (e) {}
+      setShowSimulateForm(false);
+      
+      let mockHash = '';
 
-    setShowSimulateForm(false);
-    
-    // Generate new code
-    const newCode = 'AMB-' + Math.random().toString(36).substring(2, 7).toUpperCase();
-    setAmbassadorVoucherCode(newCode);
-    localStorage.setItem('steldot_ambassador_code', newCode);
-    setSimulateVoucherCode('');
-    
-    SwalOrig.fire({
-      icon: 'success',
-      title: t.discountApplied || 'Diskon berhasil diterapkan!',
-      html: `
-        <div style="font-size: 14px; text-align: left;">
-          <p><strong>${t.targetAddress || 'Target Address'}:</strong> <br><span style="font-size: 11px; word-break: break-all;">${ambassadorTarget}</span></p>
-          <br/>
-          <p><strong>${t.originalAmount || 'Original'}:</strong> ${amount.toFixed(2)} XLM</p>
-          <p style="color: #10b981; font-weight: bold; font-size: 18px; margin-top: 8px;">Pay Only: ${discountedAmount.toFixed(2)} XLM</p>
-          <p style="font-size: 11px; color: #6b7280; margin-top: 12px;">Uses remaining: ${4 - usesCount} / 5</p>
-        </div>
-      `,
-      confirmButtonText: t.close || 'Tutup',
-      buttonsStyling: false,
-      customClass: { confirmButton: 'bg-blue-600 text-white font-bold py-3 w-full rounded-xl hover:bg-blue-700' }
-    });
+      if (!isMockMode) {
+        SwalOrig.fire({
+          title: t.confirmSignature || 'Konfirmasi Tanda Tangan',
+          text: t.confirmDonate || 'Silakan konfirmasi transaksi di dompet Anda.',
+          icon: 'info',
+          allowOutsideClick: false,
+          showConfirmButton: false,
+          didOpen: () => SwalOrig.showLoading()
+        });
+
+        const donorSc = nativeToScVal(Address.fromString(userAddress));
+        const campaignSc = nativeToScVal(activeCampaigns[0].id, { type: 'u32' });
+        const amountSc = nativeToScVal(discountedAmount, { type: 'i128' });
+        
+        const txRes = await executeTransaction(contractId, 'donate', [donorSc, campaignSc, amountSc], userAddress);
+        mockHash = txRes; // Use real hash
+      } else {
+        SwalOrig.fire({
+          title: t.blockchainSync || 'Memproses di Blockchain...',
+          html: 'Mensimulasikan penyimpanan transaksi voucher ke blockchain (Mock Mode)...',
+          allowOutsideClick: false,
+          showConfirmButton: false,
+          didOpen: () => SwalOrig.showLoading()
+        });
+        await new Promise(r => setTimeout(r, 2000));
+        mockHash = '0x' + Math.random().toString(16).substring(2, 10).toUpperCase() + '...';
+      }
+
+      // Add to global UI user tx history so it feels real
+      const newTx = {
+        hash: mockHash,
+        wallet: userAddress,
+        to: contractId,
+        amount: discountedAmount,
+        date: new Date().toLocaleDateString('en-GB')
+      };
+      setUserTxData([newTx, ...userTxData]);
+
+      const newRecord = {
+        id: 'AMB-' + Math.random().toString(36).substring(2, 9),
+        address: ambassadorTarget,
+        originalAmount: amount,
+        discountedAmount: discountedAmount,
+        date: new Date().toLocaleDateString('en-GB')
+      };
+  
+      const updatedHistory = [newRecord, ...ambassadorHistory];
+      setAmbassadorHistory(updatedHistory);
+      try { localStorage.setItem('steldot_ambassador_history', JSON.stringify(updatedHistory)); } catch (e) {}
+      
+      const newCode = 'AMB-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+      setAmbassadorVoucherCode(newCode);
+      localStorage.setItem('steldot_ambassador_code', newCode);
+      setSimulateVoucherCode('');
+      
+      SwalOrig.close();
+      SwalOrig.fire({
+        icon: 'success',
+        title: t.discountApplied || 'Diskon berhasil diterapkan!',
+        html: `
+          <div style="font-size: 14px; text-align: left;">
+            <p><strong>${t.targetAddress || 'Target Address'}:</strong> <br><span style="font-size: 11px; word-break: break-all;">${ambassadorTarget}</span></p>
+            <br/>
+            <p><strong>${t.originalAmount || 'Original'}:</strong> ${amount.toFixed(2)} XLM</p>
+            <p style="color: #10b981; font-weight: bold; font-size: 18px; margin-top: 8px;">Pay Only: ${discountedAmount.toFixed(2)} XLM</p>
+            <p style="font-size: 11px; color: #6b7280; margin-top: 12px;">Sisa penggunaan: ${4 - usesCount} / 5</p>
+            <p style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Tx: ${mockHash}</p>
+          </div>
+        `,
+        confirmButtonText: t.close || 'Tutup',
+        buttonsStyling: false,
+        customClass: { confirmButton: 'bg-blue-600 text-white font-bold py-3 w-full rounded-xl hover:bg-blue-700' }
+      });
+    } catch (err) {
+      console.error(err);
+      SwalOrig.close();
+      SwalOrig.fire({
+        title: t.txFailed || 'Transaksi Gagal',
+        text: err.message || err,
+        icon: 'error',
+        confirmButtonText: t.close || 'Tutup',
+        buttonsStyling: false,
+        customClass: { confirmButton: 'bg-red-600 text-white font-bold py-3 w-full rounded-xl' }
+      });
+    }
   };
 
   // Claim Referral Rewards
