@@ -447,6 +447,7 @@ export const getReferralHistory = async (contractId, referrerAddress) => {
     console.error('Failed to get referral history', err);
     return [];
   }
+}
 
   // Execute native payment transaction via Freighter/WC signing
   export async function executeNativePayment(destination, amountStr, memoText, userAddress) {
@@ -546,7 +547,6 @@ export const getReferralHistory = async (contractId, referrerAddress) => {
     
     return txHash;
   }
-};
 
 // Execute write transaction via Freighter signing
 export async function executeTransaction(contractId, functionName, args = [], userAddress) {
