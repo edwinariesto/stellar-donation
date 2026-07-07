@@ -800,7 +800,7 @@ export default function App() {
   const handleSimulateAmbassadorDiscount = () => {
     setShowSimulateForm(true);
     setAmbassadorAmount('');
-    setAmbassadorTarget(userAddress);
+    setAmbassadorTarget('');
     setSimulateVoucherCode('');
   };
 
@@ -3099,9 +3099,15 @@ export default function App() {
                       type="text" 
                       value={ambassadorTarget}
                       onChange={(e) => setAmbassadorTarget(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-4 pr-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-4 pr-12 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
                       placeholder="G..."
                     />
+                    <button 
+                      onClick={() => setIsScanning(true)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-cyan-400 hover:bg-cyan-900/30 rounded-lg transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                    </button>
                   </div>
                 </div>
 
@@ -3158,6 +3164,16 @@ export default function App() {
               </button>
             </div>
           </div>
+        )}
+
+        {isScanning && (
+          <QRScannerComponent 
+            onScan={(text) => {
+              setAmbassadorTarget(text);
+              setIsScanning(false);
+            }} 
+            onClose={() => setIsScanning(false)} 
+          />
         )}
 
         {/* Helping Angel Referral Modal */}
