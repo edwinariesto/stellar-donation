@@ -950,6 +950,16 @@ export default function App() {
       return;
     }
 
+    if (!/^G[A-Z0-9]{55}$/.test(ambassadorTarget.trim())) {
+      SwalOrig.fire({
+        icon: 'warning',
+        title: t.invalidTargetAddress || 'Format Alamat Tidak Valid',
+        text: t.invalidTargetAddressDesc || 'Alamat dompet target tidak valid. Pastikan alamat dimulai dengan G dan berjumlah 56 karakter.',
+        confirmButtonColor: '#FF3B30'
+      });
+      return;
+    }
+
     const usesCount = ambassadorHistory.filter(r => r.address.toLowerCase() === ambassadorTarget.toLowerCase()).length;
     
     if (usesCount >= 5) {
