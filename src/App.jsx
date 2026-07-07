@@ -600,6 +600,16 @@ export default function App() {
   };
 
 
+  const getTranslatedError = (errMessage) => {
+    if (!errMessage) return t.connErrorDesc;
+    const msg = String(errMessage);
+    if (msg === 'WALLETCONNECT_SESSION_EXPIRED') return t.wcSessionExpired;
+    const msgLow = msg.toLowerCase();
+    if (msgLow.includes('no wallet') || msgLow.includes('not connected') || msgLow.includes('not allow')) return t.errNoWallet;
+    if (msgLow.includes('decline') || msgLow.includes('reject')) return t.errUserDeclined;
+    return errMessage;
+  };
+
   const handleDisconnectWallet = () => {
     sessionStorage.removeItem('steldot_wallet_address');
     setUserAddress('');
@@ -627,14 +637,6 @@ export default function App() {
       showCancelButton: true,
       cancelButtonText: t.close || 'Close',
       didOpen: () => {
-        const getTranslatedError = (errMessage) => {
-          if (!errMessage) return t.connErrorDesc;
-          const msg = String(errMessage).toLowerCase();
-          if (msg.includes('no wallet') || msg.includes('not connected') || msg.includes('not allow')) return t.errNoWallet;
-          if (msg.includes('decline') || msg.includes('reject')) return t.errUserDeclined;
-          return errMessage;
-        };
-
         document.getElementById('btn-freighter').addEventListener('click', async () => {
           Swal.close();
           try {
@@ -779,7 +781,7 @@ export default function App() {
       } catch (err) {
         Swal.fire({
           title: t.txFailed,
-          text: err.message || t.txFailedDesc,
+          text: getTranslatedError(err.message || err),
           icon: 'error',
           confirmButtonColor: '#FF3B30'
         });
@@ -986,7 +988,7 @@ export default function App() {
       } catch (err) {
         Swal.fire({
           title: t.requestFailed,
-          text: err.message || t.requestFailedDesc,
+          text: getTranslatedError(err.message || err),
           icon: 'error',
           confirmButtonColor: '#FF3B30'
         });
@@ -1042,7 +1044,7 @@ export default function App() {
       } catch (err) {
         Swal.fire({
           title: t.withdrawFailed,
-          text: err.message || t.requestFailedDesc,
+          text: getTranslatedError(err.message || err),
           icon: 'error',
           confirmButtonColor: '#FF3B30'
         });
@@ -1129,7 +1131,7 @@ export default function App() {
         Swal.fire(t.updateCampaign, t.updateCampaignSuccess, 'success').then(() => window.location.reload());
         await refreshData();
       } catch (err) {
-        Swal.fire(t.updateFailed, err.message || t.signatureRejected, 'error');
+        Swal.fire(t.updateFailed, getTranslatedError(err.message || err), 'error');
       } finally {
         setIsLoading(false);
       }
@@ -1202,7 +1204,7 @@ export default function App() {
         const unixTime = Math.floor(Date.now() / 1000);
         setNewCampaign(prev => ({ ...prev, id: `StelDot-${unixTime}` }));
         
-        let errorText = err.message || t.requestFailedDesc;
+        let errorText = getTranslatedError(err.message || err);
         if (errorText.includes('UnreachableCodeReached')) {
           errorText = "Kontrak menolak transaksi ini (kemungkinan ID Kampanye sudah terpakai karena transaksi sebelumnya sebenarnya berhasil, atau ada input yang tidak valid). ID telah direset otomatis, silakan periksa daftar kampanye Anda atau coba lagi.";
         }

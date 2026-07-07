@@ -438,7 +438,7 @@ export async function executeTransaction(contractId, functionName, args = [], us
     if (errMsg.toLowerCase().includes("session topic doesn't exist") || errMsg.toLowerCase().includes("no matching key")) {
       sessionStorage.removeItem('steldot_wallet_address');
       sessionStorage.removeItem('steldot_wallet_type');
-      throw new Error("Sesi WalletConnect Anda telah berakhir atau terputus. Silakan klik tombol 'Disconnect', lalu hubungkan ulang dompet Anda.");
+      throw new Error('WALLETCONNECT_SESSION_EXPIRED');
     }
     throw err;
   }
