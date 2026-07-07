@@ -1376,7 +1376,12 @@ export default function App() {
         const targetStroops = BigInt(Math.round(target * 10000000));
         const targetSc = nativeToScVal(targetStroops, { type: 'i128' });
         const activeSc = nativeToScVal(active);
-        const youtubeSc = nativeToScVal(youtubeLink);
+        const youtubeSc = nativeToScVal(youtubeLink || '', { type: 'string' });
+        if (!clientWallet || !clientWallet.startsWith('G') || clientWallet.length !== 56) {
+          Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+          setIsLoading(false);
+          return;
+        }
         const clientWalletSc = nativeToScVal(clientWallet, { type: 'address' });
         const expirationSc = nativeToScVal(expirationUnix, { type: 'u64' });
 
@@ -1465,7 +1470,12 @@ export default function App() {
         const descSc = nativeToScVal(description);
         const targetStroops = BigInt(Math.round(target * 10000000));
         const targetSc = nativeToScVal(targetStroops, { type: 'i128' });
-        const youtubeSc = nativeToScVal(youtubeLink);
+        const youtubeSc = nativeToScVal(youtubeLink || '', { type: 'string' });
+        if (!clientWallet || !clientWallet.startsWith('G') || clientWallet.length !== 56) {
+          Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+          setIsLoading(false);
+          return;
+        }
         const clientWalletSc = nativeToScVal(clientWallet, { type: 'address' });
         const expirationSc = nativeToScVal(expirationUnix, { type: 'u64' });
 
