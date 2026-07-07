@@ -16,7 +16,7 @@ import {
 } from '@creit.tech/stellar-wallets-kit';
 import { FreighterModule } from '@creit.tech/stellar-wallets-kit/modules/freighter';
 import { WalletConnectModule } from '@creit.tech/stellar-wallets-kit/modules/wallet-connect';
-import { requestAccess, setAllowed, isConnected, getPublicKey, signTransaction as freighterSignTransaction } from '@stellar/freighter-api';
+import { requestAccess, setAllowed, isConnected, getAddress as freighterGetAddress, signTransaction as freighterSignTransaction } from '@stellar/freighter-api';
 
 export const NETWORKS = {
   TESTNET: {
@@ -80,10 +80,10 @@ export async function connectWallet(walletType) {
         let access = await requestAccess();
         if (access && access.error) return reject(new Error(access.error));
         
-        let pubKey = await getPublicKey();
+        let pubKey = await freighterGetAddress();
         if (pubKey && pubKey.error) return reject(new Error(pubKey.error));
         
-        return resolve(pubKey);
+        return resolve(pubKey.address || pubKey);
       }
       
       const module = getActiveModule(walletType);
@@ -100,8 +100,8 @@ export async function getWalletPublicKey() {
   try {
     const walletType = sessionStorage.getItem('steldot_wallet_type') || 'freighter';
     if (walletType === 'freighter') {
-      const pubKey = await getPublicKey();
-      return (pubKey && !pubKey.error) ? pubKey : null;
+      const pubKey = await freighterGetAddress();
+      return (pubKey && !pubKey.error) ? pubKey.address || pubKey : null;
     }
     const module = getActiveModule(walletType);
     const res = await module.getAddress();
