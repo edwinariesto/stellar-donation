@@ -427,10 +427,21 @@ export async function executeTransaction(contractId, functionName, args = [], us
   const walletType = sessionStorage.getItem('steldot_wallet_type') || 'freighter';
   
   const module = getActiveModule(walletType);
-  const signedResult = await module.signTransaction(xdrString, {
-    networkPassphrase: currentNetwork.passphrase,
-    address: account.accountId()
-  });
+  let signedResult;
+  try {
+    signedResult = await module.signTransaction(xdrString, {
+      networkPassphrase: currentNetwork.passphrase,
+      address: account.accountId()
+    });
+  } catch (err) {
+    const errMsg = err.message || err.toString();
+    if (errMsg.toLowerCase().includes("session topic doesn't exist") || errMsg.toLowerCase().includes("no matching key")) {
+      sessionStorage.removeItem('steldot_wallet_address');
+      sessionStorage.removeItem('steldot_wallet_type');
+      throw new Error("Sesi WalletConnect Anda telah berakhir atau terputus. Silakan klik tombol 'Disconnect', lalu hubungkan ulang dompet Anda.");
+    }
+    throw err;
+  }
 
   const finalXdr = signedResult.result || signedResult.signedTxXdr || signedResult;
   
