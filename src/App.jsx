@@ -387,7 +387,7 @@ export default function App() {
   useEffect(() => {
     if (isOwner && !newCampaign.id) {
       const unixTime = Math.floor(Date.now() / 1000);
-      setNewCampaign(prev => ({ ...prev, id: `StelDot-${unixTime}` }));
+      setNewCampaign(prev => ({ ...prev, id: unixTime }));
     }
   }, [isOwner, newCampaign.id]);
 
@@ -750,7 +750,7 @@ export default function App() {
 
         const amountStroops = BigInt(Math.round(amount * 10000000));
         const donorSc = nativeToScVal(Address.fromString(userAddress));
-        const campaignSc = nativeToScVal(campaignId, { type: 'u32' });
+        const campaignSc = nativeToScVal(Number(campaignId), { type: 'u32' });
         const amountSc = nativeToScVal(amountStroops, { type: 'i128' });
 
         let funcName = 'donate';
@@ -1238,7 +1238,7 @@ export default function App() {
     if (isMockMode) {
       setCampaigns(prev => [...prev, { id, title, description, target, raised: 0, active: true }]);
       const unixTime = Math.floor(Date.now() / 1000);
-      setNewCampaign({ id: `StelDot-${unixTime}`, title: '', description: '', target: '' });
+      setNewCampaign({ id: unixTime, title: '', description: '', target: '' });
       Swal.fire({
         title: t.campaignCreated,
         text: t.campaignCreatedMock,
@@ -1256,7 +1256,7 @@ export default function App() {
         });
 
         const ownerSc = nativeToScVal(Address.fromString(userAddress));
-        const idSc = nativeToScVal(id, { type: 'u32' });
+        const idSc = nativeToScVal(Number(id), { type: 'u32' });
         const titleSc = nativeToScVal(title);
         const descSc = nativeToScVal(description);
         const targetStroops = BigInt(Math.round(target * 10000000));
@@ -1276,11 +1276,11 @@ export default function App() {
           confirmButtonColor: '#34C759'
         }).then(() => window.location.reload());
         const unixTime = Math.floor(Date.now() / 1000);
-        setNewCampaign({ id: `StelDot-${unixTime}`, title: '', description: '', target: '' });
+        setNewCampaign({ id: unixTime, title: '', description: '', target: '' });
         await refreshData();
       } catch (err) {
         const unixTime = Math.floor(Date.now() / 1000);
-        setNewCampaign(prev => ({ ...prev, id: `StelDot-${unixTime}` }));
+        setNewCampaign(prev => ({ ...prev, id: unixTime }));
         
         let errorText = getTranslatedError(err.message || err);
         if (errorText.includes('UnreachableCodeReached')) {
