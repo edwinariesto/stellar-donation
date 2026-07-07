@@ -33,7 +33,7 @@ import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import bannerImg from './assets/banner.png';
 import frighterIcon from './image/frighter-icon.png';
 import walletConnectIcon from './image/walletconnect-icon.jfif';
-const DEFAULT_CONTRACT_ID = 'CBSXLDVA3YCESQU4SPVSPEOOZDN52WL4WWOEAOYCJ7W3YSIBFGRT2XVB';
+const DEFAULT_CONTRACT_ID = 'CB6UOV6HL3SU7LKXLCU25ISGHFQ3P3HN2Z5VLP22XPNXUPIAVUYD7KFM';
 const NATIVE_XLM_SAC = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
 const initialNet = localStorage.getItem('steldot_last_network') || 'TESTNET';
