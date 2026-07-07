@@ -1043,7 +1043,8 @@ export default function App() {
         discountedAmount: discountedAmount,
         date: new Date().toLocaleDateString('en-GB'),
         time: new Date().toLocaleTimeString('en-GB'),
-        hash: mockHash
+        hash: mockHash,
+        cashier: userAddress
       };
   
       const updatedHistory = [newRecord, ...ambassadorHistory];
@@ -3444,18 +3445,16 @@ export default function App() {
                                   ${ref.type !== 'REGISTER' ? `<strong style="color: #111827;">${t.originalAmount || 'Nominal Asli'}:</strong> ${ref.originalAmount.toFixed(2)} XLM<br/>
                                   <strong style="color: #111827;">${t.discountAmount || 'Potongan'}:</strong> -${(ref.originalAmount - ref.discountedAmount).toFixed(2)} XLM<br/>
                                   <strong style="color: #111827;">${t.totalPay || 'Harga Bayar'}:</strong> ${ref.discountedAmount.toFixed(2)} XLM<br/><br/>` : ''}
+                                  ${ref.type !== 'REGISTER' ? `<strong style="color: #111827;">${t.cashierWallet || 'Dompet Kasir'}:</strong><br/>
+                                  <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
+                                    <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/account/${ref.cashier || ''}" target="_blank" style="color: inherit; text-decoration: underline;">${ref.cashier || 'N/A'}</a>
+                                  </span><br/>` : ''}
                                   <strong style="color: #111827;">${t.dateLabel || 'Tanggal'}:</strong> ${ref.date} ${ref.time || ''}<br/><br/>
                                   <strong style="color: #111827;">${t.statusLabel || 'Status'}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${ref.type === 'REGISTER' ? 'TERDAFTAR' : (t.successful ? t.successful.toUpperCase() : 'SUKSES')}</span>
                                 </div>
                               `,
                               icon: 'info',
-                              confirmButtonText: t.close || 'Tutup',
-                              customClass: { 
-                                popup: 'rounded-2xl overflow-hidden !p-0',
-                                htmlContainer: '!p-0 !m-0',
-                                title: '!pt-6 !pb-4 !text-lg !font-bold text-gray-800 border-b border-gray-100 mb-4',
-                                confirmButton: 'bg-ios-blue text-white font-bold py-3 px-6 rounded-xl w-[calc(100%-32px)] mx-4 mb-4 mt-2'
-                              }
+                              confirmButtonText: t.close || 'Tutup'
                             });
                           }}
                           className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50 flex justify-between items-center cursor-pointer hover:bg-slate-700/80 transition-colors"

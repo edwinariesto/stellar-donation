@@ -313,7 +313,8 @@ export const translations = {
     invalidTargetAddressDesc: 'Alamat dompet target tidak valid. Pastikan alamat dimulai dengan G dan berjumlah 56 karakter.',
     saveVoucherInfo: '*Klik "Simpan ke Blockchain" terlebih dahulu agar kasir dapat memvalidasi kode ini.',
     invalidOwner: 'Akses Ditolak',
-    invalidOwnerDesc: 'Alamat dompet target yang dimasukkan bukan pemilik sah dari kode voucher ini. Pastikan Anda memasukkan dompet pemilik voucher yang benar.'
+    invalidOwnerDesc: 'Alamat dompet target yang dimasukkan bukan pemilik sah dari kode voucher ini. Pastikan Anda memasukkan dompet pemilik voucher yang benar.',
+    cashierWallet: 'Dompet Kasir'
   },
   en: {
     walletConnected: 'Wallet Connected',
@@ -634,6 +635,7 @@ export const translations = {
     invalidTargetAddressDesc: 'The target wallet address is invalid. Please ensure it starts with G and is 56 characters long.',
     saveVoucherInfo: '*Click "Save to Blockchain" first so the cashier can validate this code.',
     invalidOwner: 'Access Denied',
-    invalidOwnerDesc: 'The target wallet address entered is not the legitimate owner of this voucher code. Please ensure you enter the correct owner wallet.'
+    invalidOwnerDesc: 'The target wallet address entered is not the legitimate owner of this voucher code. Please ensure you enter the correct owner wallet.',
+    cashierWallet: 'Cashier Wallet'
   }
 };
