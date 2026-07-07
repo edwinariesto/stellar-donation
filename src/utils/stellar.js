@@ -74,8 +74,23 @@ export async function connectWallet(walletType) {
   return new Promise(async (resolve, reject) => {
     try {
       if (walletType === 'freighter') {
+        if (typeof window !== 'undefined' && window.freighter) {
+          if (typeof window.freighter.getPublicKey === 'function') {
+            try {
+              let pubKey = await window.freighter.getPublicKey();
+              if (pubKey) return resolve(typeof pubKey === 'string' ? pubKey : (pubKey.publicKey || pubKey.address));
+            } catch(e) {}
+          }
+          if (typeof window.freighter.getAddress === 'function') {
+            try {
+              let pubKey = await window.freighter.getAddress();
+              if (pubKey && !pubKey.error) return resolve(typeof pubKey === 'string' ? pubKey : (pubKey.address || pubKey.publicKey));
+            } catch(e) {}
+          }
+        }
+        
         const connected = await isConnected();
-        if (!connected) return reject(new Error("Freighter not detected"));
+        if (!connected || !connected.isConnected) return reject(new Error("Freighter not detected"));
         
         let access = await requestAccess();
         if (access && access.error) return reject(new Error(access.error));
@@ -100,6 +115,20 @@ export async function getWalletPublicKey() {
   try {
     const walletType = sessionStorage.getItem('steldot_wallet_type') || 'freighter';
     if (walletType === 'freighter') {
+      if (typeof window !== 'undefined' && window.freighter) {
+        if (typeof window.freighter.getPublicKey === 'function') {
+          try {
+            let pubKey = await window.freighter.getPublicKey();
+            if (pubKey) return typeof pubKey === 'string' ? pubKey : (pubKey.publicKey || pubKey.address);
+          } catch(e) {}
+        }
+        if (typeof window.freighter.getAddress === 'function') {
+          try {
+            let pubKey = await window.freighter.getAddress();
+            if (pubKey && !pubKey.error) return typeof pubKey === 'string' ? pubKey : (pubKey.address || pubKey.publicKey);
+          } catch(e) {}
+        }
+      }
       const pubKey = await freighterGetAddress();
       return (pubKey && !pubKey.error) ? pubKey.address || pubKey : null;
     }
@@ -448,11 +477,24 @@ export async function executeTransaction(contractId, functionName, args = [], us
   let signedResult;
   try {
     if (walletType === 'freighter') {
-      signedResult = await freighterSignTransaction(xdrString, {
-        network: currentNetwork.networkName,
-        networkPassphrase: currentNetwork.passphrase,
-        accountToSign: account.accountId()
-      });
+      if (typeof window !== 'undefined' && window.freighter && typeof window.freighter.signTransaction === 'function') {
+        try {
+          signedResult = await window.freighter.signTransaction(xdrString, {
+            network: currentNetwork.networkName,
+            networkPassphrase: currentNetwork.passphrase,
+            accountToSign: account.accountId()
+          });
+          if (typeof signedResult === 'string') signedResult = { signedTxXdr: signedResult };
+        } catch (e) { console.warn("Direct signTransaction failed", e); }
+      }
+      
+      if (!signedResult) {
+        signedResult = await freighterSignTransaction(xdrString, {
+          network: currentNetwork.networkName,
+          networkPassphrase: currentNetwork.passphrase,
+          accountToSign: account.accountId()
+        });
+      }
       if (signedResult && signedResult.error) {
         throw new Error(signedResult.error);
       }
