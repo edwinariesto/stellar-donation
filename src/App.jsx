@@ -809,11 +809,11 @@ export default function App() {
     const amount = parseFloat(ambassadorAmount);
     if (isNaN(amount) || amount <= 0) return;
 
-    if (simulateVoucherCode.trim().toUpperCase() !== ambassadorVoucherCode) {
+    if (!simulateVoucherCode.trim().toUpperCase().startsWith('AMB-') || simulateVoucherCode.trim().length < 6) {
       SwalOrig.fire({
         icon: 'error',
         title: t.invalidCode || 'Kode Tidak Valid',
-        text: t.invalidCodeDesc || 'Shopping Voucher Code tidak valid atau sudah kadaluwarsa.',
+        text: t.invalidCodeDesc || 'Shopping Voucher Code tidak valid. Kode harus diawali dengan AMB-.',
         confirmButtonText: t.close || 'Tutup',
         buttonsStyling: false,
         customClass: { confirmButton: 'bg-slate-800 text-white font-bold py-3 w-full rounded-xl' }
