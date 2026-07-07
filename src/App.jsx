@@ -191,6 +191,10 @@ export default function App() {
   const [ambassadorSearch, setAmbassadorSearch] = useState('');
   const [ambassadorTarget, setAmbassadorTarget] = useState('');
   const [ambassadorAmount, setAmbassadorAmount] = useState('');
+  const [simulateVoucherCode, setSimulateVoucherCode] = useState('');
+  const [ambassadorVoucherCode, setAmbassadorVoucherCode] = useState(() => {
+    return localStorage.getItem('steldot_ambassador_code') || 'AMB-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+  });
   const [showSimulateForm, setShowSimulateForm] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const AMBASSADOR_PER_PAGE = 5;
@@ -796,12 +800,25 @@ export default function App() {
     setShowSimulateForm(true);
     setAmbassadorAmount('');
     setAmbassadorTarget(userAddress);
+    setSimulateVoucherCode('');
   };
 
   const handleProcessDiscount = () => {
-    if (!ambassadorTarget || !ambassadorAmount) return;
+    if (!ambassadorTarget || !ambassadorAmount || !simulateVoucherCode) return;
     const amount = parseFloat(ambassadorAmount);
     if (isNaN(amount) || amount <= 0) return;
+
+    if (simulateVoucherCode !== ambassadorVoucherCode) {
+      SwalOrig.fire({
+        icon: 'error',
+        title: t.invalidCode || 'Kode Tidak Valid',
+        text: 'Shopping Voucher Code tidak valid atau sudah kadaluwarsa.',
+        confirmButtonText: t.close || 'Tutup',
+        buttonsStyling: false,
+        customClass: { confirmButton: 'bg-slate-800 text-white font-bold py-3 w-full rounded-xl' }
+      });
+      return;
+    }
 
     const usesCount = ambassadorHistory.filter(r => r.address.toLowerCase() === ambassadorTarget.toLowerCase()).length;
     
@@ -824,15 +841,19 @@ export default function App() {
       originalAmount: amount,
       discountedAmount: discountedAmount,
       date: new Date().toLocaleDateString('en-GB')
-    };
-
-    const updatedHistory = [newRecord, ...ambassadorHistory];
+            const updatedHistory = [newRecord, ...ambassadorHistory];
     setAmbassadorHistory(updatedHistory);
     try {
       localStorage.setItem('steldot_ambassador_history', JSON.stringify(updatedHistory));
     } catch (e) {}
 
     setShowSimulateForm(false);
+    
+    // Generate new code
+    const newCode = 'AMB-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+    setAmbassadorVoucherCode(newCode);
+    localStorage.setItem('steldot_ambassador_code', newCode);
+    setSimulateVoucherCode('');
     
     SwalOrig.fire({
       icon: 'success',
@@ -1451,6 +1472,13 @@ export default function App() {
 
           
           <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-3">
+              <button 
+                onClick={handleSimulateAmbassadorDiscount}
+                className="flex items-center justify-center p-2 rounded-full bg-cyan-50 hover:bg-cyan-100 text-cyan-600 transition-colors"
+                title={t.simulateDiscount || 'Simulate Discount'}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+              </button>
             <div className="flex items-center bg-[#F2F2F7] rounded-full p-0.5 sm:p-1 border border-ios-lightGray/40 mr-1 sm:mr-2">
               <button
                 onClick={() => setLang('en')}
@@ -2900,8 +2928,8 @@ export default function App() {
               </div>
 
               <div className="w-full bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 mb-4 text-center">
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">{t.ambassadorVoucherCode}</p>
-                <p className="font-mono text-2xl font-bold text-cyan-300 tracking-[0.2em]">{userAddress ? userAddress.substring(userAddress.length - 5).toUpperCase() : 'VCH99'}</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">{t.ambassadorVoucherCode || 'Shopping Voucher Code'}</p>
+                <p className="font-mono text-2xl font-bold text-cyan-300 tracking-[0.2em]">{ambassadorVoucherCode}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
@@ -3016,16 +3044,29 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-300 mb-1.5 block">{t.originalAmount || 'Nominal Asli (XLM)'}</label>
+                  <label className="text-xs font-bold text-slate-300 mb-1.5 block">{t.amount || 'Nominal'} (XLM)</label>
                   <input 
                     type="number" 
                     value={ambassadorAmount}
                     onChange={(e) => setAmbassadorAmount(e.target.value)}
-                    placeholder="100"
                     className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+                    placeholder="0.00"
+                    min="0"
+                    step="0.1"
                   />
                 </div>
                 
+                <div>
+                  <label className="text-xs font-bold text-slate-300 mb-1.5 block">{t.ambassadorVoucherCode || 'Shopping Voucher Code'}</label>
+                  <input 
+                    type="text" 
+                    value={simulateVoucherCode}
+                    onChange={(e) => setSimulateVoucherCode(e.target.value.toUpperCase())}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors uppercase font-mono tracking-widest"
+                    placeholder="AMB-XXXXX"
+                  />
+                </div>
+
                 <div className="bg-cyan-900/20 border border-cyan-800/50 rounded-xl p-4 flex justify-between items-center">
                   <div>
                     <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">Total Bayar</p>
@@ -3048,7 +3089,7 @@ export default function App() {
 
               <button 
                 onClick={handleProcessDiscount}
-                disabled={!ambassadorTarget || !ambassadorAmount || isNaN(parseFloat(ambassadorAmount)) || parseFloat(ambassadorAmount) <= 0}
+                disabled={!ambassadorTarget || !ambassadorAmount || isNaN(parseFloat(ambassadorAmount)) || parseFloat(ambassadorAmount) <= 0 || !simulateVoucherCode}
                 className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-cyan-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {t.calculateDiscount || 'Hitung Potongan 2%'}
