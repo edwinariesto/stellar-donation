@@ -33,7 +33,7 @@ import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import bannerImg from './assets/banner.png';
 import frighterIcon from './image/frighter-icon.png';
 import walletConnectIcon from './image/walletconnect-icon.jfif';
-const DEFAULT_CONTRACT_ID = 'CCBRNHJT4M3HXEND7RSOXYSQOWW54CC5MIAQFTI5RKYGDVFFBFD43GTI';
+const DEFAULT_CONTRACT_ID = 'CBCFL56L3AWIMLDO4GS7DLLVYYAAGAVA74R63RFLHDP7XDCJSXLYOD6Z';
 const NATIVE_XLM_SAC = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
 const initialNet = localStorage.getItem('steldot_last_network') || 'TESTNET';
@@ -502,7 +502,18 @@ export default function App() {
         setFreighterBalance(balance);
       }
 
-      // Global top contributors sync has been moved to a separate manual button
+      // Global top contributors sync
+      getGlobalTopDonors(contractId).then(globalTop => {
+        if (globalTop && globalTop.length > 0) {
+          setTopDonors(globalTop);
+        } else {
+          const realTop = [];
+          if (userAddress && totalDonated > 0) {
+            realTop.push({ address: userAddress, amount: totalDonated });
+          }
+          setTopDonors(realTop);
+        }
+      }).catch(err => console.error('Auto sync top donors failed:', err));
 
       setIsMockMode(false);
     } catch (err) {
