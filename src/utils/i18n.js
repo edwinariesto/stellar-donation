@@ -300,7 +300,10 @@ export const translations = {
     daysRemaining: 'hari lagi',
     remaining: 'Tersisa',
     invalidVoucherFormat: 'Format Voucher Salah',
-    invalidVoucherFormatDesc: 'Kode voucher harus tepat 5 karakter (kombinasi huruf dan angka).'
+    invalidVoucherFormatDesc: 'Kode voucher harus tepat 5 karakter (kombinasi huruf dan angka).',
+    registeringVoucher: 'Mendaftarkan Voucher',
+    registeringVoucherDesc: 'Mohon konfirmasi transaksi di wallet untuk mendaftarkan kode voucher Anda ke Blockchain...',
+    registerVoucherSuccess: 'Kode voucher berhasil terdaftar di Blockchain! Sekarang kasir bisa melakukan verifikasi.'
   },
   en: {
     walletConnected: 'Wallet Connected',
@@ -607,6 +610,9 @@ export const translations = {
     daysRemaining: 'days left',
     remaining: 'Remaining',
     invalidVoucherFormat: 'Invalid Voucher Format',
-    invalidVoucherFormatDesc: 'Voucher code must be exactly 5 alphanumeric characters.'
+    invalidVoucherFormatDesc: 'Voucher code must be exactly 5 alphanumeric characters.',
+    registeringVoucher: 'Registering Voucher',
+    registeringVoucherDesc: 'Please confirm the transaction in your wallet to register your voucher code to the Blockchain...',
+    registerVoucherSuccess: 'Voucher code registered successfully on the Blockchain! Cashiers can now verify it.'
   }
 };

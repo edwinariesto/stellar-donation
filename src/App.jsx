@@ -1055,8 +1055,8 @@ export default function App() {
     if (!ambassadorVoucherCode) return;
     try {
       Swal.fire({
-        title: 'Mendaftarkan Voucher',
-        text: 'Mohon konfirmasi transaksi di wallet untuk mendaftarkan kode voucher Anda ke Blockchain...',
+        title: t.registeringVoucher || 'Mendaftarkan Voucher',
+        text: t.registeringVoucherDesc || 'Mohon konfirmasi transaksi di wallet untuk mendaftarkan kode voucher Anda ke Blockchain...',
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading()
       });
@@ -1072,9 +1072,9 @@ export default function App() {
         userAddress
       );
 
-      Swal.fire('Berhasil!', 'Kode voucher berhasil terdaftar di Blockchain! Sekarang kasir bisa melakukan verifikasi.', 'success');
+      Swal.fire(t.success || 'Berhasil!', t.registerVoucherSuccess || 'Kode voucher berhasil terdaftar di Blockchain! Sekarang kasir bisa melakukan verifikasi.', 'success');
     } catch (err) {
-      Swal.fire('Gagal', getTranslatedError(err.message || err), 'error');
+      Swal.fire(t.errorTitle || 'Gagal', getTranslatedError(err.message || err), 'error');
     }
   };
 
