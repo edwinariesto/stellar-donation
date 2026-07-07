@@ -841,7 +841,9 @@ export default function App() {
       originalAmount: amount,
       discountedAmount: discountedAmount,
       date: new Date().toLocaleDateString('en-GB')
-            const updatedHistory = [newRecord, ...ambassadorHistory];
+    };
+
+    const updatedHistory = [newRecord, ...ambassadorHistory];
     setAmbassadorHistory(updatedHistory);
     try {
       localStorage.setItem('steldot_ambassador_history', JSON.stringify(updatedHistory));
