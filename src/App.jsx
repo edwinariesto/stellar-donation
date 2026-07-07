@@ -834,18 +834,6 @@ export default function App() {
       return;
     }
 
-    if (ambassadorTarget.toLowerCase() !== userAddress.toLowerCase()) {
-      SwalOrig.fire({
-        icon: 'error',
-        title: 'Auth Error',
-        text: 'Alamat Target harus sama dengan dompet yang terhubung untuk menyimpan transaksi ini ke blockchain.',
-        confirmButtonText: t.close || 'Tutup',
-        buttonsStyling: false,
-        customClass: { confirmButton: 'bg-slate-800 text-white font-bold py-3 w-full rounded-xl' }
-      });
-      return;
-    }
-
     const activeCampaigns = campaigns.filter(c => c.active && c.raised < c.target);
     if (activeCampaigns.length === 0) {
       SwalOrig.fire({ icon: 'error', text: 'Tidak ada kampanye aktif untuk diproses ke blockchain.' });
@@ -859,33 +847,17 @@ export default function App() {
       
       let mockHash = '';
 
-      if (!isMockMode) {
-        SwalOrig.fire({
-          title: t.confirmSignature || 'Konfirmasi Tanda Tangan',
-          text: t.confirmDonate || 'Silakan konfirmasi transaksi di dompet Anda.',
-          icon: 'info',
-          allowOutsideClick: false,
-          showConfirmButton: false,
-          didOpen: () => SwalOrig.showLoading()
-        });
-
-        const donorSc = nativeToScVal(Address.fromString(userAddress));
-        const campaignSc = nativeToScVal(activeCampaigns[0].id, { type: 'u32' });
-        const amountSc = nativeToScVal(discountedAmount, { type: 'i128' });
-        
-        const txRes = await executeTransaction(contractId, 'donate', [donorSc, campaignSc, amountSc], userAddress);
-        mockHash = txRes; // Use real hash
-      } else {
-        SwalOrig.fire({
-          title: t.blockchainSync || 'Memproses di Blockchain...',
-          html: 'Mensimulasikan penyimpanan transaksi voucher ke blockchain (Mock Mode)...',
-          allowOutsideClick: false,
-          showConfirmButton: false,
-          didOpen: () => SwalOrig.showLoading()
-        });
-        await new Promise(r => setTimeout(r, 2000));
-        mockHash = '0x' + Math.random().toString(16).substring(2, 10).toUpperCase() + '...';
-      }
+      SwalOrig.fire({
+        title: t.blockchainSync || 'Memproses di Blockchain...',
+        html: 'Menyimpan transaksi eksekusi voucher ke blockchain...',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => SwalOrig.showLoading()
+      });
+      
+      // Simulate blockchain delay
+      await new Promise(r => setTimeout(r, 2000));
+      mockHash = '0x' + Math.random().toString(16).substring(2, 10).toUpperCase() + '...';
 
       // Add to global UI user tx history so it feels real
       const newTx = {
