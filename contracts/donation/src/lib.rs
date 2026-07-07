@@ -193,12 +193,15 @@ impl StelDotContract {
             panic!("insufficient treasury balance");
         }
 
-        token_client.transfer(&env.current_contract_address(), &campaign.client_wallet, &amount);
+        let fee = amount * 5 / 100;
+        let amount_to_client = amount - fee;
+
+        token_client.transfer(&env.current_contract_address(), &campaign.client_wallet, &amount_to_client);
 
         campaign.funds_transferred += amount;
         
         let transfer = FundTransfer {
-            amount,
+            amount: amount_to_client,
             date: env.ledger().timestamp(),
         };
         campaign.transfers.push_back(transfer);
@@ -208,7 +211,7 @@ impl StelDotContract {
             .set(&DataKey::Campaign(campaign_id), &campaign);
 
         env.events()
-            .publish((Symbol::short("fund_trs"), campaign_id), amount);
+            .publish((Symbol::short("fund_trs"), campaign_id), amount_to_client);
     }
 
     pub fn donate(env: Env, donor: Address, campaign_id: u32, amount: i128) {
