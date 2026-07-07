@@ -960,7 +960,7 @@ export default function App() {
       return;
     }
 
-    const usesCount = ambassadorHistory.filter(r => r.address.toLowerCase() === ambassadorTarget.toLowerCase()).length;
+    const usesCount = ambassadorHistory.filter(r => r.type !== 'REGISTER' && r.address.toLowerCase() === ambassadorTarget.toLowerCase()).length;
     
     if (usesCount >= 5) {
       SwalOrig.fire({
