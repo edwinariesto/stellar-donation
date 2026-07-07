@@ -997,6 +997,26 @@ export default function App() {
         });
 
         const codeSc = nativeToScVal(simulateVoucherCode.trim().toUpperCase(), { type: 'string' });
+        
+        try {
+          const voucher = await callReadOnly(contractId, 'get_voucher', [codeSc]);
+          const ownerStr = voucher?.owner?.toString ? voucher.owner.toString() : voucher?.owner;
+          if (ownerStr && ownerStr.toUpperCase() !== ambassadorTarget.trim().toUpperCase()) {
+            SwalOrig.close();
+            SwalOrig.fire({
+              icon: 'error',
+              title: t.invalidOwner || 'Akses Ditolak',
+              text: t.invalidOwnerDesc || 'Alamat dompet target yang dimasukkan bukan pemilik sah dari kode voucher ini. Pastikan Anda memasukkan dompet pemilik voucher yang benar.',
+              confirmButtonText: t.close || 'Tutup',
+              buttonsStyling: false,
+              customClass: { confirmButton: 'bg-slate-800 text-white font-bold py-3 w-full rounded-xl' }
+            });
+            return;
+          }
+        } catch (e) {
+          throw new Error('Voucher Tidak Valid');
+        }
+
         const cashierSc = nativeToScVal(userAddress, { type: 'address' });
         
         const txRes = await executeTransaction(
