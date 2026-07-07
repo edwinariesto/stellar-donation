@@ -506,7 +506,9 @@ export async function executeTransaction(contractId, functionName, args = [], us
     }
   } catch (err) {
     const errMsg = err.message || err.toString();
-    if (errMsg.toLowerCase().includes("session topic doesn't exist") || errMsg.toLowerCase().includes("no matching key")) {
+    if (errMsg.toLowerCase().includes("session topic doesn't exist") || 
+        errMsg.toLowerCase().includes("no matching key") ||
+        errMsg.toLowerCase().includes("expired")) {
       sessionStorage.removeItem('steldot_wallet_address');
       sessionStorage.removeItem('steldot_wallet_type');
       throw new Error('WALLETCONNECT_SESSION_EXPIRED');
