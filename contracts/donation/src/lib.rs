@@ -3,6 +3,13 @@ use soroban_sdk::{contract, contractimpl, contracttype, token, Address, Env, Str
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FundTransfer {
+    pub amount: i128,
+    pub date: u64, // timestamp
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Campaign {
     pub id: u32,
     pub title: String,
@@ -10,6 +17,11 @@ pub struct Campaign {
     pub target: i128,
     pub raised: i128,
     pub active: bool,
+    pub youtube_link: String,
+    pub client_wallet: Address,
+    pub expiration: u64,
+    pub funds_transferred: i128,
+    pub transfers: Vec<FundTransfer>,
 }
 
 #[contracttype]
@@ -57,6 +69,9 @@ impl StelDotContract {
         title: String,
         description: String,
         target: i128,
+        youtube_link: String,
+        client_wallet: Address,
+        expiration: u64,
     ) {
         owner.require_auth();
         let stored_owner: Address = env
@@ -78,6 +93,11 @@ impl StelDotContract {
             target,
             raised: 0,
             active: true,
+            youtube_link,
+            client_wallet,
+            expiration,
+            funds_transferred: 0,
+            transfers: Vec::new(&env),
         };
         env.storage()
             .instance()
@@ -105,6 +125,9 @@ impl StelDotContract {
         description: String,
         target: i128,
         active: bool,
+        youtube_link: String,
+        client_wallet: Address,
+        expiration: u64,
     ) {
         owner.require_auth();
         let stored_owner: Address = env
@@ -121,16 +144,71 @@ impl StelDotContract {
             .instance()
             .get(&DataKey::Campaign(id))
             .expect("campaign not found");
+
         campaign.title = title;
         campaign.description = description;
         campaign.target = target;
         campaign.active = active;
+        campaign.youtube_link = youtube_link;
+        campaign.client_wallet = client_wallet;
+        campaign.expiration = expiration;
 
         env.storage()
             .instance()
             .set(&DataKey::Campaign(id), &campaign);
+
         env.events()
-            .publish((Symbol::short("camp_upd"), id), active);
+            .publish((Symbol::short("camp_upd"), id), target);
+    }
+
+    pub fn transfer_to_client(env: Env, owner: Address, campaign_id: u32, amount: i128) {
+        if amount <= 0 {
+            panic!("amount must be positive");
+        }
+        owner.require_auth();
+        let stored_owner: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Owner)
+            .expect("not initialized");
+        if owner != stored_owner {
+            panic!("not authorized: only owner can transfer funds");
+        }
+
+        let mut campaign: Campaign = env
+            .storage()
+            .instance()
+            .get(&DataKey::Campaign(campaign_id))
+            .expect("campaign not found");
+
+        if amount > (campaign.raised - campaign.funds_transferred) {
+            panic!("insufficient funds to transfer");
+        }
+
+        let token_addr: Address = env.storage().instance().get(&DataKey::Token).unwrap();
+        let token_client = token::Client::new(&env, &token_addr);
+        
+        let balance = token_client.balance(&env.current_contract_address());
+        if balance < amount {
+            panic!("insufficient treasury balance");
+        }
+
+        token_client.transfer(&env.current_contract_address(), &campaign.client_wallet, &amount);
+
+        campaign.funds_transferred += amount;
+        
+        let transfer = FundTransfer {
+            amount,
+            date: env.ledger().timestamp(),
+        };
+        campaign.transfers.push_back(transfer);
+
+        env.storage()
+            .instance()
+            .set(&DataKey::Campaign(campaign_id), &campaign);
+
+        env.events()
+            .publish((Symbol::short("fund_trs"), campaign_id), amount);
     }
 
     pub fn donate(env: Env, donor: Address, campaign_id: u32, amount: i128) {
@@ -144,6 +222,10 @@ impl StelDotContract {
             .instance()
             .get(&DataKey::Campaign(campaign_id))
             .expect("campaign not found");
+        
+        if env.ledger().timestamp() > campaign.expiration {
+            panic!("campaign has expired");
+        }
         if !campaign.active {
             panic!("campaign is inactive");
         }
@@ -158,7 +240,7 @@ impl StelDotContract {
             .instance()
             .set(&DataKey::Campaign(campaign_id), &campaign);
 
-        // Update donor total donations
+        // Update donor total specific to user
         let donor_total_key = DataKey::DonorTotalDonated(donor.clone());
         let current_total: i128 = env
             .storage()
@@ -172,7 +254,7 @@ impl StelDotContract {
             .persistent()
             .extend_ttl(&donor_total_key, 5000, 10000);
 
-        // Update donor unclaimed volume (points = stroops donated)
+        // Track unclaimed volume for rewards
         let donor_points_key = DataKey::DonorPoints(donor.clone());
         let current_points: i128 = env
             .storage()
@@ -196,8 +278,10 @@ impl StelDotContract {
             .instance()
             .set(&DataKey::TotalRaised, &(total_raised + amount));
 
-        env.events()
-            .publish((Symbol::short("donate"), donor), amount);
+        env.events().publish(
+            (Symbol::short("donate"), donor.clone(), campaign_id),
+            amount,
+        );
     }
 
     pub fn donate_with_referral(
@@ -215,6 +299,19 @@ impl StelDotContract {
         if donor == referrer {
             panic!("cannot refer yourself");
         }
+        
+        let mut campaign: Campaign = env
+            .storage()
+            .instance()
+            .get(&DataKey::Campaign(campaign_id))
+            .expect("campaign not found");
+            
+        if env.ledger().timestamp() > campaign.expiration {
+            panic!("campaign has expired");
+        }
+        if !campaign.active {
+            panic!("campaign is inactive");
+        }
 
         // Enforce first-time donor rule for referrals
         let donor_total_key = DataKey::DonorTotalDonated(donor.clone());
@@ -223,18 +320,9 @@ impl StelDotContract {
             .persistent()
             .get(&donor_total_key)
             .unwrap_or(0);
-
+            
         if current_total > 0 {
-            panic!("referral only allowed for first-time donors");
-        }
-
-        let mut campaign: Campaign = env
-            .storage()
-            .instance()
-            .get(&DataKey::Campaign(campaign_id))
-            .expect("campaign not found");
-        if !campaign.active {
-            panic!("campaign is inactive");
+            panic!("referral only valid for first time donors");
         }
 
         let token_addr: Address = env.storage().instance().get(&DataKey::Token).unwrap();
@@ -247,7 +335,7 @@ impl StelDotContract {
             .instance()
             .set(&DataKey::Campaign(campaign_id), &campaign);
 
-        // Update donor total donations
+        // Update donor total specific to user
         env.storage()
             .persistent()
             .set(&donor_total_key, &(current_total + amount));
@@ -255,7 +343,7 @@ impl StelDotContract {
             .persistent()
             .extend_ttl(&donor_total_key, 5000, 10000);
 
-        // Update donor unclaimed volume (points = stroops donated)
+        // Track unclaimed volume for rewards
         let donor_points_key = DataKey::DonorPoints(donor.clone());
         let current_points: i128 = env
             .storage()
@@ -487,10 +575,16 @@ impl StelDotContract {
     }
 
     pub fn get_campaign(env: Env, id: u32) -> Campaign {
-        env.storage()
+        let mut cmp: Campaign = env.storage()
             .instance()
             .get(&DataKey::Campaign(id))
-            .expect("campaign not found")
+            .expect("campaign not found");
+        
+        // Auto-flag inactive if expired
+        if env.ledger().timestamp() > cmp.expiration {
+            cmp.active = false;
+        }
+        cmp
     }
 
     pub fn has_donated(env: Env, donor: Address) -> bool {

@@ -33,7 +33,7 @@ import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import bannerImg from './assets/banner.png';
 import frighterIcon from './image/frighter-icon.png';
 import walletConnectIcon from './image/walletconnect-icon.jfif';
-const DEFAULT_CONTRACT_ID = 'CBCFL56L3AWIMLDO4GS7DLLVYYAAGAVA74R63RFLHDP7XDCJSXLYOD6Z';
+const DEFAULT_CONTRACT_ID = 'CBSXLDVA3YCESQU4SPVSPEOOZDN52WL4WWOEAOYCJ7W3YSIBFGRT2XVB';
 const NATIVE_XLM_SAC = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
 const initialNet = localStorage.getItem('steldot_last_network') || 'TESTNET';
@@ -118,6 +118,64 @@ function NeuronCanvas() {
     />
   );
 }
+
+// Custom Transparent iOS Date Picker
+const CustomDatePicker = ({ value, onChange, placeholder }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(value ? new Date(value) : new Date());
+
+  const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+  const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+
+  const handleDateClick = (day) => {
+    const d = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    onChange(d.toISOString().split('T')[0]);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative w-full">
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full bg-white/40 backdrop-blur-xl border border-ios-lightGray/40 shadow-inner rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all text-ios-darkText cursor-pointer flex items-center min-h-[42px]"
+      >
+        {value ? new Date(value).toLocaleDateString('en-GB') : <span className="text-gray-400">{placeholder}</span>}
+      </div>
+      
+      {isOpen && (
+        <div className="absolute top-full mt-2 left-0 z-[100] bg-white/80 backdrop-blur-3xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl p-4 w-[280px]">
+          <div className="flex justify-between items-center mb-4">
+            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)); }} className="p-1 hover:bg-black/5 rounded-full"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6"/></svg></button>
+            <span className="font-bold text-sm text-ios-darkText">{currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
+            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)); }} className="p-1 hover:bg-black/5 rounded-full"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/></svg></button>
+          </div>
+          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-gray-400 mb-2 uppercase">
+            {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => <div key={d}>{d}</div>)}
+          </div>
+          <div className="grid grid-cols-7 gap-1 text-center text-sm">
+            {Array(firstDay).fill(null).map((_, i) => <div key={`empty-${i}`}></div>)}
+            {Array(daysInMonth).fill(null).map((_, i) => {
+              const day = i + 1;
+              const dateStr = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day).toISOString().split('T')[0];
+              const isSelected = value === dateStr;
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDateClick(day); }}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors text-[13px] ${isSelected ? 'bg-ios-blue text-white font-bold shadow-md' : 'hover:bg-black/5 text-gray-700 font-medium'}`}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const QRScannerComponent = ({ onScan, onClose }) => {
   useEffect(() => {
@@ -223,11 +281,14 @@ export default function App() {
 
   // UI state
   const [donateAmounts, setDonateAmounts] = useState({});
-  const [newCampaign, setNewCampaign] = useState({ id: '', title: '', description: '', target: '' });
+  const [newCampaign, setNewCampaign] = useState({ id: '', title: '', description: '', target: '', youtube_link: '', client_wallet: '', expiration: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [syncProgress, setSyncProgress] = useState('');
   const [isSyncingTopDonors, setIsSyncingTopDonors] = useState(false);
   const [expandedCampaigns, setExpandedCampaigns] = useState({});
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
+  const [transferAmount, setTransferAmount] = useState('');
+  const [adminTab, setAdminTab] = useState('campaign'); // 'campaign' or 'claims'
   const [translatedCampaigns, setTranslatedCampaigns] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('active'); // active, completed, inactive
@@ -506,7 +567,12 @@ export default function App() {
               description: camp.description.toString(),
               target: Number(camp.target) / 10000000,
               raised: Number(camp.raised) / 10000000,
-              active: camp.active
+              active: camp.active,
+              youtube_link: camp.youtube_link?.toString() || '',
+              client_wallet: camp.client_wallet?.toString() || '',
+              expiration: camp.expiration ? Number(camp.expiration) : 0,
+              funds_transferred: camp.funds_transferred ? Number(camp.funds_transferred) / 10000000 : 0,
+              transfers: camp.transfers ? camp.transfers.map(t => ({ amount: Number(t.amount)/10000000, date: Number(t.date) })) : []
             });
           }
         }
@@ -1166,6 +1232,47 @@ export default function App() {
     }
   };
 
+  // Owner transfers to client
+  const handleTransferToClient = async (camp) => {
+    if (!transferAmount || isNaN(transferAmount) || transferAmount <= 0) {
+      Swal.fire({ title: 'Invalid Amount', text: 'Please enter a valid amount to transfer.', icon: 'warning' });
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      Swal.fire({
+        title: t.transferToClient || 'Transferring Funds',
+        text: 'Please sign the transaction in Freighter...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      const ownerSc = nativeToScVal(userAddress, { type: 'address' });
+      const idSc = nativeToScVal(camp.id, { type: 'u32' });
+      const amountStroops = BigInt(Math.round(transferAmount * 10000000));
+      const amountSc = nativeToScVal(amountStroops, { type: 'i128' });
+
+      await executeTransaction(
+        contractId,
+        'transfer_to_client',
+        [ownerSc, idSc, amountSc],
+        userAddress
+      );
+
+      Swal.fire('Success', 'Funds transferred successfully!', 'success').then(() => {
+        setSelectedCampaign(null);
+        setTransferAmount('');
+        window.location.reload();
+      });
+      await refreshData();
+    } catch (err) {
+      Swal.fire('Failed', getTranslatedError(err.message || err), 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   // Owner updates a campaign
   const handleUpdateCampaign = async (camp) => {
@@ -1189,6 +1296,18 @@ export default function App() {
             <input type="checkbox" id="swal-active" class="w-5 h-5 accent-blue-500 rounded border-gray-300 focus:ring-blue-500 cursor-pointer" ${camp.active ? 'checked' : ''}>
             <label for="swal-active" class="text-sm font-bold text-gray-700 cursor-pointer">${t.setAsActive || 'Set as Active Campaign'}</label>
           </div>
+          <div>
+            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">YouTube Link</label>
+            <input type="url" id="swal-youtube" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow" value="${camp.youtube_link || ''}">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Client Wallet</label>
+            <input type="text" id="swal-wallet" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow" value="${camp.client_wallet || ''}">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Expiration Date</label>
+            <input type="date" id="swal-expiration" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow" value="${camp.expiration ? new Date(camp.expiration * 1000).toISOString().split('T')[0] : ''}">
+          </div>
         </div>
       `,
       focusConfirm: false,
@@ -1198,21 +1317,26 @@ export default function App() {
           title: document.getElementById('swal-title').value,
           description: document.getElementById('swal-desc').value,
           target: parseFloat(document.getElementById('swal-target').value),
-          active: document.getElementById('swal-active').checked
+          active: document.getElementById('swal-active').checked,
+          youtube_link: document.getElementById('swal-youtube').value,
+          client_wallet: document.getElementById('swal-wallet').value,
+          expiration: document.getElementById('swal-expiration').value
         };
       }
     });
 
     if (!formValues) return;
 
-    if (!formValues.title || !formValues.description || isNaN(formValues.target)) {
-      Swal.fire({ title: t.invalidInputs, text: t.invalidInputsDesc, icon: 'warning' });
+    if (!formValues.title || !formValues.description || isNaN(formValues.target) || !formValues.client_wallet || !formValues.expiration) {
+      Swal.fire({ title: t.invalidInputs, text: t.invalidInputsDesc || 'Please fill all required fields.', icon: 'warning' });
       return;
     }
+    
+    const expirationUnix = Math.floor(new Date(formValues.expiration).getTime() / 1000);
 
     if (isMockMode) {
       setCampaigns(prev => prev.map(c => 
-        c.id === camp.id ? { ...c, title: formValues.title, description: formValues.description, target: formValues.target, active: formValues.active } : c
+        c.id === camp.id ? { ...c, title: formValues.title, description: formValues.description, target: formValues.target, active: formValues.active, youtube_link: formValues.youtube_link, client_wallet: formValues.client_wallet, expiration: expirationUnix } : c
       ));
       Swal.fire(t.updateCampaign, t.updateCampaignMock, 'success').then(() => window.location.reload());
     } else {
@@ -1232,11 +1356,14 @@ export default function App() {
         const targetStroops = BigInt(Math.round(formValues.target * 10000000));
         const targetSc = nativeToScVal(targetStroops, { type: 'i128' });
         const activeSc = nativeToScVal(formValues.active);
+        const youtubeSc = nativeToScVal(formValues.youtube_link);
+        const clientWalletSc = nativeToScVal(formValues.client_wallet, { type: 'address' });
+        const expirationSc = nativeToScVal(expirationUnix, { type: 'u64' });
 
         await executeTransaction(
           contractId,
           'update_campaign',
-          [ownerSc, idSc, titleSc, descSc, targetSc, activeSc],
+          [ownerSc, idSc, titleSc, descSc, targetSc, activeSc, youtubeSc, clientWalletSc, expirationSc],
           userAddress
         );
 
@@ -1258,21 +1385,26 @@ export default function App() {
     const target = parseFloat(newCampaign.target);
     const title = newCampaign.title.trim();
     const description = newCampaign.description.trim();
+    const youtubeLink = newCampaign.youtube_link.trim();
+    const clientWallet = newCampaign.client_wallet.trim();
+    const expirationStr = newCampaign.expiration;
 
-    if (isNaN(id) || isNaN(target) || target <= 0 || !title || !description) {
+    if (isNaN(id) || isNaN(target) || target <= 0 || !title || !description || !clientWallet || !expirationStr) {
       Swal.fire({
         title: t.invalidInputs,
-        text: t.invalidInputsDesc,
+        text: t.invalidInputsDesc || 'Please fill in all required fields including Client Wallet and Expiration Date',
         icon: 'warning',
         confirmButtonColor: '#FF3B30'
       });
       return;
     }
+    
+    const expirationUnix = Math.floor(new Date(expirationStr).getTime() / 1000);
 
     if (isMockMode) {
-      setCampaigns(prev => [...prev, { id, title, description, target, raised: 0, active: true }]);
+      setCampaigns(prev => [...prev, { id, title, description, target, raised: 0, active: true, youtube_link: youtubeLink, client_wallet: clientWallet, expiration: expirationUnix, funds_transferred: 0, transfers: [] }]);
       const unixTime = Math.floor(Date.now() / 1000);
-      setNewCampaign({ id: unixTime, title: '', description: '', target: '' });
+      setNewCampaign({ id: unixTime, title: '', description: '', target: '', youtube_link: '', client_wallet: '', expiration: '' });
       Swal.fire({
         title: t.campaignCreated,
         text: t.campaignCreatedMock,
@@ -1295,11 +1427,14 @@ export default function App() {
         const descSc = nativeToScVal(description);
         const targetStroops = BigInt(Math.round(target * 10000000));
         const targetSc = nativeToScVal(targetStroops, { type: 'i128' });
+        const youtubeSc = nativeToScVal(youtubeLink);
+        const clientWalletSc = nativeToScVal(clientWallet, { type: 'address' });
+        const expirationSc = nativeToScVal(expirationUnix, { type: 'u64' });
 
         await executeTransaction(
           contractId,
           'create_campaign',
-          [ownerSc, idSc, titleSc, descSc, targetSc],
+          [ownerSc, idSc, titleSc, descSc, targetSc, youtubeSc, clientWalletSc, expirationSc],
           userAddress
         );
 
@@ -1310,7 +1445,7 @@ export default function App() {
           confirmButtonColor: '#34C759'
         }).then(() => window.location.reload());
         const unixTime = Math.floor(Date.now() / 1000);
-        setNewCampaign({ id: unixTime, title: '', description: '', target: '' });
+        setNewCampaign({ id: unixTime, title: '', description: '', target: '', youtube_link: '', client_wallet: '', expiration: '' });
         await refreshData();
       } catch (err) {
         const unixTime = Math.floor(Date.now() / 1000);
@@ -2000,51 +2135,143 @@ export default function App() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              
+            {/* iOS Style Tabs for Admin Panel */}
+            <div className="flex bg-gray-100 p-1 rounded-xl mb-6 w-full max-w-sm">
+              <button 
+                onClick={(e) => { e.preventDefault(); setAdminTab('campaign'); }}
+                className={`flex-1 py-2 px-4 text-xs font-bold rounded-lg transition-all ${adminTab === 'campaign' ? 'bg-white shadow text-ios-darkText' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                {t.createNewCampaign}
+              </button>
+              <button 
+                onClick={(e) => { e.preventDefault(); setAdminTab('claims'); }}
+                className={`flex-1 py-2 px-4 text-xs font-bold rounded-lg transition-all ${adminTab === 'claims' ? 'bg-white shadow text-ios-darkText' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                {t.rewardClaimHistoryTitle || 'Claim History'}
+              </button>
+            </div>
+
+            <div>
               {/* Campaign Creation */}
+              {adminTab === 'campaign' && (
               <div>
-                <h3 className="font-bold text-sm text-ios-secondaryText mb-4">{t.createNewCampaign}</h3>
                 <form onSubmit={handleCreateCampaign} className="space-y-4">
                   <div>
-                    <label className="text-[10px] font-bold text-ios-darkGray block mb-1">{t.autoCampaignId || 'AUTO CAMPAIGN ID'}</label>
-                    <input 
-                      type="text" 
-                      value={newCampaign.id}
-                      readOnly
-                      placeholder={t.egCampaignId}
-                      className="w-full bg-[#E5E5EA] border border-ios-lightGray/40 rounded-xl px-4 py-2.5 text-sm outline-none cursor-not-allowed text-ios-darkGray"
-                    />
+                    <label className="text-[11px] font-bold text-ios-darkGray block mb-1">{t.autoCampaignId || 'Auto Campaign ID'}</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <div className="w-6 h-6 rounded-full bg-gray-500/10 flex items-center justify-center">
+                          <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path></svg>
+                        </div>
+                      </div>
+                      <input 
+                        type="text" 
+                        value={newCampaign.id}
+                        readOnly
+                        placeholder={t.egCampaignId}
+                        className="w-full bg-[#E5E5EA] border border-ios-lightGray/40 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none cursor-not-allowed text-ios-darkGray"
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-ios-darkGray block mb-1">{t.title}</label>
-                    <input 
-                      type="text" 
-                      value={newCampaign.title}
-                      onChange={(e) => setNewCampaign({ ...newCampaign, title: e.target.value })}
-                      placeholder={t.egTitle}
-                      className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all"
-                    />
+                    <label className="text-[11px] font-bold text-ios-darkGray block mb-1">{t.title}</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center">
+                          <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                      </div>
+                      <input 
+                        type="text" 
+                        value={newCampaign.title}
+                        onChange={(e) => setNewCampaign({ ...newCampaign, title: e.target.value })}
+                        placeholder={t.egTitle}
+                        className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all"
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-ios-darkGray block mb-1">{t.description}</label>
-                    <textarea 
-                      value={newCampaign.description}
-                      onChange={(e) => setNewCampaign({ ...newCampaign, description: e.target.value })}
-                      placeholder={t.describeCampaign}
-                      rows="5"
-                      className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all"
-                    ></textarea>
+                    <label className="text-[11px] font-bold text-ios-darkGray block mb-1">{t.description}</label>
+                    <div className="relative">
+                      <div className="absolute top-2.5 left-0 pl-3 flex items-start pointer-events-none">
+                        <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center">
+                          <svg className="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                        </div>
+                      </div>
+                      <textarea 
+                        value={newCampaign.description}
+                        onChange={(e) => setNewCampaign({ ...newCampaign, description: e.target.value })}
+                        placeholder={t.describeCampaign}
+                        rows="5"
+                        className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all"
+                      ></textarea>
+                    </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-ios-darkGray block mb-1">{t.goalTarget}</label>
-                    <input 
-                      type="number" 
-                      value={newCampaign.target}
-                      onChange={(e) => setNewCampaign({ ...newCampaign, target: e.target.value })}
-                      placeholder={t.egTarget}
-                      className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all"
-                    />
+                    <label className="text-[11px] font-bold text-ios-darkGray block mb-1">{t.goalTarget}</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <div className="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center">
+                          <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                      </div>
+                      <input 
+                        type="number" 
+                        value={newCampaign.target}
+                        onChange={(e) => setNewCampaign({ ...newCampaign, target: e.target.value })}
+                        placeholder={t.egTarget}
+                        className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-ios-darkGray block mb-1">{t.youtubeLink || 'YouTube Link'}</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <div className="w-6 h-6 rounded-full bg-red-500/10 flex items-center justify-center">
+                          <svg className="w-3.5 h-3.5 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                        </div>
+                      </div>
+                      <input 
+                        type="url" 
+                        value={newCampaign.youtube_link}
+                        onChange={(e) => setNewCampaign({ ...newCampaign, youtube_link: e.target.value })}
+                        placeholder={t.youtubeLinkEg || "https://youtube.com/watch?v=..."}
+                        className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-ios-darkGray block mb-1">{t.clientWallet || 'Client Wallet'}</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center">
+                          <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                        </div>
+                      </div>
+                      <input 
+                        type="text" 
+                        value={newCampaign.client_wallet}
+                        onChange={(e) => setNewCampaign({ ...newCampaign, client_wallet: e.target.value })}
+                        placeholder={t.clientWalletEg || "G..."}
+                        className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-ios-darkGray block mb-1">{t.expirationDate || 'Expiration Date'}</label>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                        <div className="w-6 h-6 rounded-full bg-purple-500/10 flex items-center justify-center">
+                          <svg className="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+                      </div>
+                      <CustomDatePicker 
+                        value={newCampaign.expiration}
+                        onChange={(val) => setNewCampaign({ ...newCampaign, expiration: val })}
+                        placeholder="Select date"
+                      />
+                    </div>
                   </div>
                   
                   <button 
@@ -2076,8 +2303,10 @@ export default function App() {
                   </div>
                 </div>
               </div>
+              )}
 
               {/* Claim History */}
+              {adminTab === 'claims' && (
               <div className="flex flex-col h-full justify-start">
                 <div className="flex flex-col mb-4 gap-3">
                   <div className="flex justify-between items-center w-full">
@@ -2189,6 +2418,7 @@ export default function App() {
                   </button>
                 </div>
               </div>
+              )}
             </div>
           </section>
         )}
@@ -2335,23 +2565,50 @@ export default function App() {
                     </div>
 
                     <h3 className="font-bold text-xl text-ios-darkText leading-tight mb-2">
-                      {activeTitle} {!camp.active && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-2 align-middle">Inactive</span>}
+                      {activeTitle} 
+                      {!camp.active && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-2 align-middle">{t.inactive || 'Inactive'}</span>}
+                      {camp.expiration > 0 && (
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full ml-2 align-middle border ${(Date.now()/1000) > camp.expiration ? 'bg-red-50 border-red-200 text-red-600' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
+                          <svg className="w-3 h-3 inline mr-1 pb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                          {new Date(camp.expiration * 1000).toLocaleDateString('en-GB')}
+                        </span>
+                      )}
                     </h3>
 
-                    <p className={`text-sm text-ios-secondaryText leading-relaxed whitespace-pre-wrap ${shouldTruncate ? 'mb-1' : 'mb-4'}`}>
-                      {displayDesc}
-                    </p>
-                    {shouldTruncate && (
-                      <button 
-                        onClick={() => toggleDescription(camp.id)} 
-                        className="text-[11px] font-bold text-ios-blue hover:text-blue-600 transition-colors mb-4 inline-block"
-                      >
-                        {isExpanded ? t.showLess : t.showMore}
-                      </button>
-                    )}
+                    <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                      <div className="flex-1 cursor-pointer" onClick={() => setSelectedCampaign(camp)}>
+                        <p className={`text-sm text-ios-secondaryText leading-relaxed whitespace-pre-wrap ${shouldTruncate ? 'mb-1' : ''}`}>
+                          {displayDesc}
+                        </p>
+                        {shouldTruncate && (
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); toggleDescription(camp.id); }} 
+                            className="text-[11px] font-bold text-ios-blue hover:text-blue-600 transition-colors inline-block mt-1"
+                          >
+                            {isExpanded ? t.showLess : t.showMore}
+                          </button>
+                        )}
+                      </div>
+                      
+                      {camp.youtube_link && (() => {
+                        const match = camp.youtube_link.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+                        const videoId = match ? match[1] : null;
+                        if (!videoId) return null;
+                        return (
+                          <div className="w-full sm:w-32 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200 relative group cursor-pointer" onClick={() => setSelectedCampaign(camp)}>
+                            <img src={`https://img.youtube.com/vi/${videoId}/0.jpg`} className="w-full h-full object-cover" alt="YouTube Thumbnail" />
+                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/40 transition-all">
+                              <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center shadow-lg">
+                                <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
 
                     {/* Progress Bar */}
-                    <div className="w-full bg-ios-bg h-2 rounded-full overflow-hidden mb-6 border border-ios-lightGray/10">
+                    <div className="w-full bg-ios-bg h-2 rounded-full overflow-hidden mb-3 border border-ios-lightGray/10 cursor-pointer" onClick={() => setSelectedCampaign(camp)}>
                       <div 
                         className="bg-gradient-to-r from-ios-blue to-ios-green h-full rounded-full transition-all duration-500" 
                         style={{ width: `${percent}%` }}
@@ -2362,6 +2619,22 @@ export default function App() {
                       <span>{t.raisedLabel} {camp.raised.toFixed(2)} XLM</span>
                       <span>{t.target} {camp.target.toFixed(2)} XLM</span>
                     </div>
+
+                    {/* Transfer Progress Box */}
+                    {camp.client_wallet && (
+                      <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 mb-6 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => setSelectedCampaign(camp)}>
+                        <div className="flex justify-between items-center text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+                          <span>{t.transferredToClient || 'Funds Transferred'}</span>
+                          <span className="text-ios-blue">{camp.funds_transferred.toFixed(2)} / {camp.raised.toFixed(2)} XLM</span>
+                        </div>
+                        <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                          <div 
+                            className="bg-blue-400 h-full rounded-full transition-all duration-500" 
+                            style={{ width: `${camp.raised > 0 ? Math.min((camp.funds_transferred / camp.raised) * 100, 100) : 0}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Donation Action Form */}
                     {userAddress && camp.active && camp.raised < camp.target ? (
@@ -3342,6 +3615,112 @@ export default function App() {
         )}
 
       </main>
+
+      {/* Campaign Details Modal */}
+      {selectedCampaign && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100">
+              <h2 className="text-xl font-bold text-ios-darkText">{selectedCampaign.title}</h2>
+              <button onClick={() => { setSelectedCampaign(null); setTransferAmount(''); }} className="text-gray-400 hover:text-gray-600 transition-colors bg-gray-100 rounded-full p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1">
+              {selectedCampaign.youtube_link && (() => {
+                const match = selectedCampaign.youtube_link.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+                const videoId = match ? match[1] : null;
+                if (!videoId) return null;
+                return (
+                  <div className="w-full aspect-video bg-black rounded-xl overflow-hidden mb-6 shadow-md">
+                    <iframe 
+                      className="w-full h-full" 
+                      src={`https://www.youtube.com/embed/${videoId}?autoplay=0`} 
+                      title="YouTube video player" 
+                      frameBorder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowFullScreen
+                    ></iframe>
+                  </div>
+                );
+              })()}
+
+              <div className="mb-6 space-y-4">
+                <p className="text-sm text-ios-secondaryText whitespace-pre-wrap leading-relaxed">{selectedCampaign.description}</p>
+                
+                <div className="flex flex-wrap gap-2 text-[11px] font-bold">
+                  <span className="bg-blue-50 text-ios-blue px-3 py-1 rounded-lg border border-blue-100">ID: {selectedCampaign.id}</span>
+                  {!selectedCampaign.active && <span className="bg-red-50 text-red-600 px-3 py-1 rounded-lg border border-red-200">{t.inactive || 'Inactive'}</span>}
+                  {selectedCampaign.expiration > 0 && (
+                    <span className={`px-3 py-1 rounded-lg border ${(Date.now()/1000) > selectedCampaign.expiration ? 'bg-red-50 border-red-200 text-red-600' : 'bg-purple-50 border-purple-200 text-purple-600'}`}>
+                      {t.expirationDate || 'Expiration'}: {new Date(selectedCampaign.expiration * 1000).toLocaleDateString('en-GB')}
+                    </span>
+                  )}
+                  {selectedCampaign.client_wallet && (
+                    <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg border border-gray-200 break-all">
+                      Wallet: {selectedCampaign.client_wallet}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 mb-6">
+                <div className="flex justify-between text-xs text-ios-darkGray font-semibold mb-2">
+                  <span>{t.raisedLabel} {selectedCampaign.raised.toFixed(2)} XLM</span>
+                  <span>{t.target} {selectedCampaign.target.toFixed(2)} XLM</span>
+                </div>
+                <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden mb-4">
+                  <div 
+                    className="bg-gradient-to-r from-ios-blue to-ios-green h-full rounded-full" 
+                    style={{ width: `${selectedCampaign.target > 0 ? Math.min((selectedCampaign.raised / selectedCampaign.target) * 100, 100) : 0}%` }}
+                  ></div>
+                </div>
+
+                <div className="flex justify-between text-xs text-ios-darkGray font-semibold mb-2 pt-2 border-t border-gray-200">
+                  <span>{t.transferredToClient || 'Transferred to Client'}</span>
+                  <span className="text-ios-blue">{selectedCampaign.funds_transferred.toFixed(2)} / {selectedCampaign.raised.toFixed(2)} XLM</span>
+                </div>
+                <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-blue-500 h-full rounded-full" 
+                    style={{ width: `${selectedCampaign.raised > 0 ? Math.min((selectedCampaign.funds_transferred / selectedCampaign.raised) * 100, 100) : 0}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              {isOwner && selectedCampaign.client_wallet && (
+                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-5 mb-2">
+                  <h3 className="text-sm font-bold text-ios-darkText mb-3 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-ios-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    {t.transferToClient || 'Transfer to Client'}
+                  </h3>
+                  <div className="flex gap-3">
+                    <div className="relative flex-grow">
+                      <input 
+                        type="number" 
+                        min="0.1" 
+                        step="0.1"
+                        value={transferAmount}
+                        onChange={(e) => setTransferAmount(e.target.value)}
+                        placeholder={t.transferAmount || "Amount (XLM)"}
+                        className="w-full bg-white border border-blue-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all font-semibold"
+                      />
+                    </div>
+                    <button 
+                      onClick={() => handleTransferToClient(selectedCampaign)}
+                      disabled={isLoading}
+                      className="bg-ios-blue hover:bg-blue-600 text-white font-bold px-6 py-2.5 rounded-xl shadow-md disabled:opacity-50 transition-all flex-shrink-0"
+                    >
+                      {t.sendFunds || 'Send Funds'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Certificate Modal */}
       {showCertificate && (
