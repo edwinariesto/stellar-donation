@@ -558,18 +558,23 @@ export async function executeTransaction(contractId, functionName, args = [], us
   const accountData = await res.json();
   const account = new Account(userAddress, accountData.sequence);
 
-  // 2. Build transaction
+  // 2. Build transaction — Soroban calls need a higher fee than BASE_FEE
   const contractObj = new Contract(contractId);
   let tx = new TransactionBuilder(account, {
-    fee: BASE_FEE,
+    fee: String(10000000), // 1 XLM max fee for Soroban
     networkPassphrase: currentNetwork.passphrase,
   })
     .addOperation(contractObj.call(functionName, ...args))
     .setTimeout(60)
     .build();
 
-  // 3. Prepare transaction (adds footprint/simulated authorization details)
-  tx = await rpcServer.prepareTransaction(tx);
+  // 3. Prepare transaction (simulation + footprint + auth)
+  try {
+    tx = await rpcServer.prepareTransaction(tx);
+  } catch (simErr) {
+    const detail = simErr?.message || simErr?.toString() || 'Simulation failed';
+    throw new Error(`Contract simulation error: ${detail}`);
+  }
 
   // 4. Convert to XDR and request Wallet signature
   const xdrString = tx.toXDR();
