@@ -3792,8 +3792,11 @@ export default function App() {
                   <span className="bg-blue-50 text-ios-blue px-3 py-1 rounded-lg border border-blue-100">ID: {selectedCampaign.id}</span>
                   {!selectedCampaign.active && <span className="bg-red-50 text-red-600 px-3 py-1 rounded-lg border border-red-200">{t.inactive || 'Inactive'}</span>}
                   {selectedCampaign.expiration > 0 && (
-                    <span className={`px-3 py-1 rounded-lg border ${(Date.now()/1000) > selectedCampaign.expiration ? 'bg-red-50 border-red-200 text-red-600' : 'bg-purple-50 border-purple-200 text-purple-600'}`}>
-                      {t.expirationDate || 'Expiration'}: {new Date(selectedCampaign.expiration * 1000).toLocaleDateString('en-GB')}
+                    <span className={`px-3 py-1 rounded-lg border flex items-center gap-1 ${(Date.now()/1000) > selectedCampaign.expiration ? 'bg-red-50 border-red-200 text-red-600' : 'bg-purple-50 border-purple-200 text-purple-600'}`}>
+                      <svg className="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      {(Date.now()/1000) > selectedCampaign.expiration
+                        ? t.campaignFinished
+                        : `${t.remaining} ${Math.ceil((selectedCampaign.expiration - (Date.now()/1000)) / (60 * 60 * 24))} ${t.daysRemaining}`}
                     </span>
                   )}
                   {selectedCampaign.client_wallet && isOwner && (
