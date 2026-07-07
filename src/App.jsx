@@ -123,6 +123,8 @@ function NeuronCanvas() {
 const CustomDatePicker = ({ value, onChange, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(value ? new Date(value) : new Date());
+  const [dropUp, setDropUp] = useState(false);
+  const triggerRef = React.useRef(null);
 
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
   const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
@@ -134,17 +136,41 @@ const CustomDatePicker = ({ value, onChange, placeholder }) => {
     setIsOpen(false);
   };
 
+  const handleToggle = () => {
+    if (!isOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setDropUp(spaceBelow < 320);
+    }
+    setIsOpen(prev => !prev);
+  };
+
+  // Close on outside click
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e) => {
+      if (triggerRef.current && !triggerRef.current.closest('.custom-datepicker-root').contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isOpen]);
+
   return (
-    <div className="relative w-full">
-      <div 
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full bg-white/40 backdrop-blur-xl border border-ios-lightGray/40 shadow-inner rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all text-ios-darkText cursor-pointer flex items-center min-h-[42px]"
+    <div className="relative w-full custom-datepicker-root" ref={triggerRef}>
+      <div
+        onClick={handleToggle}
+        className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all text-ios-darkText cursor-pointer flex items-center min-h-[42px]"
       >
-        {value ? new Date(value).toLocaleDateString('en-GB') : <span className="text-gray-400">{placeholder}</span>}
+        {value ? new Date(value).toLocaleDateString('en-GB') : <span className="text-gray-400">{placeholder || 'Select date'}</span>}
       </div>
-      
+
       {isOpen && (
-        <div className="absolute top-full mt-2 left-0 z-[100] bg-white/80 backdrop-blur-3xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl p-4 w-[280px]">
+        <div
+          className={`absolute ${dropUp ? 'bottom-full mb-2' : 'top-full mt-2'} left-0 z-[999] bg-white border border-gray-200 shadow-[0_8px_30px_rgb(0,0,0,0.15)] rounded-2xl p-4 w-[280px]`}
+          onMouseDown={e => e.stopPropagation()}
+        >
           <div className="flex justify-between items-center mb-4">
             <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)); }} className="p-1 hover:bg-black/5 rounded-full"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6"/></svg></button>
             <span className="font-bold text-sm text-ios-darkText">{currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
@@ -3766,7 +3792,7 @@ export default function App() {
                       {t.expirationDate || 'Expiration'}: {new Date(selectedCampaign.expiration * 1000).toLocaleDateString('en-GB')}
                     </span>
                   )}
-                  {selectedCampaign.client_wallet && (
+                  {selectedCampaign.client_wallet && isOwner && (
                     <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg border border-gray-200 break-all">
                       Wallet: {selectedCampaign.client_wallet}
                     </span>
