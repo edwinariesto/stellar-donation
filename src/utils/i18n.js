@@ -311,7 +311,8 @@ export const translations = {
     voucherNotFound: 'Voucher Tidak Valid',
     voucherNotFoundDesc: 'Kode voucher tidak ditemukan di blockchain, belum didaftarkan, atau batas penggunaannya (5x) sudah habis.',
     invalidTargetAddress: 'Format Alamat Tidak Valid',
-    invalidTargetAddressDesc: 'Alamat dompet target tidak valid. Pastikan alamat dimulai dengan G dan berjumlah 56 karakter.'
+    invalidTargetAddressDesc: 'Alamat dompet target tidak valid. Pastikan alamat dimulai dengan G dan berjumlah 56 karakter.',
+    saveVoucherInfo: '*Klik "Simpan ke Blockchain" terlebih dahulu agar kasir dapat memvalidasi kode ini.'
   },
   en: {
     walletConnected: 'Wallet Connected',
@@ -629,6 +630,7 @@ export const translations = {
     voucherNotFound: 'Invalid Voucher',
     voucherNotFoundDesc: 'The voucher code was not found on the blockchain, is unregistered, or its usage limit (5x) has been exhausted.',
     invalidTargetAddress: 'Invalid Address Format',
-    invalidTargetAddressDesc: 'The target wallet address is invalid. Please ensure it starts with G and is 56 characters long.'
+    invalidTargetAddressDesc: 'The target wallet address is invalid. Please ensure it starts with G and is 56 characters long.',
+    saveVoucherInfo: '*Click "Save to Blockchain" first so the cashier can validate this code.'
   }
 };

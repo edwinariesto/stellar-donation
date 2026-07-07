@@ -1057,7 +1057,7 @@ export default function App() {
       SwalOrig.close();
       SwalOrig.fire({
         title: t.txFailed || 'Transaksi Gagal',
-        text: err.message || err,
+        text: getTranslatedError(err.message || err),
         icon: 'error',
         confirmButtonText: t.close || 'Tutup',
         buttonsStyling: false,
@@ -3410,6 +3410,7 @@ export default function App() {
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                   {t.saveToBlockchain || 'Simpan ke Blockchain'}
                 </button>
+                <p className="text-[9px] text-slate-400/80 italic px-2">{t.saveVoucherInfo || '*Klik "Simpan ke Blockchain" terlebih dahulu agar kasir dapat memvalidasi kode ini.'}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
