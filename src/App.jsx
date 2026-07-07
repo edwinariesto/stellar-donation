@@ -289,7 +289,7 @@ export default function App() {
   const filteredAmbassadors = ambassadorHistory.filter(r => r.address.toLowerCase().includes(ambassadorSearch.toLowerCase()));
   const totalAmbassadorPages = Math.max(1, Math.ceil(filteredAmbassadors.length / AMBASSADOR_PER_PAGE));
   const currentAmbassadors = filteredAmbassadors.slice((ambassadorPage - 1) * AMBASSADOR_PER_PAGE, ambassadorPage * AMBASSADOR_PER_PAGE);
-  const currentAmbassadorUses = ambassadorHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase()).length;
+  const currentAmbassadorUses = ambassadorHistory.filter(r => r.type !== 'REGISTER' && r.address.toLowerCase() === (userAddress || '').toLowerCase()).length;
 
   const searchParams = new URLSearchParams(window.location.search);
   const refParam = searchParams.get('ref');
@@ -1086,6 +1086,7 @@ export default function App() {
       
       const updatedHistory = [newRecord, ...ambassadorHistory];
       setAmbassadorHistory(updatedHistory);
+      setAmbassadorPage(1);
       try { localStorage.setItem('steldot_ambassador_history', JSON.stringify(updatedHistory)); } catch (e) {}
 
       Swal.fire(t.success || 'Berhasil!', t.registerVoucherSuccess || 'Kode voucher berhasil terdaftar di Blockchain! Sekarang kasir bisa melakukan verifikasi.', 'success');
