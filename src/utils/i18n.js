@@ -287,7 +287,20 @@ export const translations = {
     sendFunds: 'Kirim Dana',
     inactive: 'Tidak Aktif',
     adminSettingsPanel: 'Pengaturan Admin',
-    rewardClaimHistoryTitle: 'Riwayat Klaim'
+    rewardClaimHistoryTitle: 'Riwayat Klaim',
+    shortDescription: 'Deskripsi Pendek',
+    shortDescriptionDesc: 'Deskripsi campaign harus lebih dari 2 kata.',
+    invalidWalletFormat: 'Format Wallet Salah',
+    invalidWalletFormatDesc: 'Alamat dompet (Wallet) tidak boleh mengandung spasi.',
+    invalidYoutube: 'YouTube Tidak Valid',
+    invalidYoutubeDesc: 'Pastikan link berasal dari youtube.com atau youtu.be',
+    invalidDate: 'Tanggal Tidak Valid',
+    invalidDateDesc: 'Batas waktu campaign minimal harus 1 minggu dari hari ini.',
+    campaignFinished: 'Waktu Selesai',
+    daysRemaining: 'hari lagi',
+    remaining: 'Tersisa',
+    invalidVoucherFormat: 'Format Voucher Salah',
+    invalidVoucherFormatDesc: 'Kode voucher harus tepat 5 karakter (kombinasi huruf dan angka).'
   },
   en: {
     walletConnected: 'Wallet Connected',
@@ -581,6 +594,19 @@ export const translations = {
     sendFunds: 'Send Funds',
     inactive: 'Inactive',
     adminSettingsPanel: 'Admin Settings',
-    rewardClaimHistoryTitle: 'Claim History'
+    rewardClaimHistoryTitle: 'Claim History',
+    shortDescription: 'Short Description',
+    shortDescriptionDesc: 'Campaign description must be more than 2 words.',
+    invalidWalletFormat: 'Invalid Wallet Format',
+    invalidWalletFormatDesc: 'Wallet address cannot contain spaces.',
+    invalidYoutube: 'Invalid YouTube',
+    invalidYoutubeDesc: 'Make sure the link is from youtube.com or youtu.be',
+    invalidDate: 'Invalid Date',
+    invalidDateDesc: 'Campaign deadline must be at least 1 week from today.',
+    campaignFinished: 'Finished',
+    daysRemaining: 'days left',
+    remaining: 'Remaining',
+    invalidVoucherFormat: 'Invalid Voucher Format',
+    invalidVoucherFormatDesc: 'Voucher code must be exactly 5 alphanumeric characters.'
   }
 };

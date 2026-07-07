@@ -287,6 +287,7 @@ export default function App() {
   const [isSyncingTopDonors, setIsSyncingTopDonors] = useState(false);
   const [expandedCampaigns, setExpandedCampaigns] = useState({});
   const [selectedCampaign, setSelectedCampaign] = useState(null);
+  const [editingCampaign, setEditingCampaign] = useState(null);
   const [transferAmount, setTransferAmount] = useState('');
   const [adminTab, setAdminTab] = useState('campaign'); // 'campaign' or 'claims'
   const [translatedCampaigns, setTranslatedCampaigns] = useState({});
@@ -909,14 +910,12 @@ export default function App() {
     const amount = parseFloat(ambassadorAmount);
     if (isNaN(amount) || amount <= 0) return;
 
-    if (!simulateVoucherCode.trim().toUpperCase().startsWith('AMB-') || simulateVoucherCode.trim().length < 6) {
+    if (!/^[a-zA-Z0-9]{5}$/.test(simulateVoucherCode.trim())) {
       SwalOrig.fire({
-        icon: 'error',
-        title: t.invalidCode || 'Kode Tidak Valid',
-        text: t.invalidCodeDesc || 'Shopping Voucher Code tidak valid. Kode harus diawali dengan AMB-.',
-        confirmButtonText: t.close || 'Tutup',
-        buttonsStyling: false,
-        customClass: { confirmButton: 'bg-slate-800 text-white font-bold py-3 w-full rounded-xl' }
+        icon: 'warning',
+        title: t.invalidVoucherFormat,
+        text: t.invalidVoucherFormatDesc,
+        confirmButtonColor: '#FF3B30'
       });
       return;
     }
@@ -1275,69 +1274,60 @@ export default function App() {
 
 
   // Owner updates a campaign
-  const handleUpdateCampaign = async (camp) => {
-    const { value: formValues } = await Swal.fire({
-      title: t.updateCampaign,
-      html: `
-        <div class="text-left space-y-4 mt-4">
-          <div>
-            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">${t.title}</label>
-            <input id="swal-title" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow" value="${camp.title}">
-          </div>
-          <div>
-            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">${t.description}</label>
-            <textarea id="swal-desc" rows="6" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow resize-y">${camp.description}</textarea>
-          </div>
-          <div>
-            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">${t.goalTarget}</label>
-            <input type="number" id="swal-target" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow" value="${camp.target}">
-          </div>
-          <div class="flex items-center gap-2 pt-2 pb-1">
-            <input type="checkbox" id="swal-active" class="w-5 h-5 accent-blue-500 rounded border-gray-300 focus:ring-blue-500 cursor-pointer" ${camp.active ? 'checked' : ''}>
-            <label for="swal-active" class="text-sm font-bold text-gray-700 cursor-pointer">${t.setAsActive || 'Set as Active Campaign'}</label>
-          </div>
-          <div>
-            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">YouTube Link</label>
-            <input type="url" id="swal-youtube" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow" value="${camp.youtube_link || ''}">
-          </div>
-          <div>
-            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Client Wallet</label>
-            <input type="text" id="swal-wallet" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow" value="${camp.client_wallet || ''}">
-          </div>
-          <div>
-            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Expiration Date</label>
-            <input type="date" id="swal-expiration" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow" value="${camp.expiration ? new Date(camp.expiration * 1000).toISOString().split('T')[0] : ''}">
-          </div>
-        </div>
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      preConfirm: () => {
-        return {
-          title: document.getElementById('swal-title').value,
-          description: document.getElementById('swal-desc').value,
-          target: parseFloat(document.getElementById('swal-target').value),
-          active: document.getElementById('swal-active').checked,
-          youtube_link: document.getElementById('swal-youtube').value,
-          client_wallet: document.getElementById('swal-wallet').value,
-          expiration: document.getElementById('swal-expiration').value
-        };
-      }
+  const handleUpdateCampaign = (camp) => {
+    setEditingCampaign({
+      ...camp,
+      expirationDateStr: camp.expiration ? new Date(camp.expiration * 1000).toISOString().split('T')[0] : ''
     });
+  };
 
-    if (!formValues) return;
+  const submitUpdateCampaign = async (e) => {
+    if (e) e.preventDefault();
+    if (!editingCampaign) return;
 
-    if (!formValues.title || !formValues.description || isNaN(formValues.target) || !formValues.client_wallet || !formValues.expiration) {
-      Swal.fire({ title: t.invalidInputs, text: t.invalidInputsDesc || 'Please fill all required fields.', icon: 'warning' });
+    const id = editingCampaign.id;
+    const target = parseFloat(editingCampaign.target);
+    const title = editingCampaign.title.trim();
+    const description = editingCampaign.description.trim();
+    const youtubeLink = (editingCampaign.youtube_link || '').trim();
+    const clientWallet = (editingCampaign.client_wallet || '').trim();
+    const expirationStr = editingCampaign.expirationDateStr;
+    const active = editingCampaign.active;
+
+    if (isNaN(id) || isNaN(target) || target <= 0 || !title || !description || !clientWallet || !expirationStr) {
+      Swal.fire({ title: t.invalidInputs, text: 'Harap isi semua kolom wajib.', icon: 'warning', confirmButtonColor: '#FF3B30' });
+      return;
+    }
+
+    if (description.split(/\s+/).length <= 2) {
+      Swal.fire({ title: t.shortDescription, text: t.shortDescriptionDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+      return;
+    }
+
+    if (clientWallet.includes(' ')) {
+      Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+      return;
+    }
+
+    if (youtubeLink && !/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/.test(youtubeLink)) {
+      Swal.fire({ title: t.invalidYoutube, text: t.invalidYoutubeDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+      return;
+    }
+
+    const expirationTime = new Date(expirationStr).getTime();
+    const oneWeekFromNow = Date.now() + (7 * 24 * 60 * 60 * 1000);
+    if (expirationTime < new Date(new Date(oneWeekFromNow).setHours(0,0,0,0)).getTime()) {
+      Swal.fire({ title: t.invalidDate, text: t.invalidDateDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
       return;
     }
     
-    const expirationUnix = Math.floor(new Date(formValues.expiration).getTime() / 1000);
+    const expirationUnix = Math.floor(expirationTime / 1000);
 
     if (isMockMode) {
       setCampaigns(prev => prev.map(c => 
-        c.id === camp.id ? { ...c, title: formValues.title, description: formValues.description, target: formValues.target, active: formValues.active, youtube_link: formValues.youtube_link, client_wallet: formValues.client_wallet, expiration: expirationUnix } : c
+        c.id === id ? { ...c, title, description, target, active, youtube_link: youtubeLink, client_wallet: clientWallet, expiration: expirationUnix } : c
       ));
+      setEditingCampaign(null);
       Swal.fire(t.updateCampaign, t.updateCampaignMock, 'success').then(() => window.location.reload());
     } else {
       try {
@@ -1350,14 +1340,14 @@ export default function App() {
         });
 
         const ownerSc = nativeToScVal(userAddress, { type: 'address' });
-        const idSc = nativeToScVal(camp.id, { type: 'u32' });
-        const titleSc = nativeToScVal(formValues.title);
-        const descSc = nativeToScVal(formValues.description);
-        const targetStroops = BigInt(Math.round(formValues.target * 10000000));
+        const idSc = nativeToScVal(id, { type: 'u32' });
+        const titleSc = nativeToScVal(title);
+        const descSc = nativeToScVal(description);
+        const targetStroops = BigInt(Math.round(target * 10000000));
         const targetSc = nativeToScVal(targetStroops, { type: 'i128' });
-        const activeSc = nativeToScVal(formValues.active);
-        const youtubeSc = nativeToScVal(formValues.youtube_link);
-        const clientWalletSc = nativeToScVal(formValues.client_wallet, { type: 'address' });
+        const activeSc = nativeToScVal(active);
+        const youtubeSc = nativeToScVal(youtubeLink);
+        const clientWalletSc = nativeToScVal(clientWallet, { type: 'address' });
         const expirationSc = nativeToScVal(expirationUnix, { type: 'u64' });
 
         await executeTransaction(
@@ -1367,6 +1357,7 @@ export default function App() {
           userAddress
         );
 
+        setEditingCampaign(null);
         Swal.fire(t.updateCampaign, t.updateCampaignSuccess, 'success').then(() => window.location.reload());
         await refreshData();
       } catch (err) {
@@ -1390,12 +1381,29 @@ export default function App() {
     const expirationStr = newCampaign.expiration;
 
     if (isNaN(id) || isNaN(target) || target <= 0 || !title || !description || !clientWallet || !expirationStr) {
-      Swal.fire({
-        title: t.invalidInputs,
-        text: t.invalidInputsDesc || 'Please fill in all required fields including Client Wallet and Expiration Date',
-        icon: 'warning',
-        confirmButtonColor: '#FF3B30'
-      });
+      Swal.fire({ title: t.invalidInputs, text: t.invalidInputsDesc || 'Harap isi semua kolom wajib.', icon: 'warning', confirmButtonColor: '#FF3B30' });
+      return;
+    }
+
+    if (description.split(/\s+/).length <= 2) {
+      Swal.fire({ title: t.shortDescription, text: t.shortDescriptionDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+      return;
+    }
+
+    if (clientWallet.includes(' ')) {
+      Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+      return;
+    }
+
+    if (youtubeLink && !/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/.test(youtubeLink)) {
+      Swal.fire({ title: t.invalidYoutube, text: t.invalidYoutubeDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+      return;
+    }
+
+    const expirationTime = new Date(expirationStr).getTime();
+    const oneWeekFromNow = Date.now() + (7 * 24 * 60 * 60 * 1000);
+    if (expirationTime < new Date(new Date(oneWeekFromNow).setHours(0,0,0,0)).getTime()) {
+      Swal.fire({ title: t.invalidDate, text: t.invalidDateDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
       return;
     }
     
@@ -2469,7 +2477,7 @@ export default function App() {
               const filteredCampaigns = categorizedCampaigns[activeTab].filter(c => 
                 c.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                 c.id.toString().toLowerCase().includes(searchQuery.toLowerCase())
-              );
+              ).sort((a, b) => b.id - a.id);
               const totalPages = Math.ceil(filteredCampaigns.length / CAMPAIGNS_PER_PAGE);
               const currentCampaigns = filteredCampaigns.slice((currentPage - 1) * CAMPAIGNS_PER_PAGE, currentPage * CAMPAIGNS_PER_PAGE);
 
@@ -2568,9 +2576,9 @@ export default function App() {
                       {activeTitle} 
                       {!camp.active && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-2 align-middle">{t.inactive || 'Inactive'}</span>}
                       {camp.expiration > 0 && (
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full ml-2 align-middle border ${(Date.now()/1000) > camp.expiration ? 'bg-red-50 border-red-200 text-red-600' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full ml-2 align-middle border ${(Date.now()/1000) > camp.expiration ? 'bg-red-50 border-red-200 text-red-600' : 'bg-blue-50 border-blue-200 text-blue-600'}`}>
                           <svg className="w-3 h-3 inline mr-1 pb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                          {new Date(camp.expiration * 1000).toLocaleDateString('en-GB')}
+                          {(Date.now()/1000) > camp.expiration ? t.campaignFinished : `${t.remaining} ${Math.ceil((camp.expiration - (Date.now()/1000)) / (60 * 60 * 24))} ${t.daysRemaining}`}
                         </span>
                       )}
                     </h3>
@@ -3615,6 +3623,107 @@ export default function App() {
         )}
 
       </main>
+
+      {/* Update Campaign Modal */}
+      {editingCampaign && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] my-8 animate-fade-in">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 sticky top-0 bg-white/95 backdrop-blur z-10 rounded-t-2xl">
+              <h2 className="text-xl font-bold text-ios-darkText">{t.updateCampaign || 'Update Campaign'}</h2>
+              <button onClick={() => setEditingCampaign(null)} className="text-gray-400 hover:text-gray-600 transition-colors bg-gray-100 hover:bg-gray-200 rounded-full p-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto custom-scrollbar">
+              <form id="update-campaign-form" onSubmit={submitUpdateCampaign} className="space-y-5">
+                <div>
+                  <label className="text-[11px] font-bold text-ios-darkGray block mb-1">{t.title}</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      </div>
+                    </div>
+                    <input type="text" value={editingCampaign.title} onChange={(e) => setEditingCampaign({ ...editingCampaign, title: e.target.value })} className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-ios-darkGray block mb-1">{t.description}</label>
+                  <div className="relative">
+                    <div className="absolute top-2.5 left-0 pl-3 flex items-start pointer-events-none">
+                      <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center">
+                        <svg className="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                      </div>
+                    </div>
+                    <textarea value={editingCampaign.description} onChange={(e) => setEditingCampaign({ ...editingCampaign, description: e.target.value })} rows="5" className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all"></textarea>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-ios-darkGray block mb-1">{t.goalTarget}</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <div className="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center">
+                        <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      </div>
+                    </div>
+                    <input type="number" value={editingCampaign.target} onChange={(e) => setEditingCampaign({ ...editingCampaign, target: e.target.value })} className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-ios-darkGray block mb-1">{t.youtubeLink || 'YouTube Link'}</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <div className="w-6 h-6 rounded-full bg-red-500/10 flex items-center justify-center">
+                        <svg className="w-3.5 h-3.5 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                      </div>
+                    </div>
+                    <input type="url" value={editingCampaign.youtube_link || ''} onChange={(e) => setEditingCampaign({ ...editingCampaign, youtube_link: e.target.value })} className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-ios-darkGray block mb-1">{t.clientWallet || 'Client Wallet'}</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                      </div>
+                    </div>
+                    <input type="text" value={editingCampaign.client_wallet || ''} onChange={(e) => setEditingCampaign({ ...editingCampaign, client_wallet: e.target.value })} className="w-full bg-[#F2F2F7] border border-ios-lightGray/40 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-ios-blue transition-all" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-ios-darkGray block mb-1">{t.expirationDate || 'Expiration Date'}</label>
+                  <div className="relative z-50">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                      <div className="w-6 h-6 rounded-full bg-gray-500/10 flex items-center justify-center">
+                        <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                      </div>
+                    </div>
+                    <CustomDatePicker 
+                      selectedDate={editingCampaign.expirationDateStr}
+                      onChange={(e) => setEditingCampaign({ ...editingCampaign, expirationDateStr: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 pt-2">
+                  <input type="checkbox" id="edit-active" checked={editingCampaign.active} onChange={(e) => setEditingCampaign({ ...editingCampaign, active: e.target.checked })} className="w-5 h-5 accent-ios-blue rounded border-gray-300 focus:ring-ios-blue cursor-pointer" />
+                  <label htmlFor="edit-active" className="text-sm font-bold text-ios-darkText cursor-pointer">{t.setAsActive || 'Set as Active Campaign'}</label>
+                </div>
+              </form>
+            </div>
+            
+            <div className="p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex justify-end gap-3 sticky bottom-0">
+              <button type="button" onClick={() => setEditingCampaign(null)} className="px-6 py-2.5 rounded-xl font-bold text-ios-darkGray bg-white border border-gray-200 hover:bg-gray-50 transition-colors">
+                {t.closeBtn || 'Close'}
+              </button>
+              <button form="update-campaign-form" type="submit" disabled={isLoading} className="px-6 py-2.5 rounded-xl font-bold text-white bg-ios-blue hover:bg-blue-600 transition-colors shadow-md disabled:opacity-50">
+                {isLoading ? t.processing || 'Processing...' : t.updateCampaign || 'Update Campaign'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Campaign Details Modal */}
       {selectedCampaign && (

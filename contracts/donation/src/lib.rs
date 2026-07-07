@@ -1,5 +1,7 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, token, Address, Env, String, Symbol, Vec};
+use soroban_sdk::{
+    contract, contractimpl, contracttype, token, Address, BytesN, Env, String, Symbol, Vec,
+};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -25,6 +27,15 @@ pub struct Campaign {
 }
 
 #[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Voucher {
+    pub owner: Address,
+    pub max_uses: u32,
+    pub uses_left: u32,
+    pub active: bool,
+}
+
+#[contracttype]
 #[derive(Clone)]
 enum DataKey {
     Owner,
@@ -38,6 +49,7 @@ enum DataKey {
     TotalClaimsApproved,
     HasDonated(Address),
     ReferralReward(Address),
+    VoucherInfo(String),
 }
 
 #[contract]
@@ -607,6 +619,60 @@ impl StelDotContract {
             .persistent()
             .get(&DataKey::ReferralReward(referrer))
             .unwrap_or(0)
+    }
+
+    pub fn register_voucher(env: Env, owner: Address, code: String, max_uses: u32) {
+        owner.require_auth();
+        let key = DataKey::VoucherInfo(code.clone());
+        if env.storage().persistent().has(&key) {
+            panic!("voucher code already exists");
+        }
+        let v = Voucher {
+            owner: owner.clone(),
+            max_uses,
+            uses_left: max_uses,
+            active: true,
+        };
+        env.storage().persistent().set(&key, &v);
+    }
+
+    pub fn verify_and_claim_voucher(env: Env, code: String, cashier: Address) {
+        cashier.require_auth();
+        let key = DataKey::VoucherInfo(code.clone());
+        let mut v: Voucher = env
+            .storage()
+            .persistent()
+            .get(&key)
+            .expect("voucher not found");
+
+        if !v.active || v.uses_left == 0 {
+            panic!("voucher is inactive or exhausted");
+        }
+
+        v.uses_left -= 1;
+        if v.uses_left == 0 {
+            v.active = false;
+        }
+
+        env.storage().persistent().set(&key, &v);
+    }
+
+    pub fn get_voucher(env: Env, code: String) -> Voucher {
+        let key = DataKey::VoucherInfo(code);
+        env.storage()
+            .persistent()
+            .get(&key)
+            .expect("voucher not found")
+    }
+
+    pub fn upgrade_contract(env: Env, new_wasm_hash: BytesN<32>) {
+        let owner: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Owner)
+            .expect("not initialized");
+        owner.require_auth();
+        env.deployer().update_current_contract_wasm(new_wasm_hash);
     }
 }
 
