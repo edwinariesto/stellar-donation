@@ -980,6 +980,10 @@ export default function App() {
           title: t.confirmSignature || 'Konfirmasi Tanda Tangan',
           text: t.confirmDonate || 'Silakan konfirmasi transaksi eksekusi diskon di dompet kasir.',
           icon: 'info',
+          allowOutsideClick: false,
+          showConfirmButton: false,
+          didOpen: () => SwalOrig.showLoading()
+        });
 
         const codeSc = nativeToScVal(simulateVoucherCode.trim().toUpperCase(), { type: 'string' });
         const cashierSc = nativeToScVal(userAddress, { type: 'address' });
