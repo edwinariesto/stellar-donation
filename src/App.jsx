@@ -33,7 +33,7 @@ import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import bannerImg from './assets/banner.png';
 import frighterIcon from './image/frighter-icon.png';
 import walletConnectIcon from './image/walletconnect-icon.jfif';
-const DEFAULT_CONTRACT_ID = 'CDQBMFQXXWGG2H6WELWFHHA476WQTZIXYOPTYADBVBC4LRJOROCKPXK2';
+const DEFAULT_CONTRACT_ID = 'CCBRNHJT4M3HXEND7RSOXYSQOWW54CC5MIAQFTI5RKYGDVFFBFD43GTI';
 const NATIVE_XLM_SAC = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
 const initialNet = localStorage.getItem('steldot_last_network') || 'TESTNET';
@@ -1648,7 +1648,7 @@ export default function App() {
           <div className="bg-white rounded-2xl p-6 shadow-ios border border-ios-lightGray/30 flex flex-col justify-between">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-ios-darkGray">{t.totalUsers || 'Total Pengguna'}</span>
-              <div className="text-3xl font-extrabold text-ios-darkText mt-2">{Math.max(1, topDonors.length + (userAddress && totalDonated === 0 ? 1 : 0))}</div>
+              <div className="text-3xl font-extrabold text-ios-darkText mt-2">{topDonors.length}</div>
             </div>
             <p className="text-[11px] text-ios-darkGray mt-4">{t.totalUsersDesc || 'Dompet unik terhubung di jaringan'}</p>
           </div>
