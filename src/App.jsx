@@ -433,7 +433,7 @@ export default function App() {
 
       // Get contract active balance (in SAC token)
       const balRes = await callReadOnly(NATIVE_XLM_SAC, 'balance', [
-        nativeToScVal(Address.fromString(contractId))
+        nativeToScVal(contractId, { type: 'address' })
       ]);
       setContractBalance(balRes ? Number(balRes) / 10000000 : 0);
 
@@ -441,12 +441,12 @@ export default function App() {
       setSyncProgress('Step 2/4: Fetching your wallet data...');
       if (userAddress) {
         const pointsRes = await callReadOnly(contractId, 'get_donor_points', [
-          nativeToScVal(Address.fromString(userAddress))
+          nativeToScVal(userAddress, { type: 'address' })
         ]);
         setLoyaltyPoints(pointsRes ? Number(pointsRes) / 10000000 : 0);
 
         const donorTotalRes = await callReadOnly(contractId, 'get_donor_total_donated', [
-          nativeToScVal(Address.fromString(userAddress))
+          nativeToScVal(userAddress, { type: 'address' })
         ]);
         const total = donorTotalRes ? Number(donorTotalRes) / 10000000 : 0;
         setTotalDonated(total);
@@ -465,7 +465,7 @@ export default function App() {
         }
 
         const statusRes = await callReadOnly(contractId, 'get_donor_successful_claims', [
-          nativeToScVal(Address.fromString(userAddress))
+          nativeToScVal(userAddress, { type: 'address' })
         ]);
         setSuccessfulClaims(Number(statusRes || 0));
 
@@ -749,7 +749,7 @@ export default function App() {
         });
 
         const amountStroops = BigInt(Math.round(amount * 10000000));
-        const donorSc = nativeToScVal(Address.fromString(userAddress));
+        const donorSc = nativeToScVal(userAddress, { type: 'address' });
         const campaignSc = nativeToScVal(Number(campaignId), { type: 'u32' });
         const amountSc = nativeToScVal(amountStroops, { type: 'i128' });
 
@@ -761,7 +761,7 @@ export default function App() {
         
         if (refParam && refParam.startsWith('G') && refParam.length === 56 && refParam !== userAddress) {
           try {
-            args.push(nativeToScVal(Address.fromString(refParam)));
+            args.push(nativeToScVal(refParam, { type: 'address' }));
             funcName = 'donate_with_referral';
           } catch(e) {
             console.error('Invalid ref address', e);
@@ -975,7 +975,7 @@ export default function App() {
           didOpen: () => Swal.showLoading()
         });
 
-        const txRes = await executeTransaction(contractId, 'claim_referral_reward', [nativeToScVal(Address.fromString(userAddress))], userAddress);
+        const txRes = await executeTransaction(contractId, 'claim_referral_reward', [nativeToScVal(userAddress, { type: 'address' })], userAddress);
         
         await refreshData();
         Swal.fire({
@@ -1053,7 +1053,7 @@ export default function App() {
           didOpen: () => Swal.showLoading()
         });
 
-        const donorSc = nativeToScVal(Address.fromString(userAddress));
+        const donorSc = nativeToScVal(userAddress, { type: 'address' });
         await executeTransaction(contractId, 'claim_reward', [donorSc], userAddress);
         
         Swal.fire({
@@ -1109,7 +1109,7 @@ export default function App() {
       setIsLoading(true);
       try {
         const amountSc = nativeToScVal(formValues * 10000000, { type: 'i128' });
-        const ownerSc = nativeToScVal(Address.fromString(userAddress));
+        const ownerSc = nativeToScVal(userAddress, { type: 'address' });
         
         const txRes = await executeTransaction(contractId, 'withdraw', [ownerSc, amountSc], userAddress);
         Swal.fire({
@@ -1191,7 +1191,7 @@ export default function App() {
           didOpen: () => Swal.showLoading()
         });
 
-        const ownerSc = nativeToScVal(Address.fromString(userAddress));
+        const ownerSc = nativeToScVal(userAddress, { type: 'address' });
         const idSc = nativeToScVal(camp.id, { type: 'u32' });
         const titleSc = nativeToScVal(formValues.title);
         const descSc = nativeToScVal(formValues.description);
@@ -1255,7 +1255,7 @@ export default function App() {
           didOpen: () => Swal.showLoading()
         });
 
-        const ownerSc = nativeToScVal(Address.fromString(userAddress));
+        const ownerSc = nativeToScVal(userAddress, { type: 'address' });
         const idSc = nativeToScVal(Number(id), { type: 'u32' });
         const titleSc = nativeToScVal(title);
         const descSc = nativeToScVal(description);
