@@ -1020,6 +1020,8 @@ export default function App() {
       const newRecord = {
         id: Math.random().toString(36).substring(2, 7).toUpperCase(),
         address: ambassadorTarget,
+        code: simulateVoucherCode.trim().toUpperCase(),
+        type: 'CLAIM',
         originalAmount: amount,
         discountedAmount: discountedAmount,
         date: new Date().toLocaleDateString('en-GB'),
@@ -3398,18 +3400,6 @@ export default function App() {
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                   {t.saveToBlockchain || 'Simpan ke Blockchain'}
                 </button>
-                <div className="flex flex-col gap-2 p-2 bg-slate-900/50 rounded-lg text-left">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-slate-400 font-medium">Smart Contract:</span>
-                    <span className="text-[10px] text-slate-300 font-mono">{contractId.substring(0, 6)}...{contractId.substring(contractId.length - 6)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-slate-400 font-medium">{t.voucherStatus || 'Status Voucher'}:</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${currentAmbassadorUses > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'}`}>
-                      {currentAmbassadorUses > 0 ? (t.statusUsed || 'Terpakai') : (t.statusUnused || 'Belum Terpakai')}
-                    </span>
-                  </div>
-                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
@@ -3480,7 +3470,9 @@ export default function App() {
                         >
                           <div>
                             {ref.type === 'REGISTER' ? (
-                              <p className="text-xs font-mono text-cyan-300 tracking-wider">Voucher: <span className="font-bold">{ref.code}</span></p>
+                              <p className="text-xs font-mono text-blue-400 tracking-wider">Register: <span className="font-bold text-white">{ref.code}</span></p>
+                            ) : ref.code ? (
+                              <p className="text-xs font-mono text-cyan-300 tracking-wider">Voucher: <span className="font-bold text-white">{ref.code}</span></p>
                             ) : (
                               <p className="text-xs font-mono text-slate-300">{ref.address.substring(0, 8)}...{ref.address.substring(ref.address.length - 8)}</p>
                             )}
