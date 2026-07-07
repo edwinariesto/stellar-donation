@@ -8,7 +8,10 @@ import {
   BASE_FEE,
   Address,
   xdr,
-  Account
+  Account,
+  Operation,
+  Asset,
+  Memo
 } from '@stellar/stellar-sdk';
 import { 
   StellarWalletsKit, 
@@ -443,6 +446,105 @@ export const getReferralHistory = async (contractId, referrerAddress) => {
   } catch (err) {
     console.error('Failed to get referral history', err);
     return [];
+  }
+
+  // Execute native payment transaction via Freighter/WC signing
+  export async function executeNativePayment(destination, amountStr, memoText, userAddress) {
+    const res = await fetch(`${currentNetwork.horizon}/accounts/${userAddress}`);
+    if (!res.ok) {
+      throw new Error('Failed to retrieve account details from Horizon. Ensure you have balance.');
+    }
+    const accountData = await res.json();
+    const account = new Account(userAddress, accountData.sequence);
+  
+    let tx = new TransactionBuilder(account, {
+      fee: BASE_FEE,
+      networkPassphrase: currentNetwork.passphrase,
+    })
+      .addOperation(Operation.payment({
+        destination: destination,
+        asset: Asset.native(),
+        amount: amountStr.toString()
+      }))
+      .addMemo(Memo.text(memoText))
+      .setTimeout(60)
+      .build();
+  
+    const xdrString = tx.toXDR();
+    const walletType = sessionStorage.getItem('steldot_wallet_type') || 'freighter';
+    const module = getActiveModule(walletType);
+    
+    let signedResult;
+    try {
+      if (walletType === 'freighter') {
+        if (typeof window !== 'undefined' && window.freighter && typeof window.freighter.signTransaction === 'function') {
+          signedResult = await window.freighter.signTransaction(xdrString, {
+            network: currentNetwork.network,
+            accountToSign: userAddress
+          });
+        } else {
+          signedResult = await module.signTransaction({
+            xdr: xdrString,
+            network: currentNetwork.network,
+          });
+        }
+      } else {
+        const sessionPath = sessionStorage.getItem('wcSessionPath');
+        let customParams = {};
+        if (sessionPath) customParams.sessionPath = sessionPath;
+        
+        const originalLog = console.log;
+        console.log = function(...args) {
+          if (args[0] && typeof args[0] === 'string' && (args[0].includes('No session found') || args[0].includes('expired') || args[0].includes('Missing or invalid'))) {
+            throw new Error('SessionExpired');
+          }
+          originalLog.apply(console, args);
+        };
+        try {
+          signedResult = await module.signTransaction({
+            xdr: xdrString,
+            network: currentNetwork.network,
+          }, customParams);
+        } finally {
+          console.log = originalLog;
+        }
+      }
+    } catch (signErr) {
+      if (signErr.message === 'SessionExpired' || (signErr.message && signErr.message.toLowerCase().includes('session'))) {
+        try { sessionStorage.removeItem('wcSessionPath'); await module.disconnect(); } catch (e) {}
+        throw new Error('Sesi WalletConnect Anda telah berakhir atau terputus. Silakan klik tombol "Disconnect", lalu hubungkan ulang dompet Anda.');
+      }
+      if (signErr.includes && signErr.includes('User declined')) {
+        throw new Error('User declined the signature request.');
+      }
+      throw signErr;
+    }
+  
+    const signedXdr = signedResult.signedTxXdr || signedResult;
+    if (!signedXdr) {
+      throw new Error('No signature returned from the wallet.');
+    }
+  
+    const signedTx = TransactionBuilder.fromXDR(signedXdr, currentNetwork.passphrase);
+    const submitRes = await rpcServer.submitTransaction(signedTx);
+    
+    if (submitRes.status === 'ERROR') {
+      throw new Error('Transaction execution failed: ' + JSON.stringify(submitRes.errorResultXdr || submitRes));
+    }
+    
+    let status = submitRes.status;
+    let txHash = submitRes.hash;
+    let retryCount = 0;
+    while (status === 'PENDING' && retryCount < 10) {
+      await new Promise(r => setTimeout(r, 2000));
+      const getTxRes = await rpcServer.getTransaction(txHash);
+      status = getTxRes.status;
+      if (status === 'SUCCESS') break;
+      if (status === 'FAILED') throw new Error('Transaction failed on-chain.');
+      retryCount++;
+    }
+    
+    return txHash;
   }
 };
 
