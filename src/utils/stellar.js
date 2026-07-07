@@ -457,10 +457,9 @@ export async function executeTransaction(contractId, functionName, args = [], us
         throw new Error(signedResult.error);
       }
     } else {
-      signedResult = await module.signTransaction({
-        xdr: xdrString,
+      signedResult = await module.signTransaction(xdrString, {
         networkPassphrase: currentNetwork.passphrase,
-        accountToSign: account.accountId()
+        address: account.accountId()
       });
     }
   } catch (err) {
