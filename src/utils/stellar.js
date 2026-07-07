@@ -74,16 +74,16 @@ export async function connectWallet(walletType) {
   return new Promise(async (resolve, reject) => {
     try {
       if (walletType === 'freighter') {
-        try {
-          await setAllowed();
-        } catch(e) { console.warn("setAllowed failed", e); }
+        const connected = await isConnected();
+        if (!connected) return reject(new Error("Freighter not detected"));
         
-        try {
-          const access = await requestAccess();
-          if (access && access.error) {
-            return reject(new Error(access.error));
-          }
-        } catch(e) { console.warn("requestAccess failed", e); }
+        let access = await requestAccess();
+        if (access && access.error) return reject(new Error(access.error));
+        
+        let pubKey = await getPublicKey();
+        if (pubKey && pubKey.error) return reject(new Error(pubKey.error));
+        
+        return resolve(pubKey);
       }
       
       const module = getActiveModule(walletType);
@@ -99,6 +99,10 @@ export async function connectWallet(walletType) {
 export async function getWalletPublicKey() {
   try {
     const walletType = sessionStorage.getItem('steldot_wallet_type') || 'freighter';
+    if (walletType === 'freighter') {
+      const pubKey = await getPublicKey();
+      return (pubKey && !pubKey.error) ? pubKey : null;
+    }
     const module = getActiveModule(walletType);
     const res = await module.getAddress();
     return res.address || res;
@@ -443,10 +447,21 @@ export async function executeTransaction(contractId, functionName, args = [], us
   const module = getActiveModule(walletType);
   let signedResult;
   try {
-    signedResult = await module.signTransaction(xdrString, {
-      networkPassphrase: currentNetwork.passphrase,
-      address: account.accountId()
-    });
+    if (walletType === 'freighter') {
+      signedResult = await freighterSignTransaction(xdrString, {
+        network: currentNetwork.networkName,
+        networkPassphrase: currentNetwork.passphrase,
+        accountToSign: account.accountId()
+      });
+      if (signedResult && signedResult.error) {
+        throw new Error(signedResult.error);
+      }
+    } else {
+      signedResult = await module.signTransaction(xdrString, {
+        networkPassphrase: currentNetwork.passphrase,
+        address: account.accountId()
+      });
+    }
   } catch (err) {
     const errMsg = err.message || err.toString();
     if (errMsg.toLowerCase().includes("session topic doesn't exist") || errMsg.toLowerCase().includes("no matching key")) {
