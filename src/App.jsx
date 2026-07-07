@@ -6,7 +6,6 @@ import { translations } from './utils/i18n';
 import SwalOrig from 'sweetalert2';
 
 const Swal = SwalOrig.mixin({
-  buttonsStyling: false,
   customClass: {
     popup: 'overflow-hidden !pb-0',
     actions: 'flex w-full mt-6 !mb-0 !border-none',
@@ -564,12 +563,11 @@ export default function App() {
             setPartnerAddress(null);
             const newUrl = window.location.origin + window.location.pathname;
             window.history.pushState({path:newUrl},'',newUrl);
-            SwalOrig.fire({
+            Swal.fire({
                 title: t.invalidReferralTitle || 'Tautan Referral Tidak Berlaku',
                 text: t.invalidReferralDesc || 'Tautan referral hanya dapat digunakan oleh pengguna baru yang belum pernah berdonasi. Tautan telah dihapus dari sesi Anda.',
                 icon: 'warning',
-                confirmButtonColor: '#FF3B30'
-            });
+                });
         }
 
         const statusRes = await callReadOnly(contractId, 'get_donor_successful_claims', [
@@ -695,7 +693,7 @@ export default function App() {
       }));
     } catch (err) {
       console.error(err);
-      SwalOrig.fire({ toast: true, position: 'top-end', icon: 'error', title: t.translateFailed, showConfirmButton: false, timer: 3000 });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: t.translateFailed, showConfirmButton: false, timer: 3000 });
       setTranslatedCampaigns(prev => {
         const next = { ...prev };
         delete next[camp.id];
@@ -782,9 +780,9 @@ export default function App() {
             sessionStorage.setItem('steldot_wallet_type', 'freighter');
             const balance = await getXlmBalance(address);
             setFreighterBalance(balance);
-            Swal.fire({ title: t.walletConnected, text: `${t.address}: ${address.substring(0, 6)}...${address.substring(50)}`, icon: 'success', confirmButtonColor: '#007AFF' });
+            Swal.fire({ title: t.walletConnected, text: `${t.address}: ${address.substring(0, 6)}...${address.substring(50)}`, icon: 'success', });
           } catch (err) {
-            Swal.fire({ title: t.connError, text: getTranslatedError(err.message || err), icon: 'error', confirmButtonColor: '#FF3B30' });
+            Swal.fire({ title: t.connError, text: getTranslatedError(err.message || err), icon: 'error', });
           }
         });
         
@@ -797,9 +795,9 @@ export default function App() {
             sessionStorage.setItem('steldot_wallet_type', 'wallet_connect');
             const balance = await getXlmBalance(address);
             setFreighterBalance(balance);
-            Swal.fire({ title: t.walletConnected, text: `${t.address}: ${address.substring(0, 6)}...${address.substring(50)}`, icon: 'success', confirmButtonColor: '#007AFF' });
+            Swal.fire({ title: t.walletConnected, text: `${t.address}: ${address.substring(0, 6)}...${address.substring(50)}`, icon: 'success', });
           } catch (err) {
-            Swal.fire({ title: t.connError, text: getTranslatedError(err.message || err), icon: 'error', confirmButtonColor: '#FF3B30' });
+            Swal.fire({ title: t.connError, text: getTranslatedError(err.message || err), icon: 'error', });
           }
         });
       }
@@ -814,8 +812,7 @@ export default function App() {
         title: t.invalidAmount,
         text: t.invalidAmountDesc,
         icon: 'warning',
-        confirmButtonColor: '#007AFF'
-      });
+        });
       return;
     }
 
@@ -827,8 +824,7 @@ export default function App() {
           title: t.donationExceedsTarget,
           text: typeof t.donationExceedsTargetDesc === 'function' ? t.donationExceedsTargetDesc(remaining.toFixed(2)) : t.donationExceedsTargetDesc,
           icon: 'warning',
-          confirmButtonColor: '#FF3B30'
-        });
+          });
         return;
       }
     }
@@ -858,7 +854,6 @@ export default function App() {
           title: t.donationSuccess,
           html: t.donationSuccessMock(amount),
           icon: 'success',
-          confirmButtonColor: '#34C759',
           timer: 5000,
           timerProgressBar: true
         }).then(() => {
@@ -908,7 +903,6 @@ export default function App() {
           title: t.donationSuccess,
           html: t.donationProcessed(amount, txRes.hash, networkMode),
           icon: 'success',
-          confirmButtonColor: '#34C759',
           timer: 5000,
           timerProgressBar: true
         }).then(() => {
@@ -919,8 +913,7 @@ export default function App() {
           title: t.txFailed,
           text: getTranslatedError(err.message || err),
           icon: 'error',
-          confirmButtonColor: '#FF3B30'
-        });
+          });
       } finally {
         setIsLoading(false);
       }
@@ -941,42 +934,38 @@ export default function App() {
     if (isNaN(amount) || amount <= 0) return;
 
     if (!/^[a-zA-Z0-9]{5}$/.test(simulateVoucherCode.trim())) {
-      SwalOrig.fire({
+      Swal.fire({
         icon: 'warning',
         title: t.invalidVoucherFormat,
         text: t.invalidVoucherFormatDesc,
-        confirmButtonColor: '#FF3B30'
-      });
+        });
       return;
     }
 
     if (!/^G[A-Z0-9]{55}$/.test(ambassadorTarget.trim())) {
-      SwalOrig.fire({
+      Swal.fire({
         icon: 'warning',
         title: t.invalidTargetAddress || 'Format Alamat Tidak Valid',
         text: t.invalidTargetAddressDesc || 'Alamat dompet target tidak valid. Pastikan alamat dimulai dengan G dan berjumlah 56 karakter.',
-        confirmButtonColor: '#FF3B30'
-      });
+        });
       return;
     }
 
     const usesCount = ambassadorHistory.filter(r => r.type !== 'REGISTER' && r.address.toLowerCase() === ambassadorTarget.toLowerCase()).length;
     
     if (usesCount >= 5) {
-      SwalOrig.fire({
+      Swal.fire({
         icon: 'error',
         title: t.limitReached || 'Batas Tercapai',
         text: t.usageLimitReached || 'Batas penggunaan 5 kali telah tercapai untuk dompet ini.',
         confirmButtonText: t.close || 'Tutup',
-        buttonsStyling: false,
-        customClass: { confirmButton: 'bg-slate-800 text-white font-bold py-3 w-full rounded-xl' }
-      });
+        });
       return;
     }
 
     const activeCampaigns = campaigns.filter(c => c.active && c.raised < c.target);
     if (activeCampaigns.length === 0) {
-      SwalOrig.fire({ icon: 'error', text: 'Tidak ada kampanye aktif untuk diproses ke blockchain.' });
+      Swal.fire({ icon: 'error', text: 'Tidak ada kampanye aktif untuk diproses ke blockchain.' });
       return;
     }
 
@@ -987,13 +976,13 @@ export default function App() {
       let mockHash = '';
 
       if (!isMockMode) {
-        SwalOrig.fire({
+        Swal.fire({
           title: t.confirmSignature || 'Konfirmasi Tanda Tangan',
           text: t.confirmDonate || 'Silakan konfirmasi transaksi eksekusi diskon di dompet kasir.',
           icon: 'info',
           allowOutsideClick: false,
           showConfirmButton: false,
-          didOpen: () => SwalOrig.showLoading()
+          didOpen: () => Swal.showLoading()
         });
 
         const codeSc = nativeToScVal(simulateVoucherCode.trim().toUpperCase(), { type: 'string' });
@@ -1002,15 +991,13 @@ export default function App() {
           const voucher = await callReadOnly(contractId, 'get_voucher', [codeSc]);
           const ownerStr = voucher?.owner?.toString ? voucher.owner.toString() : voucher?.owner;
           if (ownerStr && ownerStr.toUpperCase() !== ambassadorTarget.trim().toUpperCase()) {
-            SwalOrig.close();
-            SwalOrig.fire({
+            Swal.close();
+            Swal.fire({
               icon: 'error',
               title: t.invalidOwner || 'Akses Ditolak',
               text: t.invalidOwnerDesc || 'Alamat dompet target yang dimasukkan bukan pemilik sah dari kode voucher ini. Pastikan Anda memasukkan dompet pemilik voucher yang benar.',
               confirmButtonText: t.close || 'Tutup',
-              buttonsStyling: false,
-              customClass: { confirmButton: 'bg-slate-800 text-white font-bold py-3 w-full rounded-xl' }
-            });
+              });
             return;
           }
         } catch (e) {
@@ -1027,12 +1014,12 @@ export default function App() {
         );
         mockHash = txRes.hash;
       } else {
-        SwalOrig.fire({
+        Swal.fire({
           title: t.blockchainSync || 'Memproses di Blockchain...',
           html: 'Menyimpan transaksi eksekusi voucher ke blockchain...',
           allowOutsideClick: false,
           showConfirmButton: false,
-          didOpen: () => SwalOrig.showLoading()
+          didOpen: () => Swal.showLoading()
         });
         await new Promise(r => setTimeout(r, 2000));
         mockHash = '0x' + Math.random().toString(16).substring(2, 10).toUpperCase() + '...';
@@ -1064,25 +1051,22 @@ export default function App() {
       try { localStorage.setItem('steldot_ambassador_history', JSON.stringify(updatedHistory)); } catch (e) {}
         setSimulateVoucherCode('');
       
-      SwalOrig.fire({
+      Swal.fire({
         icon: 'success',
         title: t.success || 'Berhasil',
         text: t.discountApplied || `Diskon berhasil dieksekusi secara on-chain! Total potongan: ${discountedAmount.toFixed(2)} XLM.`,
-        confirmButtonText: 'OK',
-        buttonsStyling: true,
-        customClass: { confirmButton: 'bg-[#34C759] hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl' }
-      });
+        }).then(() => {
+          window.location.reload();
+        });
     } catch (err) {
       console.error(err);
-      SwalOrig.close();
-      SwalOrig.fire({
+      Swal.close();
+      Swal.fire({
         title: t.txFailed || 'Transaksi Gagal',
         text: getTranslatedError(err.message || err),
         icon: 'error',
         confirmButtonText: t.close || 'Tutup',
-        buttonsStyling: false,
-        customClass: { confirmButton: 'bg-red-600 text-white font-bold py-3 w-full rounded-xl' }
-      });
+        });
     }
   };
 
@@ -1135,8 +1119,7 @@ export default function App() {
         title: t.pointsInsufficient,
         text: 'No referral balance to claim',
         icon: 'warning',
-        confirmButtonColor: '#007AFF'
-      });
+        });
       return;
     }
 
@@ -1145,8 +1128,7 @@ export default function App() {
         title: t.treasuryDeficit,
         text: typeof t.treasuryDeficitDesc === 'function' ? t.treasuryDeficitDesc(contractBalance.toFixed(2)) : t.treasuryDeficitDesc,
         icon: 'error',
-        confirmButtonColor: '#FF3B30'
-      });
+        });
       return;
     }
 
@@ -1160,8 +1142,7 @@ export default function App() {
           title: 'Claim Successful',
           text: `You have successfully claimed your referral reward.`,
           icon: 'success',
-          confirmButtonColor: '#007AFF'
-        });
+          });
       }, 1500);
     } else {
       try {
@@ -1180,16 +1161,14 @@ export default function App() {
           title: 'Claim Successful',
           html: `<a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/tx/${txRes.hash}" target="_blank" class="text-ios-blue underline">View on Explorer</a>`,
           icon: 'success',
-          confirmButtonColor: '#007AFF'
-        });
+          });
       } catch (err) {
         console.error('Failed to claim referral reward', err);
         Swal.fire({
           title: t.txFailed,
           text: getTranslatedError(err.message || err),
           icon: 'error',
-          confirmButtonColor: '#FF3B30'
-        });
+          });
       } finally {
         setIsLoading(false);
       }
@@ -1208,8 +1187,7 @@ export default function App() {
         title: t.pointsInsufficient,
         text: t.pointsInsufficientDesc,
         icon: 'warning',
-        confirmButtonColor: '#007AFF'
-      });
+        });
       return;
     }
 
@@ -1220,8 +1198,7 @@ export default function App() {
         title: t.treasuryDeficit,
         text: typeof t.treasuryDeficitDesc === 'function' ? t.treasuryDeficitDesc(contractBalance.toFixed(2)) : t.treasuryDeficitDesc,
         icon: 'error',
-        confirmButtonColor: '#FF3B30'
-      });
+        });
       return;
     }
 
@@ -1238,8 +1215,7 @@ export default function App() {
           title: t.rewardRequested || 'Claim Successful',
           text: `You have successfully claimed ${rewardXlm} XLM.`,
           icon: 'success',
-          confirmButtonColor: '#007AFF'
-        }).then(() => window.location.reload());
+          }).then(() => window.location.reload());
       }, 1500);
     } else {
       try {
@@ -1258,16 +1234,14 @@ export default function App() {
           title: t.claimSubmitted || 'Claim Successful',
           text: `You have successfully received ${rewardXlm} XLM in your wallet.`,
           icon: 'success',
-          confirmButtonColor: '#34C759'
-        }).then(() => window.location.reload());
+          }).then(() => window.location.reload());
         await refreshData();
       } catch (err) {
         Swal.fire({
           title: t.requestFailed,
           text: getTranslatedError(err.message || err),
           icon: 'error',
-          confirmButtonColor: '#FF3B30'
-        });
+          });
       } finally {
         setIsLoading(false);
       }
@@ -1314,16 +1288,14 @@ export default function App() {
           title: t.withdrawSuccess,
           html: t.withdrawSuccessDesc(formValues, txRes.hash, networkMode),
           icon: 'success',
-          confirmButtonColor: '#34C759'
-        }).then(() => window.location.reload());
+          }).then(() => window.location.reload());
         await refreshData();
       } catch (err) {
         Swal.fire({
           title: t.withdrawFailed,
           text: getTranslatedError(err.message || err),
           icon: 'error',
-          confirmButtonColor: '#FF3B30'
-        });
+          });
       } finally {
         setIsLoading(false);
       }
@@ -1394,29 +1366,29 @@ export default function App() {
     const active = editingCampaign.active;
 
     if (isNaN(id) || isNaN(target) || target <= 0 || !title || !description || !clientWallet || !expirationStr) {
-      Swal.fire({ title: t.invalidInputs, text: 'Harap isi semua kolom wajib.', icon: 'warning', confirmButtonColor: '#FF3B30' });
+      Swal.fire({ title: t.invalidInputs, text: 'Harap isi semua kolom wajib.', icon: 'warning', });
       return;
     }
 
     if (description.split(/\s+/).length <= 2) {
-      Swal.fire({ title: t.shortDescription, text: t.shortDescriptionDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+      Swal.fire({ title: t.shortDescription, text: t.shortDescriptionDesc, icon: 'warning', });
       return;
     }
 
     if (clientWallet.includes(' ')) {
-      Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+      Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc, icon: 'warning', });
       return;
     }
 
     if (youtubeLink && !/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/.test(youtubeLink)) {
-      Swal.fire({ title: t.invalidYoutube, text: t.invalidYoutubeDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+      Swal.fire({ title: t.invalidYoutube, text: t.invalidYoutubeDesc, icon: 'warning', });
       return;
     }
 
     const expirationTime = new Date(expirationStr).getTime();
     const oneWeekFromNow = Date.now() + (7 * 24 * 60 * 60 * 1000);
     if (expirationTime < new Date(new Date(oneWeekFromNow).setHours(0,0,0,0)).getTime()) {
-      Swal.fire({ title: t.invalidDate, text: t.invalidDateDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+      Swal.fire({ title: t.invalidDate, text: t.invalidDateDesc, icon: 'warning', });
       return;
     }
     
@@ -1447,7 +1419,7 @@ export default function App() {
         const activeSc = nativeToScVal(active);
         const youtubeSc = nativeToScVal(youtubeLink || '', { type: 'string' });
         if (!clientWallet || !clientWallet.startsWith('G') || clientWallet.length !== 56) {
-          Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+          Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc, icon: 'warning', });
           setIsLoading(false);
           return;
         }
@@ -1485,29 +1457,29 @@ export default function App() {
     const expirationStr = newCampaign.expiration;
 
     if (isNaN(id) || isNaN(target) || target <= 0 || !title || !description || !clientWallet || !expirationStr) {
-      Swal.fire({ title: t.invalidInputs, text: t.invalidInputsDesc || 'Harap isi semua kolom wajib.', icon: 'warning', confirmButtonColor: '#FF3B30' });
+      Swal.fire({ title: t.invalidInputs, text: t.invalidInputsDesc || 'Harap isi semua kolom wajib.', icon: 'warning', });
       return;
     }
 
     if (description.split(/\s+/).length <= 2) {
-      Swal.fire({ title: t.shortDescription, text: t.shortDescriptionDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+      Swal.fire({ title: t.shortDescription, text: t.shortDescriptionDesc, icon: 'warning', });
       return;
     }
 
     if (clientWallet.includes(' ')) {
-      Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+      Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc, icon: 'warning', });
       return;
     }
 
     if (youtubeLink && !/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/.test(youtubeLink)) {
-      Swal.fire({ title: t.invalidYoutube, text: t.invalidYoutubeDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+      Swal.fire({ title: t.invalidYoutube, text: t.invalidYoutubeDesc, icon: 'warning', });
       return;
     }
 
     const expirationTime = new Date(expirationStr).getTime();
     const oneWeekFromNow = Date.now() + (7 * 24 * 60 * 60 * 1000);
     if (expirationTime < new Date(new Date(oneWeekFromNow).setHours(0,0,0,0)).getTime()) {
-      Swal.fire({ title: t.invalidDate, text: t.invalidDateDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+      Swal.fire({ title: t.invalidDate, text: t.invalidDateDesc, icon: 'warning', });
       return;
     }
     
@@ -1521,8 +1493,7 @@ export default function App() {
         title: t.campaignCreated,
         text: t.campaignCreatedMock,
         icon: 'success',
-        confirmButtonColor: '#34C759'
-      }).then(() => window.location.reload());
+        }).then(() => window.location.reload());
     } else {
       try {
         setIsLoading(true);
@@ -1541,7 +1512,7 @@ export default function App() {
         const targetSc = nativeToScVal(targetStroops, { type: 'i128' });
         const youtubeSc = nativeToScVal(youtubeLink || '', { type: 'string' });
         if (!clientWallet || !clientWallet.startsWith('G') || clientWallet.length !== 56) {
-          Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc, icon: 'warning', confirmButtonColor: '#FF3B30' });
+          Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc, icon: 'warning', });
           setIsLoading(false);
           return;
         }
@@ -1559,8 +1530,7 @@ export default function App() {
           title: t.campaignAdded,
           text: typeof t.campaignAddedDesc === 'function' ? t.campaignAddedDesc(networkMode) : t.campaignAddedDesc,
           icon: 'success',
-          confirmButtonColor: '#34C759'
-        }).then(() => window.location.reload());
+          }).then(() => window.location.reload());
         const unixTime = Math.floor(Date.now() / 1000);
         setNewCampaign({ id: unixTime, title: '', description: '', target: '', youtube_link: '', client_wallet: '', expiration: '' });
         await refreshData();
@@ -1577,8 +1547,7 @@ export default function App() {
           title: t.deploymentFailed,
           text: errorText,
           icon: 'error',
-          confirmButtonColor: '#FF3B30'
-        });
+          });
       } finally {
         setIsLoading(false);
       }
@@ -1643,8 +1612,7 @@ export default function App() {
           title: t.updated,
           text: t.updatedDesc,
           icon: 'success',
-          confirmButtonColor: '#007AFF'
-        });
+          });
       }
     });
   };
@@ -1677,8 +1645,7 @@ export default function App() {
         title: t.monthlyStatsTitle,
         text: t.noStatsAvailable,
         icon: 'info',
-        confirmButtonColor: '#007AFF'
-      });
+        });
       return;
     }
 
@@ -1696,7 +1663,7 @@ export default function App() {
 
     const statsArray = Object.entries(stats).map(([period, total]) => ({ period, total }));
 
-    SwalOrig.fire({
+    Swal.fire({
       title: t.monthlyStatsTitle,
       html: `
         <div id="claim-stats-container" style="background: white; padding: 24px; border-radius: 20px; width: 100%; box-sizing: border-box; text-align: left;">
@@ -2465,7 +2432,7 @@ export default function App() {
                       <div 
                         key={claim.id}
                         onClick={() => {
-                          SwalOrig.fire({
+                          Swal.fire({
                             title: t.transactionDetail,
                             html: `
                               <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
@@ -2484,7 +2451,6 @@ export default function App() {
                             `,
                             icon: 'info',
                             confirmButtonText: t.close,
-                            buttonsStyling: false,
                             customClass: { 
                               popup: 'rounded-2xl overflow-hidden !p-0',
                               htmlContainer: '!p-0 !m-0',
@@ -2958,7 +2924,7 @@ export default function App() {
                       <div 
                         key={tx.id}
                         onClick={() => {
-                          SwalOrig.fire({
+                          Swal.fire({
                             title: t.transactionDetail,
                             html: `
                               <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
@@ -2981,7 +2947,6 @@ export default function App() {
                             `,
                             icon: 'success',
                             confirmButtonText: t.close,
-                            buttonsStyling: false,
                             customClass: { 
                               popup: 'rounded-2xl overflow-hidden !p-0',
                               htmlContainer: '!p-0 !m-0',
@@ -3063,7 +3028,7 @@ export default function App() {
                       <div 
                         key={claim.id}
                         onClick={() => {
-                          SwalOrig.fire({
+                          Swal.fire({
                             title: t.claimDetailTitle,
                             html: `
                               <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
@@ -3086,7 +3051,6 @@ export default function App() {
                             `,
                             icon: 'success',
                             confirmButtonText: t.close,
-                            buttonsStyling: false,
                             customClass: { 
                               popup: 'rounded-2xl overflow-hidden !p-0',
                               htmlContainer: '!p-0 !m-0',
@@ -3166,7 +3130,7 @@ export default function App() {
                 ) : (
                   currentAllTxs.map(tx => (
                     <div key={tx.id} onClick={() => {
-                        SwalOrig.fire({
+                        Swal.fire({
                           title: t.transactionDetail,
                           html: `
                             <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
@@ -3189,7 +3153,6 @@ export default function App() {
                           `,
                           icon: 'success',
                           confirmButtonText: t.close,
-                          buttonsStyling: false,
                           customClass: { 
                             popup: 'rounded-2xl overflow-hidden !p-0', htmlContainer: '!p-0 !m-0', title: '!pt-6', actions: 'w-full !m-0 !p-0 border-t border-gray-100', confirmButton: 'w-full bg-ios-blue hover:bg-blue-600 text-white font-bold py-4 rounded-none transition-colors !m-0 border-none outline-none focus:outline-none focus:ring-0'
                           }
@@ -3254,7 +3217,7 @@ export default function App() {
                 ) : (
                   currentClaims.map(claim => (
                     <div key={claim.id} onClick={() => {
-                        SwalOrig.fire({
+                        Swal.fire({
                           title: t.claimRewardDetail,
                           html: `
                             <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
@@ -3275,7 +3238,6 @@ export default function App() {
                           `,
                           icon: 'success',
                           confirmButtonText: t.close,
-                          buttonsStyling: false,
                           customClass: { 
                             popup: 'rounded-2xl overflow-hidden !p-0',
                             htmlContainer: '!p-0 !m-0',
@@ -3462,7 +3424,7 @@ export default function App() {
                         <div 
                           key={idx} 
                           onClick={() => {
-                            SwalOrig.fire({
+                            Swal.fire({
                               title: t.transactionDetail || 'Detail Transaksi',
                               html: `
                                 <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
@@ -3488,7 +3450,6 @@ export default function App() {
                               `,
                               icon: 'info',
                               confirmButtonText: t.close || 'Tutup',
-                              buttonsStyling: false,
                               customClass: { 
                                 popup: 'rounded-2xl overflow-hidden !p-0',
                                 htmlContainer: '!p-0 !m-0',
@@ -3713,7 +3674,7 @@ export default function App() {
                           key={idx} 
                           className="bg-slate-800/80 hover:bg-slate-700/80 cursor-pointer transition-colors rounded-xl p-3 border border-slate-700/50 flex justify-between items-center"
                           onClick={() => {
-                            SwalOrig.fire({
+                            Swal.fire({
                               title: t.claimDetailTitle || 'Detail Transaksi',
                               html: `
                                 <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
@@ -3728,7 +3689,6 @@ export default function App() {
                               `,
                               icon: 'info',
                               confirmButtonText: t.close || 'Tutup',
-                              buttonsStyling: false,
                               customClass: { 
                                 popup: 'rounded-2xl overflow-hidden !p-0',
                                 htmlContainer: '!p-0 !m-0',
