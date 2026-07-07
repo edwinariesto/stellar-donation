@@ -398,30 +398,9 @@ export default function App() {
   }, [userAddress]);
 
   // Check if Freighter status, network, or account changes
+  // Polling has been removed to prevent continuous connection popups on mobile wallets (like Freighter Mobile).
   useEffect(() => {
-    const interval = setInterval(async () => {
-      const installed = await checkWalletInstalled();
-      setFreighterInstalled(installed);
-      
-      if (installed) {
-        // Check network change
-        const net = await checkFreighterNetwork();
-        if (net !== networkMode) {
-          localStorage.setItem('steldot_last_network', net);
-          window.location.reload();
-        }
-
-        // Check account change
-        if (userAddress) {
-          const pk = await getWalletPublicKey();
-          if (pk && pk !== userAddress) {
-            sessionStorage.removeItem('steldot_wallet_address');
-            window.location.reload();
-          }
-        }
-      }
-    }, 2000);
-    return () => clearInterval(interval);
+    // We only rely on the initial connection and manual disconnects.
   }, [networkMode, userAddress]);
 
   // Refresh stats and state
