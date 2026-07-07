@@ -803,6 +803,37 @@ export default function App() {
     setSimulateVoucherCode('');
   };
 
+  const handleProcessDiscount = async () => {
+    if (!ambassadorTarget || !ambassadorAmount || !simulateVoucherCode) return;
+    const amount = parseFloat(ambassadorAmount);
+    if (isNaN(amount) || amount <= 0) return;
+
+    if (simulateVoucherCode.trim().toUpperCase() !== ambassadorVoucherCode) {
+      SwalOrig.fire({
+        icon: 'error',
+        title: t.invalidCode || 'Kode Tidak Valid',
+        text: t.invalidCodeDesc || 'Shopping Voucher Code tidak valid atau sudah kadaluwarsa.',
+        confirmButtonText: t.close || 'Tutup',
+        buttonsStyling: false,
+        customClass: { confirmButton: 'bg-slate-800 text-white font-bold py-3 w-full rounded-xl' }
+      });
+      return;
+    }
+
+    const usesCount = ambassadorHistory.filter(r => r.address.toLowerCase() === ambassadorTarget.toLowerCase()).length;
+    
+    if (usesCount >= 5) {
+      SwalOrig.fire({
+        icon: 'error',
+        title: t.limitReached || 'Batas Tercapai',
+        text: t.usageLimitReached || 'Batas penggunaan 5 kali telah tercapai untuk dompet ini.',
+        confirmButtonText: t.close || 'Tutup',
+        buttonsStyling: false,
+        customClass: { confirmButton: 'bg-slate-800 text-white font-bold py-3 w-full rounded-xl' }
+      });
+      return;
+    }
+
     if (ambassadorTarget.toLowerCase() !== userAddress.toLowerCase()) {
       SwalOrig.fire({
         icon: 'error',
