@@ -1531,13 +1531,15 @@ export default function App() {
 
           
           <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-3">
-              <button 
-                onClick={handleSimulateAmbassadorDiscount}
-                className="flex items-center justify-center p-2 rounded-full bg-cyan-50 hover:bg-cyan-100 text-cyan-600 transition-colors"
-                title={t.simulateDiscount || 'Simulate Discount'}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-              </button>
+              {userAddress && (
+                <button 
+                  onClick={handleSimulateAmbassadorDiscount}
+                  className="flex items-center justify-center p-2 rounded-full bg-cyan-50 hover:bg-cyan-100 text-cyan-600 transition-colors"
+                  title={t.simulateDiscount || 'Simulate Discount'}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                </button>
+              )}
             <div className="flex items-center bg-[#F2F2F7] rounded-full p-0.5 sm:p-1 border border-ios-lightGray/40 mr-1 sm:mr-2">
               <button
                 onClick={() => setLang('en')}
