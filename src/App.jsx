@@ -980,13 +980,17 @@ export default function App() {
           title: t.confirmSignature || 'Konfirmasi Tanda Tangan',
           text: t.confirmDonate || 'Silakan konfirmasi transaksi eksekusi diskon di dompet kasir.',
           icon: 'info',
-          allowOutsideClick: false,
-          showConfirmButton: false,
-          didOpen: () => SwalOrig.showLoading()
-        });
 
-        const txHash = await executeNativePayment(ambassadorTarget, discountedAmount.toFixed(7), 'AMB-VOUCHER', userAddress);
-        mockHash = txHash;
+        const codeSc = nativeToScVal(simulateVoucherCode.trim().toUpperCase(), { type: 'string' });
+        const cashierSc = nativeToScVal(userAddress, { type: 'address' });
+        
+        const txRes = await executeTransaction(
+          contractId,
+          'verify_and_claim_voucher',
+          [codeSc, cashierSc],
+          userAddress
+        );
+        mockHash = txRes.hash;
       } else {
         SwalOrig.fire({
           title: t.blockchainSync || 'Memproses di Blockchain...',
@@ -999,12 +1003,11 @@ export default function App() {
         mockHash = '0x' + Math.random().toString(16).substring(2, 10).toUpperCase() + '...';
       }
 
-      // Add to global UI user tx history so it feels real
+      // Add to local history for UI rendering
       const newTx = {
         hash: mockHash,
-        wallet: userAddress,
-        to: contractId,
-        amount: discountedAmount,
+        type: 'AMBASSADOR_CLAIM',
+        amount: discountedAmount.toFixed(7),
         date: new Date().toLocaleDateString('en-GB')
       };
       setUserTxData([newTx, ...userTxData]);
@@ -1020,30 +1023,15 @@ export default function App() {
       const updatedHistory = [newRecord, ...ambassadorHistory];
       setAmbassadorHistory(updatedHistory);
       try { localStorage.setItem('steldot_ambassador_history', JSON.stringify(updatedHistory)); } catch (e) {}
+        setSimulateVoucherCode('');
       
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      const newCode = Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-      setAmbassadorVoucherCode(newCode);
-      localStorage.setItem('steldot_ambassador_code', newCode);
-      setSimulateVoucherCode('');
-      
-      SwalOrig.close();
       SwalOrig.fire({
         icon: 'success',
-        title: t.discountApplied || 'Diskon berhasil diterapkan!',
-        html: `
-          <div style="font-size: 14px; text-align: left;">
-            <p><strong>${t.targetAddress || 'Target Address'}:</strong> <br><span style="font-size: 11px; word-break: break-all;">${ambassadorTarget}</span></p>
-            <br/>
-            <p><strong>${t.totalPay || 'Total Bayar'}:</strong> ${amount.toFixed(2)} XLM</p>
-            <p style="color: #10b981; font-weight: bold; font-size: 18px; margin-top: 8px;">${t.discountAmount || 'Potongan (2%)'}: ${discountedAmount.toFixed(2)} XLM</p>
-            <p style="font-size: 11px; color: #6b7280; margin-top: 12px;">${t.remainingUses || 'Sisa penggunaan'}: ${4 - usesCount} / 5</p>
-            <p style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Tx: ${mockHash.substring(0, 16)}...</p>
-          </div>
-        `,
-        confirmButtonText: t.close || 'Tutup',
-        buttonsStyling: false,
-        customClass: { confirmButton: 'bg-blue-600 text-white font-bold py-3 w-full rounded-xl hover:bg-blue-700' }
+        title: t.success || 'Berhasil',
+        text: t.discountApplied || `Diskon berhasil dieksekusi secara on-chain! Total potongan: ${discountedAmount.toFixed(2)} XLM.`,
+        confirmButtonText: 'OK',
+        buttonsStyling: true,
+        customClass: { confirmButton: 'bg-[#34C759] hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl' }
       });
     } catch (err) {
       console.error(err);
@@ -1056,6 +1044,33 @@ export default function App() {
         buttonsStyling: false,
         customClass: { confirmButton: 'bg-red-600 text-white font-bold py-3 w-full rounded-xl' }
       });
+    }
+  };
+
+  const handleRegisterVoucher = async () => {
+    if (!ambassadorVoucherCode) return;
+    try {
+      Swal.fire({
+        title: 'Mendaftarkan Voucher',
+        text: 'Mohon konfirmasi transaksi di wallet untuk mendaftarkan kode voucher Anda ke Blockchain...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      const ownerSc = nativeToScVal(userAddress, { type: 'address' });
+      const codeSc = nativeToScVal(ambassadorVoucherCode, { type: 'string' });
+      const maxUsesSc = nativeToScVal(5, { type: 'u32' });
+
+      await executeTransaction(
+        contractId,
+        'register_voucher',
+        [ownerSc, codeSc, maxUsesSc],
+        userAddress
+      );
+
+      Swal.fire('Berhasil!', 'Kode voucher berhasil terdaftar di Blockchain! Sekarang kasir bisa melakukan verifikasi.', 'success');
+    } catch (err) {
+      Swal.fire('Gagal', getTranslatedError(err.message || err), 'error');
     }
   };
 
@@ -3352,7 +3367,15 @@ export default function App() {
 
               <div className="w-full bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 mb-4 text-center">
                 <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">{t.ambassadorVoucherCode || 'Shopping Voucher Code'}</p>
-                <p className="font-mono text-2xl font-bold text-cyan-300 tracking-[0.2em]">{ambassadorVoucherCode}</p>
+                <p className="font-mono text-2xl font-bold text-cyan-300 tracking-[0.2em] mb-2">{ambassadorVoucherCode}</p>
+                <button
+                  onClick={handleRegisterVoucher}
+                  disabled={isLoading}
+                  className="text-[11px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-4 py-2 rounded-lg hover:bg-cyan-500/30 transition-colors w-full uppercase tracking-widest flex items-center justify-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  Simpan ke Blockchain
+                </button>
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
