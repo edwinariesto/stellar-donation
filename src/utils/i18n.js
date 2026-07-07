@@ -307,7 +307,9 @@ export const translations = {
     saveToBlockchain: 'Simpan ke Blockchain',
     voucherStatus: 'Status Voucher',
     statusUsed: 'Terpakai',
-    statusUnused: 'Belum Terpakai'
+    statusUnused: 'Belum Terpakai',
+    voucherNotFound: 'Voucher Tidak Valid',
+    voucherNotFoundDesc: 'Kode voucher tidak ditemukan di blockchain, belum didaftarkan, atau batas penggunaannya (5x) sudah habis.'
   },
   en: {
     walletConnected: 'Wallet Connected',
@@ -621,6 +623,8 @@ export const translations = {
     saveToBlockchain: 'Save to Blockchain',
     voucherStatus: 'Voucher Status',
     statusUsed: 'Used',
-    statusUnused: 'Unused'
+    statusUnused: 'Unused',
+    voucherNotFound: 'Invalid Voucher',
+    voucherNotFoundDesc: 'The voucher code was not found on the blockchain, is unregistered, or its usage limit (5x) has been exhausted.'
   }
 };

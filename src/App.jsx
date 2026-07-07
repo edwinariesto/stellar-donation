@@ -742,6 +742,7 @@ export default function App() {
     const msgLow = msg.toLowerCase();
     if (msgLow.includes('no wallet') || msgLow.includes('not connected') || msgLow.includes('not detected')) return t.errNoWallet;
     if (msgLow.includes('decline') || msgLow.includes('reject') || msgLow.includes('not allow')) return t.errUserDeclined;
+    if (msgLow.includes('unreachablecodereached') || msgLow.includes('invalidaction') || msgLow.includes('voucher not found')) return t.voucherNotFoundDesc || 'Kode voucher tidak ditemukan atau batas penggunaan telah habis.';
     return errMessage;
   };
 
