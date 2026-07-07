@@ -1021,7 +1021,9 @@ export default function App() {
         address: ambassadorTarget,
         originalAmount: amount,
         discountedAmount: discountedAmount,
-        date: new Date().toLocaleDateString('en-GB')
+        date: new Date().toLocaleDateString('en-GB'),
+        time: new Date().toLocaleTimeString('en-GB'),
+        hash: mockHash
       };
   
       const updatedHistory = [newRecord, ...ambassadorHistory];
@@ -3375,11 +3377,23 @@ export default function App() {
                 <button
                   onClick={handleRegisterVoucher}
                   disabled={isLoading}
-                  className="text-[11px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-4 py-2 rounded-lg hover:bg-cyan-500/30 transition-colors w-full uppercase tracking-widest flex items-center justify-center gap-2"
+                  className="text-[11px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-4 py-2 rounded-lg hover:bg-cyan-500/30 transition-colors w-full uppercase tracking-widest flex items-center justify-center gap-2 mb-3"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                  Simpan ke Blockchain
+                  {t.saveToBlockchain || 'Simpan ke Blockchain'}
                 </button>
+                <div className="flex flex-col gap-2 p-2 bg-slate-900/50 rounded-lg text-left">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-slate-400 font-medium">Smart Contract:</span>
+                    <span className="text-[10px] text-slate-300 font-mono">{contractId.substring(0, 6)}...{contractId.substring(contractId.length - 6)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-slate-400 font-medium">{t.voucherStatus || 'Status Voucher'}:</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${currentAmbassadorUses > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'}`}>
+                      {currentAmbassadorUses > 0 ? (t.statusUsed || 'Terpakai') : (t.statusUnused || 'Belum Terpakai')}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
@@ -3410,7 +3424,42 @@ export default function App() {
                       {currentAmbassadors.map((ref, idx) => (
                         <div 
                           key={idx} 
-                          className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50 flex justify-between items-center"
+                          onClick={() => {
+                            SwalOrig.fire({
+                              title: t.transactionDetail || 'Detail Transaksi',
+                              html: `
+                                <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
+                                  <strong style="color: #111827;">${t.contractSource || 'Sumber Kontrak'}:</strong><br/>
+                                  <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
+                                    <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/contract/${contractId}" target="_blank" style="color: inherit; text-decoration: underline;">${contractId}</a>
+                                  </span><br/>
+                                  <strong style="color: #111827;">${t.targetAddress || 'Wallet (Pengguna)'}:</strong><br/>
+                                  <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">
+                                    <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/account/${ref.address}" target="_blank" style="color: #2563eb; text-decoration: underline;">${ref.address}</a>
+                                  </span><br/>
+                                  ${ref.hash ? `<strong style="color: #111827;">Transaction Hash:</strong><br/>
+                                  <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
+                                    <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/tx/${ref.hash}" target="_blank" style="color: #2563eb; text-decoration: underline;">${ref.hash}</a>
+                                  </span><br/>` : ''}
+                                  <strong style="color: #111827;">${t.originalAmount || 'Nominal Asli'}:</strong> ${ref.originalAmount.toFixed(2)} XLM<br/>
+                                  <strong style="color: #111827;">${t.discountAmount || 'Potongan'}:</strong> -${(ref.originalAmount - ref.discountedAmount).toFixed(2)} XLM<br/>
+                                  <strong style="color: #111827;">${t.totalPay || 'Harga Bayar'}:</strong> ${ref.discountedAmount.toFixed(2)} XLM<br/><br/>
+                                  <strong style="color: #111827;">${t.dateLabel || 'Tanggal'}:</strong> ${ref.date} ${ref.time || ''}<br/><br/>
+                                  <strong style="color: #111827;">${t.statusLabel || 'Status'}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.successful ? t.successful.toUpperCase() : 'SUKSES'}</span>
+                                </div>
+                              `,
+                              icon: 'info',
+                              confirmButtonText: t.close || 'Tutup',
+                              buttonsStyling: false,
+                              customClass: { 
+                                popup: 'rounded-2xl overflow-hidden !p-0',
+                                htmlContainer: '!p-0 !m-0',
+                                title: '!pt-6 !pb-4 !text-lg !font-bold text-gray-800 border-b border-gray-100 mb-4',
+                                confirmButton: 'bg-ios-blue text-white font-bold py-3 px-6 rounded-xl w-[calc(100%-32px)] mx-4 mb-4 mt-2'
+                              }
+                            });
+                          }}
+                          className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50 flex justify-between items-center cursor-pointer hover:bg-slate-700/80 transition-colors"
                         >
                           <div>
                             <p className="text-xs font-mono text-slate-300">{ref.address.substring(0, 8)}...{ref.address.substring(ref.address.length - 8)}</p>
@@ -3418,7 +3467,7 @@ export default function App() {
                           </div>
                           <div className="flex flex-col items-end">
                             <span className="text-[10px] font-bold text-cyan-400 mb-0.5"><span className="line-through text-slate-500 mr-1">{ref.originalAmount.toFixed(2)}</span>{ref.discountedAmount.toFixed(2)} XLM</span>
-                            <span className="text-[9px] font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded-md uppercase">+ Sukses</span>
+                            <span className="text-[9px] font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded-md uppercase">+ {t.successful || 'Sukses'}</span>
                           </div>
                         </div>
                       ))}
