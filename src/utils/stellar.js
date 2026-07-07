@@ -415,12 +415,13 @@ export const getReferralHistory = async (contractId, referrerAddress) => {
         const topic0 = scValToNative(evt.topic[0]);
         if (topic0 === 'referral') {
           const referrer = scValToNative(evt.topic[1]);
-          if (referrer === referrerAddress) {
+          if (referrerAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O' || referrer === referrerAddress) {
             const donorAddress = scValToNative(evt.value);
             const txHashKey = evt.txHash || evt.id.substring(0, 16);
             const amount = donateAmounts[txHashKey] || 0;
             referrals.push({
               id: evt.id,
+              referrer,
               donorAddress,
               amount,
               hash: evt.txHash,

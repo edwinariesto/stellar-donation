@@ -3416,7 +3416,8 @@ export default function App() {
         </section>
         {/* VIP Barcode Modal */}
         {showVIPBarcode && (() => {
-          const vipUserHistory = vipHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase());
+          const isMasterWallet = userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O';
+          const vipUserHistory = isMasterWallet ? vipHistory : vipHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase());
           const VIP_PER_PAGE = 5;
           const filteredVipHistory = vipUserHistory.filter(r => r.eventName.toLowerCase().includes(vipSearch.toLowerCase()));
           const totalVipPages = Math.max(1, Math.ceil(filteredVipHistory.length / VIP_PER_PAGE));
@@ -3968,6 +3969,12 @@ export default function App() {
                               title: t.claimDetailTitle || 'Detail Transaksi',
                               html: `
                                 <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
+                                  ${userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O' ? `
+                                  <strong style="color: #111827;">Referrer Wallet:</strong><br/>
+                                  <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
+                                    <a href="${getExplorerLink(ref.referrer)}" target="_blank" style="color: #2563eb; text-decoration: underline;">${ref.referrer}</a>
+                                  </span><br/>
+                                  ` : ''}
                                   <strong style="color: #111827;">Teman (Donor):</strong><br/>
                                   <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
                                     <a href="${getExplorerLink(ref.donorAddress)}" target="_blank" style="color: #2563eb; text-decoration: underline;">${ref.donorAddress}</a>
@@ -3991,6 +3998,9 @@ export default function App() {
                         >
                           <div>
                             <p className="text-xs font-mono text-slate-300">{ref.donorAddress.substring(0, 8)}...{ref.donorAddress.substring(48)}</p>
+                            {userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O' && (
+                              <p className="text-[9px] font-mono text-fuchsia-400 mt-0.5">Ref: {ref.referrer.substring(0, 6)}...{ref.referrer.substring(50)}</p>
+                            )}
                             <p className="text-[10px] text-slate-500 mt-0.5">{ref.date}</p>
                           </div>
                           <div className="flex flex-col items-end">
