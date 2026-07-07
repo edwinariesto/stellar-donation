@@ -286,7 +286,7 @@ export default function App() {
   const [showSimulateForm, setShowSimulateForm] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const AMBASSADOR_PER_PAGE = 5;
-  const filteredAmbassadors = ambassadorHistory.filter(r => r.address.toLowerCase().includes(ambassadorSearch.toLowerCase()));
+  const filteredAmbassadors = ambassadorHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase() && (!ambassadorSearch || r.address.toLowerCase().includes(ambassadorSearch.toLowerCase()) || (r.code && r.code.toLowerCase().includes(ambassadorSearch.toLowerCase()))));
   const totalAmbassadorPages = Math.max(1, Math.ceil(filteredAmbassadors.length / AMBASSADOR_PER_PAGE));
   const currentAmbassadors = filteredAmbassadors.slice((ambassadorPage - 1) * AMBASSADOR_PER_PAGE, ambassadorPage * AMBASSADOR_PER_PAGE);
   const currentAmbassadorUses = ambassadorHistory.filter(r => r.type !== 'REGISTER' && r.address.toLowerCase() === (userAddress || '').toLowerCase()).length;
