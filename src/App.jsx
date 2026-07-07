@@ -278,7 +278,10 @@ export default function App() {
   const [ambassadorAmount, setAmbassadorAmount] = useState('');
   const [simulateVoucherCode, setSimulateVoucherCode] = useState('');
   const [ambassadorVoucherCode, setAmbassadorVoucherCode] = useState(() => {
-    return localStorage.getItem('steldot_ambassador_code') || 'AMB-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+    const saved = localStorage.getItem('steldot_ambassador_code');
+    if (saved && /^[A-Z0-9]{5}$/.test(saved)) return saved;
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    return Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
   });
   const [showSimulateForm, setShowSimulateForm] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
@@ -1007,7 +1010,7 @@ export default function App() {
       setUserTxData([newTx, ...userTxData]);
 
       const newRecord = {
-        id: 'AMB-' + Math.random().toString(36).substring(2, 9),
+        id: Math.random().toString(36).substring(2, 7).toUpperCase(),
         address: ambassadorTarget,
         originalAmount: amount,
         discountedAmount: discountedAmount,
@@ -1018,7 +1021,8 @@ export default function App() {
       setAmbassadorHistory(updatedHistory);
       try { localStorage.setItem('steldot_ambassador_history', JSON.stringify(updatedHistory)); } catch (e) {}
       
-      const newCode = 'AMB-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      const newCode = Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
       setAmbassadorVoucherCode(newCode);
       localStorage.setItem('steldot_ambassador_code', newCode);
       setSimulateVoucherCode('');
@@ -3472,7 +3476,7 @@ export default function App() {
                     value={simulateVoucherCode}
                     onChange={(e) => setSimulateVoucherCode(e.target.value.toUpperCase())}
                     className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors uppercase font-mono tracking-widest"
-                    placeholder="AMB-XXXXX"
+                    placeholder="XXXXX"
                   />
                 </div>
 
