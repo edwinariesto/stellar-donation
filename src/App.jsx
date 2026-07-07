@@ -1067,12 +1067,26 @@ export default function App() {
       const codeSc = nativeToScVal(ambassadorVoucherCode, { type: 'string' });
       const maxUsesSc = nativeToScVal(5, { type: 'u32' });
 
-      await executeTransaction(
+      const txRes = await executeTransaction(
         contractId,
         'register_voucher',
         [ownerSc, codeSc, maxUsesSc],
         userAddress
       );
+
+      const newRecord = {
+        id: Math.random().toString(36).substring(2, 7).toUpperCase(),
+        address: userAddress,
+        type: 'REGISTER',
+        code: ambassadorVoucherCode,
+        date: new Date().toLocaleDateString('en-GB'),
+        time: new Date().toLocaleTimeString('en-GB'),
+        hash: txRes?.hash || ''
+      };
+      
+      const updatedHistory = [newRecord, ...ambassadorHistory];
+      setAmbassadorHistory(updatedHistory);
+      try { localStorage.setItem('steldot_ambassador_history', JSON.stringify(updatedHistory)); } catch (e) {}
 
       Swal.fire(t.success || 'Berhasil!', t.registerVoucherSuccess || 'Kode voucher berhasil terdaftar di Blockchain! Sekarang kasir bisa melakukan verifikasi.', 'success');
     } catch (err) {
@@ -3433,19 +3447,20 @@ export default function App() {
                                   <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
                                     <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/contract/${contractId}" target="_blank" style="color: inherit; text-decoration: underline;">${contractId}</a>
                                   </span><br/>
-                                  <strong style="color: #111827;">${t.targetAddress || 'Wallet (Pengguna)'}:</strong><br/>
+                                  <strong style="color: #111827;">${ref.type === 'REGISTER' ? 'Wallet (Pendaftar)' : (t.targetAddress || 'Wallet (Pengguna)')}:</strong><br/>
                                   <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">
                                     <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/account/${ref.address}" target="_blank" style="color: #2563eb; text-decoration: underline;">${ref.address}</a>
                                   </span><br/>
+                                  ${ref.type === 'REGISTER' ? `<strong style="color: #111827;">${t.ambassadorVoucherCode || 'Voucher Code'}:</strong><br/><span style="color: #10b981; font-weight: bold; font-size: 16px;">${ref.code}</span><br/><br/>` : ''}
                                   ${ref.hash ? `<strong style="color: #111827;">Transaction Hash:</strong><br/>
                                   <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
                                     <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/tx/${ref.hash}" target="_blank" style="color: #2563eb; text-decoration: underline;">${ref.hash}</a>
                                   </span><br/>` : ''}
-                                  <strong style="color: #111827;">${t.originalAmount || 'Nominal Asli'}:</strong> ${ref.originalAmount.toFixed(2)} XLM<br/>
+                                  ${ref.type !== 'REGISTER' ? `<strong style="color: #111827;">${t.originalAmount || 'Nominal Asli'}:</strong> ${ref.originalAmount.toFixed(2)} XLM<br/>
                                   <strong style="color: #111827;">${t.discountAmount || 'Potongan'}:</strong> -${(ref.originalAmount - ref.discountedAmount).toFixed(2)} XLM<br/>
-                                  <strong style="color: #111827;">${t.totalPay || 'Harga Bayar'}:</strong> ${ref.discountedAmount.toFixed(2)} XLM<br/><br/>
+                                  <strong style="color: #111827;">${t.totalPay || 'Harga Bayar'}:</strong> ${ref.discountedAmount.toFixed(2)} XLM<br/><br/>` : ''}
                                   <strong style="color: #111827;">${t.dateLabel || 'Tanggal'}:</strong> ${ref.date} ${ref.time || ''}<br/><br/>
-                                  <strong style="color: #111827;">${t.statusLabel || 'Status'}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.successful ? t.successful.toUpperCase() : 'SUKSES'}</span>
+                                  <strong style="color: #111827;">${t.statusLabel || 'Status'}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${ref.type === 'REGISTER' ? 'TERDAFTAR' : (t.successful ? t.successful.toUpperCase() : 'SUKSES')}</span>
                                 </div>
                               `,
                               icon: 'info',
@@ -3462,12 +3477,22 @@ export default function App() {
                           className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50 flex justify-between items-center cursor-pointer hover:bg-slate-700/80 transition-colors"
                         >
                           <div>
-                            <p className="text-xs font-mono text-slate-300">{ref.address.substring(0, 8)}...{ref.address.substring(ref.address.length - 8)}</p>
-                            <p className="text-[10px] text-slate-500 mt-0.5">{ref.date}</p>
+                            {ref.type === 'REGISTER' ? (
+                              <p className="text-xs font-mono text-cyan-300 tracking-wider">Voucher: <span className="font-bold">{ref.code}</span></p>
+                            ) : (
+                              <p className="text-xs font-mono text-slate-300">{ref.address.substring(0, 8)}...{ref.address.substring(ref.address.length - 8)}</p>
+                            )}
+                            <p className="text-[10px] text-slate-500 mt-0.5">{ref.date} {ref.time || ''}</p>
                           </div>
-                          <div className="flex flex-col items-end">
-                            <span className="text-[10px] font-bold text-cyan-400 mb-0.5"><span className="line-through text-slate-500 mr-1">{ref.originalAmount.toFixed(2)}</span>{ref.discountedAmount.toFixed(2)} XLM</span>
-                            <span className="text-[9px] font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded-md uppercase">+ {t.successful || 'Sukses'}</span>
+                          <div className="flex flex-col items-end justify-center">
+                            {ref.type === 'REGISTER' ? (
+                              <span className="text-[9px] font-bold text-blue-400 bg-blue-400/10 px-2 py-1 rounded-md uppercase">TERDAFTAR</span>
+                            ) : (
+                              <>
+                                <span className="text-[10px] font-bold text-cyan-400 mb-0.5"><span className="line-through text-slate-500 mr-1">{ref.originalAmount.toFixed(2)}</span>{ref.discountedAmount.toFixed(2)} XLM</span>
+                                <span className="text-[9px] font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded-md uppercase">+ {t.successful || 'Sukses'}</span>
+                              </>
+                            )}
                           </div>
                         </div>
                       ))}
