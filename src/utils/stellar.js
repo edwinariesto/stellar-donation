@@ -16,7 +16,7 @@ import {
 } from '@creit.tech/stellar-wallets-kit';
 import { FreighterModule } from '@creit.tech/stellar-wallets-kit/modules/freighter';
 import { WalletConnectModule } from '@creit.tech/stellar-wallets-kit/modules/wallet-connect';
-import { requestAccess, setAllowed } from '@stellar/freighter-api';
+import { requestAccess, setAllowed, isConnected, getPublicKey, signTransaction as freighterSignTransaction } from '@stellar/freighter-api';
 
 export const NETWORKS = {
   TESTNET: {
