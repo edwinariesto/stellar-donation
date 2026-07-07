@@ -216,7 +216,6 @@ export default function App() {
   const [campaigns, setCampaigns] = useState([]);
   const [contractBalance, setContractBalance] = useState(0);
   const [topDonors, setTopDonors] = useState([]);
-  const [totalConnectedUsers, setTotalConnectedUsers] = useState(24);
   const [ownerAddress, setOwnerAddress] = useState('');
   const isOwner = ownerAddress ? userAddress === ownerAddress : userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O';
   const [lang, setLang] = useState('en');
@@ -603,7 +602,6 @@ export default function App() {
       realTop.push({ address: userAddress, amount: totalDonated });
     }
     setTopDonors(realTop);
-    setTotalConnectedUsers(Math.max(24, realTop.length + 58));
   };
 
 
@@ -1650,7 +1648,7 @@ export default function App() {
           <div className="bg-white rounded-2xl p-6 shadow-ios border border-ios-lightGray/30 flex flex-col justify-between">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-ios-darkGray">{t.totalUsers || 'Total Pengguna'}</span>
-              <div className="text-3xl font-extrabold text-ios-darkText mt-2">{totalConnectedUsers}</div>
+              <div className="text-3xl font-extrabold text-ios-darkText mt-2">{Math.max(1, topDonors.length + (userAddress && totalDonated === 0 ? 1 : 0))}</div>
             </div>
             <p className="text-[11px] text-ios-darkGray mt-4">{t.totalUsersDesc || 'Dompet unik terhubung di jaringan'}</p>
           </div>
