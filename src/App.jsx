@@ -633,7 +633,13 @@ export default function App() {
 
   const getTranslatedError = (errMessage) => {
     if (!errMessage) return t.connErrorDesc;
-    const msg = String(errMessage);
+    let msg;
+    if (typeof errMessage === 'object') {
+        msg = errMessage.message ? errMessage.message : JSON.stringify(errMessage);
+    } else {
+        msg = String(errMessage);
+    }
+    
     if (msg === 'WALLETCONNECT_SESSION_EXPIRED') return t.wcSessionExpired;
     const msgLow = msg.toLowerCase();
     if (msgLow.includes('no wallet') || msgLow.includes('not connected') || msgLow.includes('not detected')) return t.errNoWallet;
@@ -1337,7 +1343,7 @@ export default function App() {
   };
 
   const handleContractIdPrompt = () => {
-    const savedTestnet = localStorage.getItem('steldot_contract_TESTNET') || DEFAULT_CONTRACT_ID;
+    const savedTestnet = DEFAULT_CONTRACT_ID;
     const savedMainnet = localStorage.getItem('steldot_contract_PUBLIC') || '';
 
     Swal.fire({
@@ -2600,7 +2606,7 @@ export default function App() {
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                           </div>
                           <div className="overflow-hidden w-full">
-                            <p className="text-xs font-mono text-ios-darkText font-bold truncate">{tx.hash.substring(0, 8)}...{tx.hash.substring(tx.hash.length - 8)}</p>
+                            <p className="text-xs font-mono text-ios-darkText font-bold truncate">{tx.wallet.substring(0, 8)}...{tx.wallet.substring(tx.wallet.length - 8)}</p>
                             <p className="text-[10px] text-gray-400 mt-0.5 truncate">{tx.date}</p>
                           </div>
                         </div>
@@ -2804,7 +2810,7 @@ export default function App() {
                           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                         </div>
                         <div className="overflow-hidden w-full">
-                          <p className="text-xs font-mono text-ios-darkText font-bold truncate">{tx.hash.substring(0, 8)}...{tx.hash.substring(tx.hash.length - 8)}</p>
+                          <p className="text-xs font-mono text-ios-darkText font-bold truncate">{tx.wallet.substring(0, 8)}...{tx.wallet.substring(tx.wallet.length - 8)}</p>
                           <p className="text-[10px] text-gray-400 mt-0.5 truncate">{tx.date}</p>
                         </div>
                       </div>
