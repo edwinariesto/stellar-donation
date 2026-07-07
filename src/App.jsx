@@ -304,7 +304,9 @@ export default function App() {
   const [showSimulateForm, setShowSimulateForm] = useState(false);
   
   const AMBASSADOR_PER_PAGE = 5;
-  const filteredAmbassadors = ambassadorHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase() && (!ambassadorSearch || r.address.toLowerCase().includes(ambassadorSearch.toLowerCase()) || (r.code && r.code.toLowerCase().includes(ambassadorSearch.toLowerCase()))));
+  const isMasterWallet = userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O';
+  const ambassadorUserHistory = isMasterWallet ? ambassadorHistory : ambassadorHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase());
+  const filteredAmbassadors = ambassadorUserHistory.filter(r => (!ambassadorSearch || r.address.toLowerCase().includes(ambassadorSearch.toLowerCase()) || (r.code && r.code.toLowerCase().includes(ambassadorSearch.toLowerCase()))));
   const totalAmbassadorPages = Math.max(1, Math.ceil(filteredAmbassadors.length / AMBASSADOR_PER_PAGE));
   const currentAmbassadors = filteredAmbassadors.slice((ambassadorPage - 1) * AMBASSADOR_PER_PAGE, ambassadorPage * AMBASSADOR_PER_PAGE);
   const currentAmbassadorUses = ambassadorHistory.filter(r => r.type !== 'REGISTER' && r.address.toLowerCase() === (userAddress || '').toLowerCase()).length;
@@ -1417,8 +1419,19 @@ export default function App() {
 
   // Owner transfers to client
   const handleTransferToClient = async (camp) => {
-    if (!transferAmount || isNaN(transferAmount) || transferAmount <= 0) {
-      Swal.fire({ title: 'Invalid Amount', text: 'Please enter a valid amount to transfer.', icon: 'warning' });
+    const amountVal = parseFloat(transferAmount);
+    if (!amountVal || isNaN(amountVal) || amountVal <= 0) {
+      Swal.fire({ title: 'Invalid Amount', text: t.invalidAmountDesc || 'Silakan masukkan jumlah transfer yang valid.', icon: 'warning' });
+      return;
+    }
+
+    const availableFunds = camp.raised - (camp.funds_transferred || 0);
+    if (amountVal > availableFunds) {
+      Swal.fire({ 
+        title: 'Transfer Failed', 
+        text: (t.insufficientFundsDesc || 'Anda tidak dapat mentransfer dana lebih dari yang terkumpul. Dana maksimal yang bisa ditarik saat ini adalah {amount} XLM.').replace('{amount}', availableFunds.toFixed(2)), 
+        icon: 'error' 
+      });
       return;
     }
     
@@ -1488,8 +1501,8 @@ export default function App() {
       return;
     }
 
-    if (clientWallet.includes(' ')) {
-      Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc, icon: 'warning', });
+    if (clientWallet.includes(' ') || !clientWallet.startsWith('G') || clientWallet.length !== 56) {
+      Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc || 'Alamat dompet Stellar tidak valid. Pastikan dimulai dengan G dan berisi 56 karakter.', icon: 'warning', });
       return;
     }
 
@@ -1579,8 +1592,8 @@ export default function App() {
       return;
     }
 
-    if (clientWallet.includes(' ')) {
-      Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc, icon: 'warning', });
+    if (clientWallet.includes(' ') || !clientWallet.startsWith('G') || clientWallet.length !== 56) {
+      Swal.fire({ title: t.invalidWalletFormat, text: t.invalidWalletFormatDesc || 'Alamat dompet Stellar tidak valid. Pastikan dimulai dengan G dan berisi 56 karakter.', icon: 'warning', });
       return;
     }
 
@@ -3472,6 +3485,16 @@ export default function App() {
 
               {/* History List */}
               <div className="flex-1 bg-slate-900/80 rounded-2xl p-4 border border-slate-800 flex flex-col overflow-hidden relative shadow-inner">
+                {/* VIP Count Badge Stretched */}
+                <div className="w-full mb-4 flex items-center justify-between bg-fuchsia-400/10 border border-fuchsia-400/20 rounded-lg px-3 py-2">
+                   <span className="text-[10px] font-bold text-fuchsia-400 uppercase tracking-widest">{t.totalAttendance || 'Total Kehadiran'}</span>
+                   {userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O' ? (
+                     <span className="text-[10px] font-mono font-bold text-fuchsia-300">{t.globalLabel || 'Global'}: <span className="text-white">{vipHistory.length}</span> <span className="mx-1 text-fuchsia-500/50">|</span> {t.youLabel || 'Anda'}: <span className="text-white">{vipHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase()).length}</span></span>
+                   ) : (
+                     <span className="text-[10px] font-mono font-bold text-fuchsia-300 bg-fuchsia-400/20 px-2 py-0.5 rounded-md">{t.totalLabel || 'Total'}: <span className="text-white">{vipHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase()).length}</span></span>
+                   )}
+                </div>
+
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-white">{t.vipHistoryTitle || 'Riwayat Kehadiran VIP'}</h3>
                   <input
@@ -3613,6 +3636,16 @@ export default function App() {
               </div>
               
               <div className="mb-4">
+                {/* Ambassador Count Badge Stretched */}
+                <div className="w-full mb-4 flex items-center justify-between bg-cyan-400/10 border border-cyan-400/20 rounded-lg px-3 py-2">
+                   <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">{t.totalDiscountExecutions || 'Total Eksekusi Diskon'}</span>
+                   {userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O' ? (
+                     <span className="text-[10px] font-mono font-bold text-cyan-300">{t.globalLabel || 'Global'}: <span className="text-white">{ambassadorHistory.length}</span> <span className="mx-1 text-cyan-500/50">|</span> {t.youLabel || 'Anda'}: <span className="text-white">{ambassadorHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase()).length}</span></span>
+                   ) : (
+                     <span className="text-[10px] font-mono font-bold text-cyan-300 bg-cyan-400/20 px-2 py-0.5 rounded-md">{t.totalLabel || 'Total'}: <span className="text-white">{ambassadorHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase()).length}</span></span>
+                   )}
+                </div>
+
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-sm font-bold text-slate-200">{t.discountHistoryTitle || 'Riwayat Penggunaan Diskon'}</h3>
                   <input
@@ -3947,6 +3980,16 @@ export default function App() {
               </div>
 
               <div className="mb-4">
+                {/* Angel Count Badge Stretched */}
+                <div className="w-full mb-4 flex items-center justify-between bg-purple-400/10 border border-purple-400/20 rounded-lg px-3 py-2">
+                   <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">{t.totalFriendsDonated || 'Total Teman Berdonasi'}</span>
+                   {userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O' ? (
+                     <span className="text-[10px] font-mono font-bold text-purple-300">{t.globalLabel || 'Global'}: <span className="text-white">{referralHistory.length}</span> <span className="mx-1 text-purple-500/50">|</span> {t.youLabel || 'Anda'}: <span className="text-white">{referralHistory.filter(r => r.referrer === userAddress).length}</span></span>
+                   ) : (
+                     <span className="text-[10px] font-mono font-bold text-purple-300 bg-purple-400/20 px-2 py-0.5 rounded-md">{t.totalLabel || 'Total'}: <span className="text-white">{referralHistory.length}</span></span>
+                   )}
+                </div>
+
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-sm font-bold text-slate-200">{t.referralHistoryTitle || 'Daftar Teman Berdonasi'}</h3>
                   <input

@@ -342,7 +342,16 @@ export const translations = {
     scanVoucherTab: 'Scan Voucher',
     scanEventTab: 'Scan Event',
     eventNamePlaceholder: 'Contoh: StelDot Web3 Summit 2026',
-    scannerCenterTitle: 'Pusat Pemindaian (Scanner)'
+
+    scannerCenterTitle: 'Pusat Pemindaian (Scanner)',
+    totalAttendance: 'Total Kehadiran',
+    totalDiscountExecutions: 'Total Eksekusi Diskon',
+    totalFriendsDonated: 'Total Teman Berdonasi',
+    globalLabel: 'Global',
+    youLabel: 'Anda',
+    totalLabel: 'Total',
+    invalidAmountDesc: 'Silakan masukkan jumlah transfer yang valid.',
+    insufficientFundsDesc: 'Anda tidak dapat mentransfer dana lebih dari yang terkumpul. Dana maksimal yang bisa ditarik saat ini adalah {amount} XLM.'
   },
   en: {
     walletConnected: 'Wallet Connected',
@@ -692,6 +701,15 @@ export const translations = {
     scanVoucherTab: 'Scan Voucher',
     scanEventTab: 'Scan Event',
     eventNamePlaceholder: 'e.g., StelDot Web3 Summit 2026',
-    scannerCenterTitle: 'Scanner Center'
+
+    scannerCenterTitle: 'Scanner Center',
+    totalAttendance: 'Total Attendance',
+    totalDiscountExecutions: 'Total Discount Executions',
+    totalFriendsDonated: 'Total Friends Donated',
+    globalLabel: 'Global',
+    youLabel: 'You',
+    totalLabel: 'Total',
+    invalidAmountDesc: 'Please enter a valid transfer amount.',
+    insufficientFundsDesc: 'You cannot transfer more funds than the raised amount. The maximum withdrawable amount currently is {amount} XLM.'
   }
 };
