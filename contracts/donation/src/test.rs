@@ -36,7 +36,16 @@ fn test_steldot_flow() {
     let youtube = String::from_str(&env, "");
     let client_wallet = Address::generate(&env);
     let expiration = 0u64;
-    client.create_campaign(&owner, &1u32, &title, &desc, &200_000_000i128, &youtube, &client_wallet, &expiration); // target 20 XLM
+    client.create_campaign(
+        &owner,
+        &1u32,
+        &title,
+        &desc,
+        &200_000_000i128,
+        &youtube,
+        &client_wallet,
+        &expiration,
+    ); // target 20 XLM
 
     // Verify campaign details
     let campaign = client.get_campaign(&1u32);
@@ -95,7 +104,16 @@ fn test_insufficient_points_for_claim() {
     let youtube = String::from_str(&env, "");
     let client_wallet = Address::generate(&env);
     let expiration = 0u64;
-    client.create_campaign(&owner, &1u32, &title, &desc, &200_000_000i128, &youtube, &client_wallet, &expiration);
+    client.create_campaign(
+        &owner,
+        &1u32,
+        &title,
+        &desc,
+        &200_000_000i128,
+        &youtube,
+        &client_wallet,
+        &expiration,
+    );
 
     // Donate 9 XLM (90_000_000 stroops)
     client.donate(&donor, &1u32, &90_000_000i128);

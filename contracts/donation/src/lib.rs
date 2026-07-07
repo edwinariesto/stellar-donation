@@ -187,7 +187,7 @@ impl StelDotContract {
 
         let token_addr: Address = env.storage().instance().get(&DataKey::Token).unwrap();
         let token_client = token::Client::new(&env, &token_addr);
-        
+
         let balance = token_client.balance(&env.current_contract_address());
         if balance < amount {
             panic!("insufficient treasury balance");
@@ -196,10 +196,14 @@ impl StelDotContract {
         let fee = amount * 5 / 100;
         let amount_to_client = amount - fee;
 
-        token_client.transfer(&env.current_contract_address(), &campaign.client_wallet, &amount_to_client);
+        token_client.transfer(
+            &env.current_contract_address(),
+            &campaign.client_wallet,
+            &amount_to_client,
+        );
 
         campaign.funds_transferred += amount;
-        
+
         let transfer = FundTransfer {
             amount: amount_to_client,
             date: env.ledger().timestamp(),
@@ -225,7 +229,7 @@ impl StelDotContract {
             .instance()
             .get(&DataKey::Campaign(campaign_id))
             .expect("campaign not found");
-        
+
         if env.ledger().timestamp() > campaign.expiration {
             panic!("campaign has expired");
         }
@@ -302,13 +306,13 @@ impl StelDotContract {
         if donor == referrer {
             panic!("cannot refer yourself");
         }
-        
+
         let mut campaign: Campaign = env
             .storage()
             .instance()
             .get(&DataKey::Campaign(campaign_id))
             .expect("campaign not found");
-            
+
         if env.ledger().timestamp() > campaign.expiration {
             panic!("campaign has expired");
         }
@@ -323,7 +327,7 @@ impl StelDotContract {
             .persistent()
             .get(&donor_total_key)
             .unwrap_or(0);
-            
+
         if current_total > 0 {
             panic!("referral only valid for first time donors");
         }
@@ -578,11 +582,12 @@ impl StelDotContract {
     }
 
     pub fn get_campaign(env: Env, id: u32) -> Campaign {
-        let mut cmp: Campaign = env.storage()
+        let mut cmp: Campaign = env
+            .storage()
             .instance()
             .get(&DataKey::Campaign(id))
             .expect("campaign not found");
-        
+
         // Auto-flag inactive if expired
         if env.ledger().timestamp() > cmp.expiration {
             cmp.active = false;
