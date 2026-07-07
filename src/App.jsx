@@ -264,15 +264,34 @@ export default function App() {
   const totalReferralPages = Math.max(1, Math.ceil(filteredReferrals.length / REFERRALS_PER_PAGE));
   const currentReferrals = filteredReferrals.slice((referralPage - 1) * REFERRALS_PER_PAGE, referralPage * REFERRALS_PER_PAGE);
   
-  // Ambassador State
+  // Ambassador & VIP State
+
+  
   const [ambassadorHistory, setAmbassadorHistory] = useState(() => {
     try {
       const stored = localStorage.getItem('steldot_ambassador_history');
       return stored ? JSON.parse(stored) : [];
     } catch (e) { return []; }
   });
+  
+  const [vipHistory, setVipHistory] = useState(() => {
+    try {
+      const stored = localStorage.getItem('steldot_vip_history');
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) { return []; }
+  });
+  
   const [ambassadorPage, setAmbassadorPage] = useState(1);
   const [ambassadorSearch, setAmbassadorSearch] = useState('');
+  
+  const [isScanning, setIsScanning] = useState(false);
+  const [scannerActiveTab, setScannerActiveTab] = useState('voucher'); // 'voucher' or 'event'
+  const [vipEventName, setVipEventName] = useState('');
+  const [vipPage, setVipPage] = useState(1);
+  const [vipSearch, setVipSearch] = useState('');
+  const [targetVipTotalDonated, setTargetVipTotalDonated] = useState(0);
+  const [isCheckingVip, setIsCheckingVip] = useState(false);
+  
   const [ambassadorTarget, setAmbassadorTarget] = useState('');
   const [ambassadorAmount, setAmbassadorAmount] = useState('');
   const [simulateVoucherCode, setSimulateVoucherCode] = useState('');
@@ -283,7 +302,7 @@ export default function App() {
     return Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
   });
   const [showSimulateForm, setShowSimulateForm] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
+  
   const AMBASSADOR_PER_PAGE = 5;
   const filteredAmbassadors = ambassadorHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase() && (!ambassadorSearch || r.address.toLowerCase().includes(ambassadorSearch.toLowerCase()) || (r.code && r.code.toLowerCase().includes(ambassadorSearch.toLowerCase()))));
   const totalAmbassadorPages = Math.max(1, Math.ceil(filteredAmbassadors.length / AMBASSADOR_PER_PAGE));
@@ -514,6 +533,37 @@ export default function App() {
       return () => clearInterval(interval);
     }
   }, [userAddress]);
+
+  // Realtime VIP Eligibility Check
+  useEffect(() => {
+    if (scannerActiveTab !== 'event' || !ambassadorTarget || ambassadorTarget.length !== 56) {
+      setTargetVipTotalDonated(0);
+      setIsCheckingVip(false);
+      return;
+    }
+    let isMounted = true;
+    const fetchDonation = async () => {
+      setIsCheckingVip(true);
+      try {
+        const { callReadOnly } = await import('./utils/stellar');
+        const donorTotalRes = await callReadOnly(contractId, 'get_donor_total_donated', [
+          nativeToScVal(ambassadorTarget, { type: 'address' })
+        ]);
+        const total = donorTotalRes ? Number(donorTotalRes) / 10000000 : 0;
+        if (isMounted) setTargetVipTotalDonated(total);
+      } catch (err) {
+        if (isMounted) setTargetVipTotalDonated(0);
+      } finally {
+        if (isMounted) setIsCheckingVip(false);
+      }
+    };
+    
+    const timeoutId = setTimeout(fetchDonation, 500); // Debounce 500ms
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [ambassadorTarget, scannerActiveTab, contractId]);
 
   // Refresh stats and state
   const refreshData = async () => {
@@ -926,6 +976,68 @@ export default function App() {
     setAmbassadorAmount('');
     setAmbassadorTarget('');
     setSimulateVoucherCode('');
+  };
+
+  const handleProcessVipEntry = async () => {
+    if (userAddress !== 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O') {
+      Swal.fire({
+        icon: 'error',
+        title: t.vipAccessDenied || 'Akses Ditolak',
+        text: t.vipAccessDeniedDesc || 'Pemindaian tiket VIP Legend hanya dapat dilakukan oleh wallet Pemilik Utama StelDot.',
+        customClass: { confirmButton: 'swal-btn-full' }
+      });
+      return;
+    }
+
+    if (!ambassadorTarget || !vipEventName) return;
+
+    // Backend Validation
+    setIsCheckingVip(true);
+    let totalDonated = 0;
+    try {
+      const { callReadOnly } = await import('./utils/stellar');
+      const donorTotalRes = await callReadOnly(contractId, 'get_donor_total_donated', [
+        nativeToScVal(ambassadorTarget, { type: 'address' })
+      ]);
+      totalDonated = donorTotalRes ? Number(donorTotalRes) / 10000000 : 0;
+    } catch (e) {}
+    setIsCheckingVip(false);
+
+    if (totalDonated < 500) {
+      Swal.fire({
+        icon: 'error',
+        title: t.validationFailed || 'Validasi Gagal',
+        text: t.validationFailedDesc ? t.validationFailedDesc.replace('{amount}', totalDonated.toFixed(2)) : `Total donasi wallet peserta ini hanya ${totalDonated.toFixed(2)} XLM. Akses VIP Legend membutuhkan minimal 500 XLM.`,
+        customClass: { confirmButton: 'swal-btn-full' }
+      });
+      return;
+    }
+
+    const newRecord = {
+      id: Math.random().toString(36).substring(2, 9).toUpperCase(),
+      address: ambassadorTarget.trim(),
+      cashier: userAddress,
+      eventName: vipEventName.trim(),
+      date: new Date().toLocaleDateString('en-GB'),
+      time: new Date().toLocaleTimeString('en-GB'),
+      status: 'HADIR'
+    };
+
+    const updatedHistory = [newRecord, ...vipHistory];
+    setVipHistory(updatedHistory);
+    try { localStorage.setItem('steldot_vip_history', JSON.stringify(updatedHistory)); } catch (e) {}
+    
+    setAmbassadorTarget('');
+    setVipEventName('');
+    setShowSimulateForm(false);
+
+    Swal.fire({
+      icon: 'success',
+      title: t.vipValidationSuccess || 'Kehadiran Tercatat!',
+      text: t.vipValidationSuccessDesc || 'Kehadiran VIP berhasil diverifikasi dan disimpan ke riwayat.',
+    }).then(() => {
+      window.location.reload();
+    });
   };
 
   const handleProcessDiscount = async () => {
@@ -3303,7 +3415,13 @@ export default function App() {
           </div>
         </section>
         {/* VIP Barcode Modal */}
-        {showVIPBarcode && (
+        {showVIPBarcode && (() => {
+          const vipUserHistory = vipHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase());
+          const VIP_PER_PAGE = 5;
+          const filteredVipHistory = vipUserHistory.filter(r => r.eventName.toLowerCase().includes(vipSearch.toLowerCase()));
+          const totalVipPages = Math.max(1, Math.ceil(filteredVipHistory.length / VIP_PER_PAGE));
+          const currentVipHistory = filteredVipHistory.slice((vipPage - 1) * VIP_PER_PAGE, vipPage * VIP_PER_PAGE);
+          return (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             {/* Backdrop */}
             <div 
@@ -3312,40 +3430,126 @@ export default function App() {
             ></div>
 
             {/* Modal Content */}
-            <div className="bg-gradient-to-b from-gray-900 to-black w-full max-w-sm rounded-3xl shadow-2xl relative overflow-hidden border border-gray-800 z-10 flex flex-col items-center text-center p-8 animate-ios-fade-in glow-blue">
-              
-              <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-teal-500/20">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.956-.734L2.02 6.02a.5.5 0 0 1 .798-.518l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg>
+            <div className="bg-gradient-to-b from-slate-900 to-black w-full max-w-md rounded-3xl shadow-2xl relative overflow-hidden border border-fuchsia-900/50 z-10 flex flex-col p-6 animate-ios-fade-in glow-fuchsia">
+              <button 
+                onClick={() => setShowVIPBarcode(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 rounded-full p-2 transition-colors z-20"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 bg-gradient-to-br from-fuchsia-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/30 flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.956-.734L2.02 6.02a.5.5 0 0 1 .798-.518l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white tracking-tight">{t.vipPassTitle}</h2>
+                  <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">{t.vipPassDesc}</p>
+                </div>
               </div>
 
-              <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">{t.vipPassTitle}</h2>
-              <p className="text-xs text-gray-400 mb-8 leading-relaxed px-2">
-                {t.vipPassDesc}
-              </p>
-
-              <div className="bg-white p-4 rounded-2xl shadow-inner mb-6 ring-4 ring-emerald-500/20 relative flex items-center justify-center">
+              <div className="bg-white p-4 rounded-2xl shadow-inner mb-4 ring-4 ring-fuchsia-500/20 relative flex flex-col items-center justify-center">
                 <QRCode value={userAddress || 'StelDot-Legend'} size={200} level="H" />
                 <div className="absolute bg-white rounded-lg p-1.5 shadow-sm flex items-center justify-center" style={{ width: 44, height: 44 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#d946ef" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                   </svg>
                 </div>
               </div>
 
-              <div className="w-full bg-gray-800/50 rounded-xl p-3 border border-gray-700/50">
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">{t.vipWalletAddress}</p>
-                <p className="font-mono text-xs text-gray-300 break-all">{userAddress}</p>
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex flex-col items-center justify-center text-center">
+                  <span className="text-3xl font-bold text-fuchsia-400 mb-1">{vipUserHistory.length}</span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest">{t.totalVisits || 'Total Kunjungan'}</span>
+                </div>
+                
+                <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex flex-col items-center justify-center text-center overflow-hidden">
+                  <span className="text-xs font-mono text-slate-300 break-all leading-tight">{userAddress ? `${userAddress.substring(0,6)}...${userAddress.substring(userAddress.length-6)}` : 'N/A'}</span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest mt-2">{t.vipWalletAddress || 'VIP Wallet'}</span>
+                </div>
               </div>
 
-              <button 
-                onClick={() => setShowVIPBarcode(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-white bg-gray-800/50 hover:bg-gray-700 rounded-full p-2 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
+              {/* History List */}
+              <div className="flex-1 bg-slate-900/80 rounded-2xl p-4 border border-slate-800 flex flex-col overflow-hidden relative shadow-inner">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-white">{t.vipHistoryTitle || 'Riwayat Kehadiran VIP'}</h3>
+                  <input
+                    type="text"
+                    placeholder="Cari acara..."
+                    value={vipSearch}
+                    onChange={(e) => { setVipSearch(e.target.value); setVipPage(1); }}
+                    className="bg-slate-800/80 border border-slate-700/50 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-fuchsia-500/50 w-32 sm:w-40 transition-colors"
+                  />
+                </div>
+                
+                <div className="flex-1 min-h-[150px] max-h-[220px] overflow-y-auto custom-scrollbar">
+                  {currentVipHistory.length > 0 ? (
+                    <div className="space-y-2">
+                      {currentVipHistory.map((ref, idx) => (
+                        <div 
+                          key={idx} 
+                          onClick={() => {
+                            Swal.fire({
+                              title: t.transactionDetail || 'Detail Transaksi',
+                              html: `
+                              <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
+                                  <strong style="color: #111827;">${t.eventName || 'Nama Acara/Event'}:</strong><br/>
+                                  <span style="color: #10b981; font-weight: bold; font-size: 15px;">${ref.eventName}</span><br/><br/>
+                                  <strong style="color: #111827;">${t.participantWallet || 'Wallet Peserta'}:</strong><br/>
+                                  <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px;">
+                                    <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/account/${ref.address}" target="_blank" style="color: #2563eb; text-decoration: underline;">${ref.address}</a>
+                                  </span><br/>
+                                  <strong style="color: #111827;">${t.vipScannedBy || 'Discan oleh (Owner StelDot)'}:</strong><br/>
+                                  <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
+                                    <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/account/${ref.cashier || ''}" target="_blank" style="color: inherit; text-decoration: underline;">${ref.cashier || 'N/A'}</a>
+                                  </span><br/>
+                                  <strong style="color: #111827;">${t.dateLabel || 'Tanggal'}:</strong> ${ref.date} ${ref.time || ''}<br/><br/>
+                                  <strong style="color: #111827;">${t.statusLabel || 'Status'}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.vipPresent || 'HADIR'}</span>
+                                </div>
+                              `,
+                              icon: 'info',
+                              confirmButtonText: t.close || 'Tutup'
+                            });
+                          }}
+                          className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50 flex justify-between items-center cursor-pointer hover:bg-slate-700/80 transition-colors"
+                        >
+                          <div>
+                            <p className="text-xs font-mono text-fuchsia-400 tracking-wider font-bold mb-1">
+                              {ref.eventName.length > 25 ? ref.eventName.substring(0, 25) + '...' : ref.eventName}
+                            </p>
+                            <p className="text-[10px] text-slate-500 mt-0.5">{ref.date} {ref.time || ''}</p>
+                          </div>
+                          <div className="flex flex-col items-end justify-center">
+                            <span className="text-[9px] font-bold text-fuchsia-400 bg-fuchsia-400/10 px-2 py-1 rounded-md uppercase">{t.vipPresent || 'HADIR'}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center opacity-50">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500 mb-3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                      <p className="text-xs text-slate-400 font-mono text-center max-w-[200px]">
+                        {t.vipAttendanceDesc || 'Catatan seluruh kehadiran eksklusif Anda di acara StelDot.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-center items-center gap-2 mt-3 pt-3 border-t border-slate-700/50">
+                  <button onClick={() => setVipPage(p => Math.max(1, p - 1))} disabled={vipPage === 1} className="p-1 rounded-full text-slate-500 hover:text-fuchsia-400 disabled:opacity-30 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  </button>
+                  <span className="text-[10px] font-bold text-slate-400">{vipPage} / {Math.max(1, totalVipPages)}</span>
+                  <button onClick={() => setVipPage(p => Math.min(totalVipPages, p + 1))} disabled={vipPage === totalVipPages || totalVipPages === 0} className="p-1 rounded-full text-slate-500 hover:text-fuchsia-400 disabled:opacity-30 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  </button>
+                </div>
+              </div>
+
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* Ambassador Voucher Modal */}
         {showAmbassadorBarcode && (
@@ -3499,14 +3703,6 @@ export default function App() {
                   </button>
                 </div>
               </div>
-
-              <button 
-                onClick={handleSimulateAmbassadorDiscount}
-                className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3.5 rounded-xl mt-2 hover:shadow-lg hover:shadow-cyan-500/20 transition-all flex items-center justify-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                {t.simulateDiscount || 'Simulasikan Diskon'}
-              </button>
             </div>
           </div>
         )}
@@ -3527,10 +3723,29 @@ export default function App() {
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
 
-              <h2 className="text-xl font-bold text-white mb-2">{t.simulateDiscount || 'Simulasikan Diskon'}</h2>
-              <p className="text-[11px] text-slate-400 mb-6 leading-relaxed pr-6">
-                {t.simulateDesc || 'Masukkan alamat dompet dan nominal untuk mensimulasikan potongan 2%. Maksimal 5 kali penggunaan per dompet.'}
-              </p>
+              <h2 className="text-xl font-bold text-white mb-4">{t.scannerCenterTitle || 'Scanner Center'}</h2>
+
+              {/* iOS Style Segmented Control */}
+              <div className="flex bg-slate-800/80 p-1 rounded-xl mb-6 border border-slate-700">
+                <button
+                  onClick={() => setScannerActiveTab('voucher')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${scannerActiveTab === 'voucher' ? 'bg-cyan-500/20 text-cyan-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                  {t.scanVoucherTab || 'Scan Voucher'}
+                </button>
+                <button
+                  onClick={() => setScannerActiveTab('event')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${scannerActiveTab === 'event' ? 'bg-fuchsia-500/20 text-fuchsia-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                  {t.scanEventTab || 'Scan Event'}
+                </button>
+              </div>
+
+              {scannerActiveTab === 'voucher' ? (
+                <>
+                  <p className="text-[11px] text-slate-400 mb-6 leading-relaxed pr-6">
+                    {t.simulateDesc || 'Masukkan alamat dompet dan nominal untuk mensimulasikan potongan 2%. Maksimal 5 kali penggunaan per dompet.'}
+                  </p>
 
               <div className="space-y-4 mb-6">
                 <div>
@@ -3578,7 +3793,7 @@ export default function App() {
 
                 <div className="bg-cyan-900/20 border border-cyan-800/50 rounded-xl p-4 flex justify-between items-center">
                   <div>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">Total Bayar</p>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">{t.totalPay || 'Total Bayar'}</p>
                     <p className="text-xl font-bold text-cyan-400">
                       {ambassadorAmount && !isNaN(parseFloat(ambassadorAmount)) && parseFloat(ambassadorAmount) > 0 
                         ? (parseFloat(ambassadorAmount) * 0.98).toFixed(2) 
@@ -3586,7 +3801,7 @@ export default function App() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">Potongan (2%)</p>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">{t.discountAmount || 'Potongan (2%)'}</p>
                     <p className="text-sm font-bold text-green-400">
                       {ambassadorAmount && !isNaN(parseFloat(ambassadorAmount)) && parseFloat(ambassadorAmount) > 0 
                         ? (parseFloat(ambassadorAmount) * 0.02).toFixed(2) 
@@ -3596,13 +3811,89 @@ export default function App() {
                 </div>
               </div>
 
-              <button 
-                onClick={handleProcessDiscount}
-                disabled={!ambassadorTarget || !ambassadorAmount || isNaN(parseFloat(ambassadorAmount)) || parseFloat(ambassadorAmount) <= 0 || !simulateVoucherCode}
-                className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-cyan-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {t.simulateDiscount || 'Eksekusi Diskon'}
-              </button>
+                  <button 
+                    onClick={handleProcessDiscount}
+                    disabled={!ambassadorTarget || !ambassadorAmount || isNaN(parseFloat(ambassadorAmount)) || parseFloat(ambassadorAmount) <= 0 || !simulateVoucherCode}
+                    className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-cyan-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {t.simulateDiscount || 'Eksekusi Diskon'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-[11px] text-slate-400 mb-6 leading-relaxed pr-6">
+                    {t.vipOnlyOwner || '*Pemindaian dan verifikasi tiket VIP ini hanya dapat dilakukan secara eksklusif oleh Pemilik Utama StelDot.'}
+                    <br/><br/>
+                    <span className="text-fuchsia-400 font-bold">{t.vipScanInstruction || 'Pindai atau masukkan alamat wallet peserta untuk memverifikasi kehadiran VIP. Peserta wajib memiliki akumulasi donasi minimal 500 XLM.'}</span>
+                  </p>
+
+                  <div className="space-y-4 mb-6">
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 mb-1.5 block">{t.participantWalletLabel || 'Wallet Peserta VIP'}</label>
+                      <div className="relative">
+                        <input 
+                          type="text" 
+                          value={ambassadorTarget}
+                          onChange={(e) => setAmbassadorTarget(e.target.value)}
+                          className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-4 pr-12 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-fuchsia-500/50 transition-colors"
+                          placeholder="G..."
+                        />
+                        <button 
+                          onClick={() => setIsScanning(true)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-fuchsia-400 hover:bg-fuchsia-900/30 rounded-lg transition-colors"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 mb-1.5 block">{t.eventName || 'Nama Acara/Event'}</label>
+                      <input 
+                        type="text" 
+                        value={vipEventName}
+                        onChange={(e) => setVipEventName(e.target.value)}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-fuchsia-500/50 transition-colors"
+                        placeholder={t.eventNamePlaceholder || 'Contoh: StelDot Web3 Summit 2026'}
+                      />
+                    </div>
+                  </div>
+
+                  {ambassadorTarget && ambassadorTarget.length === 56 && (
+                    <div className={`mb-4 p-3 rounded-xl border flex items-center justify-between ${targetVipTotalDonated >= 500 ? 'bg-fuchsia-900/20 border-fuchsia-500/30' : 'bg-red-900/20 border-red-500/30'}`}>
+                      <div>
+                        <p className="text-[10px] text-slate-400 uppercase tracking-widest">{t.totalDonated || 'Total Donasi'}</p>
+                        {isCheckingVip ? (
+                          <div className="h-6 flex items-center">
+                            <div className="w-4 h-4 border-2 border-slate-500 border-t-fuchsia-400 rounded-full animate-spin"></div>
+                          </div>
+                        ) : (
+                          <p className={`font-mono text-lg font-bold ${targetVipTotalDonated >= 500 ? 'text-fuchsia-400' : 'text-red-400'}`}>
+                            {targetVipTotalDonated.toFixed(2)} XLM
+                          </p>
+                        )}
+                      </div>
+                      {!isCheckingVip && (
+                        <div className="text-right">
+                          {targetVipTotalDonated >= 500 ? (
+                            <span className="text-[10px] font-bold text-fuchsia-400 bg-fuchsia-400/10 px-2 py-1 rounded-md uppercase">{t.legendValid || 'Legend Valid'}</span>
+                          ) : (
+                            <span className="text-[10px] font-bold text-red-400 bg-red-400/10 px-2 py-1 rounded-md uppercase">{t.legendNotValid || 'Belum Legend'}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <button 
+                    onClick={handleProcessVipEntry}
+                    disabled={!ambassadorTarget || !vipEventName || isCheckingVip || targetVipTotalDonated < 500}
+                    className="w-full bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-fuchsia-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isCheckingVip ? (t.verifying || 'Memverifikasi...') : (t.simulateVipEntry || 'Proses Kehadiran VIP')}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}
