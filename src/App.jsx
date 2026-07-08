@@ -32,7 +32,7 @@ import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import bannerImg from './assets/banner.png';
 import frighterIcon from './image/frighter-icon.png';
 import walletConnectIcon from './image/walletconnect-icon.jfif';
-const DEFAULT_CONTRACT_ID = 'CC2IZMATB3FHGXR6NOR5EUEXLTTWNZ7RTMJEWVUKX25M4FQNTLNPMFJX';
+const DEFAULT_CONTRACT_ID = 'CCF3CR4LIGFXNFQSPIPX46VZBIWZ6VUFTVJ5UTRAT3FFPORPRYVHZ7XF';
 const NATIVE_XLM_SAC = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
 const initialNet = localStorage.getItem('steldot_last_network') || 'TESTNET';
@@ -1145,7 +1145,6 @@ export default function App() {
         });
 
         const codeSc = nativeToScVal(simulateVoucherCode.trim().toUpperCase(), { type: 'string' });
-        const buyerSc = nativeToScVal(ambassadorTarget.trim(), { type: 'address' });
         const amountStroops = BigInt(Math.round(amount * 10_000_000));
         const amountSc = nativeToScVal(amountStroops, { type: 'i128' });
         
@@ -1171,7 +1170,7 @@ export default function App() {
         const txRes = await executeTransaction(
           contractId,
           'verify_and_claim_voucher',
-          [codeSc, cashierSc, buyerSc, amountSc],
+          [codeSc, cashierSc, amountSc],
           userAddress
         );
         mockHash = txRes.hash;

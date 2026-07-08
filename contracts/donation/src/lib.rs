@@ -640,15 +640,8 @@ impl StelDotContract {
             .publish((Symbol::new(&env, "vouch_reg"), owner), code);
     }
 
-    pub fn verify_and_claim_voucher(
-        env: Env,
-        code: String,
-        cashier: Address,
-        buyer: Address,
-        amount: i128,
-    ) {
+    pub fn verify_and_claim_voucher(env: Env, code: String, cashier: Address, amount: i128) {
         cashier.require_auth();
-        buyer.require_auth();
 
         if amount <= 0 {
             panic!("payment amount must be positive");
@@ -667,15 +660,6 @@ impl StelDotContract {
 
         // Compute discounted amount: buyer pays 98% (2% discount)
         let discounted_amount = amount * 98 / 100;
-
-        // Transfer discounted payment from buyer to cashier
-        let token_id: Address = env
-            .storage()
-            .instance()
-            .get(&DataKey::Token)
-            .expect("token not set");
-        let token_client = token::Client::new(&env, &token_id);
-        token_client.transfer(&buyer, &cashier, &discounted_amount);
 
         v.uses_left -= 1;
         if v.uses_left == 0 {
