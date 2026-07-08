@@ -19,10 +19,11 @@ Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Total volum
 
 ### Informasi Smart Contract (Testnet)
 
-- **Deployed Contract Address (ID)**: `CDQBMFQXXWGG2H6WELWFHHA476WQTZIXYOPTYADBVBC4LRJOROCKPXK2`
-- **Lihat di Stellar Explorer**: [Tautan Kontrak di Stellar.Expert](https://stellar.expert/explorer/testnet/contract/CDQBMFQXXWGG2H6WELWFHHA476WQTZIXYOPTYADBVBC4LRJOROCKPXK2)
+- **Deployed Contract Address (ID)**: `CA5SWTEHS7BBX7ZYBEMJLHP3I7CPAF6I75XQWURTVU3II3RARE5KQSA2`
+- **Lihat di Stellar Explorer**: [Tautan Kontrak di Stellar.Expert](https://stellar.expert/explorer/testnet/contract/CA5SWTEHS7BBX7ZYBEMJLHP3I7CPAF6I75XQWURTVU3II3RARE5KQSA2)
 - **Asset/Token Address (Native XLM SAC)**: `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
-- **Contoh Hash Transaksi (Contract Call)**: [`106d12d3a6876e9edd5cd00e7c50bb9dfa57f39e3e381b44a4de5f08433298da`](https://stellar.expert/explorer/testnet/tx/106d12d3a6876e9edd5cd00e7c50bb9dfa57f39e3e381b44a4de5f08433298da)
+- **Alamat Dompet Owner (Master Wallet)**: `GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O`
+- **Contoh Hash Transaksi (Contract Call)**: [`783d369bef326ac0950d0b58e0166418e4580e2c89d10afab555aa87083c4caf`](https://stellar.expert/explorer/testnet/tx/783d369bef326ac0950d0b58e0166418e4580e2c89d10afab555aa87083c4caf)
 
 ---
 
@@ -40,6 +41,9 @@ Donatur dapat mendonasikan token XLM ke kampanye komunitas tertentu. Total volum
 - **Pencarian & Pagination**: Cari kampanye berdasarkan ID atau Judul, dan navigasikan halaman dengan sistem _pagination_ yang rapi.
 - **Riwayat Transaksi Real-time**: Pantau transaksi masuk dan keluar Anda secara instan yang ditarik langsung dari Stellar Horizon API.
 - **Riwayat Klaim Reward**: Bagian khusus untuk memantau semua pembayaran hadiah sukses yang dikirimkan oleh smart contract ke dompet Anda.
+- **Ambassador of Goodness (Voucher Diskon)**: Donatur VIP mendapatkan kode voucher QR yang unik dan terdaftar di _blockchain_ melalui fungsi `register_voucher`. Kasir bisa menscan dan mengeksekusi diskon 2% melalui **Scanner Center**, yang memanggil `verify_and_claim_voucher` secara _on-chain_. Semua aktivitas (`vouch_reg`, `vouch_clm`) dicatat sebagai _event_ di ledger Stellar.
+- **Pelacakan Kehadiran VIP**: Owner dapat mendaftarkan kehadiran VIP untuk alamat dompet mana pun di event apapun melalui `register_vip_attendance`. Event `vip_att` diterbitkan ke jaringan dan riwayatnya tampil secara _real-time_ di bagian VIP Attendance History.
+- **Scanner Center**: Dasbor khusus Owner untuk memproses Voucher Ambassador dan mendaftarkan Kehadiran VIP, semuanya melalui transaksi Soroban _on-chain_.
 - **Tambahan 4 Manfaat Eksklusif**: Donatur yang loyalitas akan mendapatkan 4 manfaat Eksklusif terbaik dan menguntungkan dari StelDot.
 - **Dasbor Donatur**: Pengguna dapat melacak donasi mereka sendiri, melihat progres target, dan melihat donatur teratas secara global.
 - **Malaikat Penolong (Sistem Referral)**: Pengguna yang telah berdonasi >100 XLM dapat membuat tautan referral unik. Mereka akan mendapat hadiah 0.5% otomatis ke dompet mereka saat teman yang mereka undang berdonasi untuk pertama kalinya!

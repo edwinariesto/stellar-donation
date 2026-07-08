@@ -3819,7 +3819,12 @@ export default function App() {
                               <span className="text-[9px] font-bold text-blue-400 bg-blue-400/10 px-2 py-1 rounded-md uppercase">TERDAFTAR</span>
                             ) : (
                               <>
-                                <span className="text-[10px] font-bold text-cyan-400 mb-0.5"><span className="line-through text-slate-500 mr-1">{ref.originalAmount.toFixed(2)}</span>{ref.discountedAmount.toFixed(2)} XLM</span>
+                                <span className="text-[10px] font-bold text-cyan-400 mb-0.5">
+                                  {ref.discountedAmount != null && ref.originalAmount != null
+                                    ? <><span className="line-through text-slate-500 mr-1">{Number(ref.originalAmount).toFixed(2)}</span>{Number(ref.discountedAmount).toFixed(2)} XLM</>
+                                    : <span className="text-green-300">2% OFF</span>
+                                  }
+                                </span>
                                 <span className="text-[9px] font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded-md uppercase">+ {t.successful || 'Sukses'}</span>
                               </>
                             )}

@@ -19,10 +19,11 @@ Donors can contribute native XLM to community campaigns. Their total donation vo
 
 ### Smart Contract Information (Testnet)
 
-- **Deployed Contract Address (ID)**: `CDQBMFQXXWGG2H6WELWFHHA476WQTZIXYOPTYADBVBC4LRJOROCKPXK2`
-- **View on Stellar Explorer**: [Stellar.Expert Contract Link](https://stellar.expert/explorer/testnet/contract/CDQBMFQXXWGG2H6WELWFHHA476WQTZIXYOPTYADBVBC4LRJOROCKPXK2)
+- **Deployed Contract Address (ID)**: `CA5SWTEHS7BBX7ZYBEMJLHP3I7CPAF6I75XQWURTVU3II3RARE5KQSA2`
+- **View on Stellar Explorer**: [Stellar.Expert Contract Link](https://stellar.expert/explorer/testnet/contract/CA5SWTEHS7BBX7ZYBEMJLHP3I7CPAF6I75XQWURTVU3II3RARE5KQSA2)
 - **Asset/Token Address (Native XLM SAC)**: `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
-- **Example Transaction Hash (Contract Call)**: [`106d12d3a6876e9edd5cd00e7c50bb9dfa57f39e3e381b44a4de5f08433298da`](https://stellar.expert/explorer/testnet/tx/106d12d3a6876e9edd5cd00e7c50bb9dfa57f39e3e381b44a4de5f08433298da)
+- **Contract Owner (Master Wallet)**: `GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O`
+- **Example Transaction Hash (Contract Call)**: [`783d369bef326ac0950d0b58e0166418e4580e2c89d10afab555aa87083c4caf`](https://stellar.expert/explorer/testnet/tx/783d369bef326ac0950d0b58e0166418e4580e2c89d10afab555aa87083c4caf)
 
 ---
 
@@ -40,6 +41,9 @@ Donors can contribute native XLM to community campaigns. Their total donation vo
 - **Search & Pagination**: Effortlessly find specific campaigns by ID or Title and navigate through pages.
 - **Real-time Transaction History**: Instantly view your incoming and outgoing transactions fetched directly from the Stellar Horizon API.
 - **My Claim Rewards**: A dedicated section to track all successful reward payouts delivered from the smart contract to your wallet.
+- **Ambassador of Goodness (Voucher)**: Loyal donors with VIP status unlock a personalized QR voucher code. Register it on-chain via `register_voucher`. Cashiers scan it via Scanner Center, which invokes `verify_and_claim_voucher` on-chain, reducing the buyer's payment by 2%. All events (`vouch_reg`, `vouch_clm`) are emitted to the Stellar ledger.
+- **VIP Attendance Tracking**: The owner can register VIP attendance for any wallet address at any named event. This calls `register_vip_attendance` on-chain and emits a `vip_att` event, viewable live in the VIP Attendance History section.
+- **Scanner Center**: A dedicated owner-only scanner dashboard for processing Ambassador Vouchers and registering VIP Event Attendance, all via on-chain Soroban transactions.
 - **Additional 4 Exclusive Benefits**: Loyal donors will get 4 of the best and most profitable Exclusive benefits from StelDot.
 
 #### For Owners (Administrators)
