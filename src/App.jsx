@@ -3649,7 +3649,7 @@ export default function App() {
                                     <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/account/${ref.cashier || ''}" target="_blank" style="color: inherit; text-decoration: underline;">${ref.cashier || 'N/A'}</a>
                                   </span><br/>
                                   <strong style="color: #111827;">${t.dateLabel || 'Tanggal'}:</strong> ${ref.date} ${ref.time || ''}<br/><br/>
-                                  <strong style="color: #111827;">${t.statusLabel || 'Status'}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.vipPresent || 'HADIR'}</span>
+                                  <strong style="color: #111827;">${t.statusLabel || 'Status'}:</strong> <span style="color: #f97316; font-weight: bold; background: #fff7ed; padding: 2px 6px; border-radius: 4px;">${t.vipPresent || 'HADIR'}</span>
                                 </div>
                               `,
                               icon: 'info',
@@ -3665,7 +3665,7 @@ export default function App() {
                             <p className="text-[10px] text-slate-500 mt-0.5">{ref.date} {ref.time || ''}</p>
                           </div>
                           <div className="flex flex-col items-end justify-center">
-                            <span className="text-[9px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-md uppercase">{t.vipPresent || 'HADIR'}</span>
+                            <span className="text-[9px] font-bold text-orange-400 bg-orange-400/10 px-2 py-1 rounded-md uppercase">{t.vipPresent || 'HADIR'}</span>
                           </div>
                         </div>
                       ))}
