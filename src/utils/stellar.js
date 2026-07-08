@@ -500,6 +500,18 @@ export const getOwnerTransferHistory = async (contractId) => {
             const funcName = scValToNative(funcNameScVal);
             
             if (funcName === 'transfer_to_client') {
+               let targetContract = '';
+               try {
+                 if (op.parameters.length > 0) {
+                   const contractSc = xdr.ScVal.fromXDR(op.parameters[0].value, 'base64');
+                   targetContract = scValToNative(contractSc);
+                 }
+               } catch (e) {}
+               
+               if (targetContract !== contractId) {
+                 return; // Skip operations belonging to older smart contract deployments
+               }
+
                let owner = '';
                let campaignId = '';
                let amount = 0;
