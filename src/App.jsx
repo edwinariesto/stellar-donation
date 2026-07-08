@@ -32,7 +32,7 @@ import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import bannerImg from './assets/banner.png';
 import frighterIcon from './image/frighter-icon.png';
 import walletConnectIcon from './image/walletconnect-icon.jfif';
-const DEFAULT_CONTRACT_ID = 'CA5SWTEHS7BBX7ZYBEMJLHP3I7CPAF6I75XQWURTVU3II3RARE5KQSA2';
+const DEFAULT_CONTRACT_ID = 'CC2IZMATB3FHGXR6NOR5EUEXLTTWNZ7RTMJEWVUKX25M4FQNTLNPMFJX';
 const NATIVE_XLM_SAC = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
 const initialNet = localStorage.getItem('steldot_last_network') || 'TESTNET';
@@ -1145,6 +1145,9 @@ export default function App() {
         });
 
         const codeSc = nativeToScVal(simulateVoucherCode.trim().toUpperCase(), { type: 'string' });
+        const buyerSc = nativeToScVal(ambassadorTarget.trim(), { type: 'address' });
+        const amountStroops = BigInt(Math.round(amount * 10_000_000));
+        const amountSc = nativeToScVal(amountStroops, { type: 'i128' });
         
         try {
           const voucher = await callReadOnly(contractId, 'get_voucher', [codeSc]);
@@ -1154,7 +1157,7 @@ export default function App() {
             Swal.fire({
               icon: 'error',
               title: t.invalidOwner || 'Akses Ditolak',
-              text: t.invalidOwnerDesc || 'Alamat dompet target yang dimasukkan bukan pemilik sah dari kode voucher ini. Pastikan Anda memasukkan dompet pemilik voucher yang benar.',
+              text: t.invalidOwnerDesc || 'Alamat dompet target yang dimasukkan bukan pemilik sah dari kode voucher ini.',
               confirmButtonText: t.close || 'Tutup',
               });
             return;
@@ -1168,7 +1171,7 @@ export default function App() {
         const txRes = await executeTransaction(
           contractId,
           'verify_and_claim_voucher',
-          [codeSc, cashierSc],
+          [codeSc, cashierSc, buyerSc, amountSc],
           userAddress
         );
         mockHash = txRes.hash;

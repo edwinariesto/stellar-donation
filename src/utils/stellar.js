@@ -407,18 +407,30 @@ export const getGlobalVoucherHistory = async (contractId) => {
           });
         } else if (topic0 === 'vouch_clm') {
           const cashier = scValToNative(evt.topic[1]);
-          const code = scValToNative(evt.value);
+          // Event value is now a tuple: (code, discounted_amount_in_stroops)
+          let code = '';
+          let discountedXlm = 0;
+          try {
+            const rawVal = scValToNative(evt.value);
+            if (Array.isArray(rawVal)) {
+              code = String(rawVal[0]);
+              discountedXlm = Number(rawVal[1]) / 10_000_000;
+            } else {
+              // Older events emitted just the code string
+              code = String(rawVal);
+            }
+          } catch(e) { code = ''; }
           const dateObj = new Date(evt.ledgerClosedAt);
-          // Without native amount in the event, we can leave amount as 0.00 or "DISCOUNT" and calculate uses by counting claims per address.
-          // Wait, who is the owner of the code? The event only gives the code and cashier.
-          // The frontend will have to infer the owner of the code by finding the registration event for this code, or we can just push it and the frontend matches it.
+          const originalXlm = discountedXlm > 0 ? (discountedXlm / 0.98) : 0;
           history.push({
             id: evt.id,
             hash: evt.txHash || evt.id.substring(0, 16),
-            address: cashier, // The cashier processed it, but the UI expects the ambassador address. We will fix this by searching the reg event below.
+            address: cashier,
             code: code,
             type: 'CLAIM',
-            amount: 'DISCOUNT', // The UI actually wants the discounted amount, but since it's not stored in the event, we just put DISCOUNT or 0.
+            amount: discountedXlm.toFixed(2),
+            discountedAmount: discountedXlm,
+            originalAmount: originalXlm,
             date: dateObj.toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit', second:'2-digit' }).replace(',', ''),
             status: 'SUCCESS'
           });

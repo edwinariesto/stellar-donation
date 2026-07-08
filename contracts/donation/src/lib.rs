@@ -640,8 +640,20 @@ impl StelDotContract {
             .publish((Symbol::new(&env, "vouch_reg"), owner), code);
     }
 
-    pub fn verify_and_claim_voucher(env: Env, code: String, cashier: Address) {
+    pub fn verify_and_claim_voucher(
+        env: Env,
+        code: String,
+        cashier: Address,
+        buyer: Address,
+        amount: i128,
+    ) {
         cashier.require_auth();
+        buyer.require_auth();
+
+        if amount <= 0 {
+            panic!("payment amount must be positive");
+        }
+
         let key = DataKey::VoucherInfo(code.clone());
         let mut v: Voucher = env
             .storage()
@@ -653,6 +665,18 @@ impl StelDotContract {
             panic!("voucher is inactive or exhausted");
         }
 
+        // Compute discounted amount: buyer pays 98% (2% discount)
+        let discounted_amount = amount * 98 / 100;
+
+        // Transfer discounted payment from buyer to cashier
+        let token_id: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Token)
+            .expect("token not set");
+        let token_client = token::Client::new(&env, &token_id);
+        token_client.transfer(&buyer, &cashier, &discounted_amount);
+
         v.uses_left -= 1;
         if v.uses_left == 0 {
             v.active = false;
@@ -660,9 +684,9 @@ impl StelDotContract {
 
         env.storage().persistent().set(&key, &v);
 
-        // Publish event for voucher claim
+        // Publish event for voucher claim with amount info
         env.events()
-            .publish((Symbol::new(&env, "vouch_clm"), cashier), code);
+            .publish((Symbol::new(&env, "vouch_clm"), cashier), (code, discounted_amount));
     }
 
     pub fn get_voucher(env: Env, code: String) -> Voucher {
