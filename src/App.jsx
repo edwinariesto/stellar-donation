@@ -290,7 +290,41 @@ export default function App() {
   const [vipHistory, setVipHistory] = useState(() => {
     try {
       const stored = localStorage.getItem('steldot_vip_history');
-      return stored ? JSON.parse(stored) : [];
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.length > 0) return parsed;
+      }
+      
+      // Inject default mock records if local storage is empty so Vercel deployment isn't blank
+      return [
+        {
+          id: 'MOCK1',
+          address: 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O',
+          cashier: 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O',
+          eventName: 'Corporate & Industry: AI Blockchain',
+          date: '08/07/2026',
+          time: '05:53:23',
+          status: 'HADIR'
+        },
+        {
+          id: 'MOCK2',
+          address: 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O',
+          cashier: 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O',
+          eventName: 'StelDot Event End Year 2026',
+          date: '08/07/2026',
+          time: '05:51:10',
+          status: 'HADIR'
+        },
+        {
+          id: 'MOCK3',
+          address: 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O',
+          cashier: 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O',
+          eventName: 'APAC Yogyakarta',
+          date: '08/07/2026',
+          time: '05:42:04',
+          status: 'HADIR'
+        }
+      ];
     } catch (e) { return []; }
   });
   
