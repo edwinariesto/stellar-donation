@@ -263,6 +263,19 @@ export default function App() {
   const filteredReferrals = referralHistory.filter(r => r.donorAddress.toLowerCase().includes(referralSearch.toLowerCase()));
   const totalReferralPages = Math.max(1, Math.ceil(filteredReferrals.length / REFERRALS_PER_PAGE));
   const currentReferrals = filteredReferrals.slice((referralPage - 1) * REFERRALS_PER_PAGE, referralPage * REFERRALS_PER_PAGE);
+
+  // Owner Transfer State
+  const [ownerTransferHistory, setOwnerTransferHistory] = useState([]);
+  const [ownerTransferSearch, setOwnerTransferSearch] = useState('');
+  const [ownerTransferPage, setOwnerTransferPage] = useState(1);
+  const OWNER_TRANSFERS_PER_PAGE = 5;
+  const filteredOwnerTransfers = ownerTransferHistory.filter(t => 
+    t.hash?.toLowerCase().includes(ownerTransferSearch.toLowerCase()) || 
+    t.campaignId?.toString().includes(ownerTransferSearch) ||
+    t.receiver?.toLowerCase().includes(ownerTransferSearch.toLowerCase())
+  );
+  const totalOwnerTransferPages = Math.max(1, Math.ceil(filteredOwnerTransfers.length / OWNER_TRANSFERS_PER_PAGE));
+  const currentOwnerTransfers = filteredOwnerTransfers.slice((ownerTransferPage - 1) * OWNER_TRANSFERS_PER_PAGE, ownerTransferPage * OWNER_TRANSFERS_PER_PAGE);
   
   // Ambassador & VIP State
 
@@ -630,6 +643,9 @@ export default function App() {
         import('./utils/stellar').then(stellar => {
           stellar.getReferralRewardBalance(contractId, userAddress).then(bal => setReferralBalance(bal));
           stellar.getReferralHistory(contractId, userAddress).then(history => setReferralHistory(history));
+          if (userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O') {
+             stellar.getOwnerTransferHistory(contractId).then(history => setOwnerTransferHistory(history));
+          }
         });
       }
 
@@ -2924,6 +2940,104 @@ export default function App() {
             </>
           )
         })()}
+
+          {/* Owner Transfer History (Only for Master Wallet) */}
+          {userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O' && (
+            <div className="bg-white rounded-3xl p-6 shadow-ios border border-ios-lightGray/30 mt-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-60"></div>
+              
+              <div className="flex items-center gap-3 mb-2 relative z-10">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-500 shadow-sm border border-red-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+                </div>
+                <h2 className="text-xl font-bold tracking-tight text-ios-darkText">{t.ownerTransferHistoryTitle || 'Histori Pengiriman Donasi ke Penerima Manfaat'}</h2>
+              </div>
+              
+              <p className="text-sm text-gray-500 mb-6 relative z-10 ml-12">
+                {t.ownerTransferHistoryDesc || 'Riwayat dana kampanye yang telah disalurkan dari treasury ke dompet para penerima manfaat.'}
+              </p>
+
+              <div className="relative mb-6 z-10">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder={t.searchHashOrWallet || 'Search Hash or Campaign ID...'}
+                  value={ownerTransferSearch}
+                  onChange={(e) => { setOwnerTransferSearch(e.target.value); setOwnerTransferPage(1); }}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm font-medium text-ios-darkText placeholder-gray-400 outline-none focus:border-blue-400 focus:bg-white transition-all shadow-sm"
+                />
+              </div>
+
+              <div className="space-y-3 relative z-10">
+                {currentOwnerTransfers.length > 0 ? (
+                  currentOwnerTransfers.map((tx, idx) => {
+                    const camp = campaigns.find(c => Number(c.id) === Number(tx.campaignId));
+                    const cWallet = camp ? camp.client_wallet : null;
+
+                    return (
+                    <div key={idx} className="flex items-center justify-between p-4 rounded-2xl border border-gray-100 bg-white hover:border-blue-100 hover:shadow-sm transition-all group">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center border border-red-100 group-hover:bg-red-500 group-hover:text-white transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <a href={`https://stellar.expert/explorer/testnet/tx/${tx.hash}`} target="_blank" rel="noopener noreferrer" className="font-mono text-sm font-bold text-ios-darkText hover:text-red-500 transition-colors">
+                              {tx.campaignId !== 'N/A' ? `ID Campaign: ${tx.campaignId}` : `ID Campaign: N/A`}
+                            </a>
+                          </div>
+                          <div className="text-[11px] text-gray-400 font-medium">
+                            {tx.date} • {t.receiverWalletLabel || 'Penerima'}: <span className="font-mono">{tx.receiver === 'Campaign Client' ? (t.beneficiaryLabel || 'Penerima Donasi') : (tx.receiver.startsWith('G') ? `${tx.receiver.substring(0,6)}...${tx.receiver.substring(tx.receiver.length-4)}` : tx.receiver)}</span>
+                          </div>
+                          {cWallet && (
+                            <div className="text-[10px] text-gray-400 font-medium mt-0.5">
+                              {t.beneficiaryLabel || 'Penerima Donasi'}: <span className="font-mono bg-gray-100 px-1 py-0.5 rounded">{cWallet.substring(0,6)}...{cWallet.substring(cWallet.length-4)}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <div className="font-bold text-sm text-ios-darkText mb-1">{tx.amount.toFixed(2)} XLM</div>
+                        <div className="inline-block bg-green-100 text-green-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-200">
+                          {t.statusSuccess || 'SUCCESS'}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+                ) : (
+                  <div className="text-center py-8 text-gray-400 text-sm font-medium">
+                    {ownerTransferSearch ? t.noSearchResults : 'No transfer history found.'}
+                  </div>
+                )}
+              </div>
+
+              {totalOwnerTransferPages > 1 && (
+                <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-gray-100">
+                  <button
+                    onClick={() => setOwnerTransferPage(p => Math.max(1, p - 1))}
+                    disabled={ownerTransferPage === 1}
+                    className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  </button>
+                  <span className="text-sm font-bold text-ios-darkText">
+                    {ownerTransferPage} / {totalOwnerTransferPages}
+                  </span>
+                  <button
+                    onClick={() => setOwnerTransferPage(p => Math.min(totalOwnerTransferPages, p + 1))}
+                    disabled={ownerTransferPage === totalOwnerTransferPages}
+                    className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           </div>
 
           {/* Column 3: Sidebar */}

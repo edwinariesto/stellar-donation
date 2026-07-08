@@ -351,7 +351,14 @@ export const translations = {
     youLabel: 'Anda',
     totalLabel: 'Total',
     invalidAmountDesc: 'Silakan masukkan jumlah transfer yang valid.',
-    insufficientFundsDesc: 'Anda tidak dapat mentransfer dana lebih dari yang terkumpul. Dana maksimal yang bisa ditarik saat ini adalah {amount} XLM.'
+    insufficientFundsDesc: 'Anda tidak dapat mentransfer dana lebih dari yang terkumpul. Dana maksimal yang bisa ditarik saat ini adalah {amount} XLM.',
+    ownerTransferHistoryTitle: 'Histori Pengiriman Donasi ke Penerima Manfaat',
+    ownerTransferHistoryDesc: 'Riwayat dana kampanye yang telah disalurkan dari treasury ke dompet para penerima manfaat, baik secara bertahap atau ditransfer full sesuai urgensi dan tahapan monitoring penggunaan dana oleh penerima donasi.',
+    searchHashOrWallet: 'Cari Hash atau ID Kampanye...',
+    senderWalletLabel: 'Pengirim',
+    receiverWalletLabel: 'Penerima',
+    beneficiaryLabel: 'Penerima Donasi',
+    statusSuccess: 'BERHASIL'
   },
   en: {
     walletConnected: 'Wallet Connected',
@@ -710,6 +717,13 @@ export const translations = {
     youLabel: 'You',
     totalLabel: 'Total',
     invalidAmountDesc: 'Please enter a valid transfer amount.',
-    insufficientFundsDesc: 'You cannot transfer more funds than the raised amount. The maximum withdrawable amount currently is {amount} XLM.'
+    insufficientFundsDesc: 'You cannot transfer more funds than the raised amount. The maximum withdrawable amount currently is {amount} XLM.',
+    ownerTransferHistoryTitle: 'Beneficiary Donation Transfer History',
+    ownerTransferHistoryDesc: 'History of campaign funds that have been disbursed from the treasury to beneficiary wallets, either in stages or transferred in full according to urgency and the monitoring phases of fund usage by the beneficiaries.',
+    searchHashOrWallet: 'Search Hash or Campaign ID...',
+    senderWalletLabel: 'Sender',
+    receiverWalletLabel: 'Receiver',
+    beneficiaryLabel: 'Beneficiary',
+    statusSuccess: 'SUCCESS'
   }
 };

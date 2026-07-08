@@ -450,6 +450,68 @@ export const getReferralHistory = async (contractId, referrerAddress) => {
   }
 }
 
+export const getOwnerTransferHistory = async (contractId) => {
+  try {
+    // Fetch operations for the Master Wallet from Horizon
+    const res = await fetch(`${currentNetwork.horizon}/accounts/GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O/operations?limit=100&order=desc`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    
+    const transfers = [];
+    data._embedded.records.forEach(op => {
+      try {
+        if (op.type === 'invoke_host_function') {
+          const symParam = op.parameters.find(p => p.type === 'Sym');
+          if (symParam) {
+            // Decode XDR Sym using stellar-sdk
+            const funcNameScVal = xdr.ScVal.fromXDR(symParam.value, 'base64');
+            const funcName = scValToNative(funcNameScVal);
+            
+            if (funcName === 'transfer_to_client') {
+               let owner = '';
+               let campaignId = '';
+               let amount = 0;
+               let receiver = 'Campaign Client';
+
+               // Parse other parameters
+               if (op.parameters.length > 2) {
+                 const ownerSc = xdr.ScVal.fromXDR(op.parameters[2].value, 'base64');
+                 owner = scValToNative(ownerSc);
+               }
+               if (op.parameters.length > 3) {
+                 const idSc = xdr.ScVal.fromXDR(op.parameters[3].value, 'base64');
+                 campaignId = scValToNative(idSc);
+               }
+               if (op.parameters.length > 4) {
+                 const amountSc = xdr.ScVal.fromXDR(op.parameters[4].value, 'base64');
+                 amount = Number(scValToNative(amountSc)) / 10000000;
+               }
+
+               transfers.push({
+                  id: op.id,
+                  hash: op.transaction_hash,
+                  campaignId: campaignId || 'N/A',
+                  sender: owner || 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O',
+                  receiver: receiver,
+                  amount: amount || 0,
+                  date: new Date(op.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' }),
+                  status: 'SUCCESS'
+               });
+            }
+          }
+        }
+      } catch(e) {}
+    });
+    
+    // Sort descending by date
+    return transfers.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  } catch (err) {
+    console.error('Failed to get owner transfer history', err);
+    return [];
+  }
+}
+
+
   // Execute native payment transaction via Freighter/WC signing
   export async function executeNativePayment(destination, amountStr, memoText, userAddress) {
     const res = await fetch(`${currentNetwork.horizon}/accounts/${userAddress}`);
