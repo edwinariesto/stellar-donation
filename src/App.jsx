@@ -643,11 +643,12 @@ export default function App() {
         import('./utils/stellar').then(stellar => {
           stellar.getReferralRewardBalance(contractId, userAddress).then(bal => setReferralBalance(bal));
           stellar.getReferralHistory(contractId, userAddress).then(history => setReferralHistory(history));
-          if (userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O') {
-             stellar.getOwnerTransferHistory(contractId).then(history => setOwnerTransferHistory(history));
-          }
         });
       }
+
+      import('./utils/stellar').then(stellar => {
+         stellar.getOwnerTransferHistory(contractId).then(history => setOwnerTransferHistory(history));
+      });
 
       // Fetch all campaigns
       setSyncProgress('Step 3/4: Loading all campaigns...');
@@ -2941,10 +2942,9 @@ export default function App() {
           )
         })()}
 
-          {/* Owner Transfer History (Only for Master Wallet) */}
-          {userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O' && (
-            <div className="bg-white rounded-3xl p-6 shadow-ios border border-ios-lightGray/30 mt-8 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-60"></div>
+          {/* Owner Transfer History (Publicly Visible) */}
+          <div className="bg-white rounded-3xl p-6 shadow-ios border border-ios-lightGray/30 mt-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-60"></div>
               
               <div className="flex items-center gap-3 mb-2 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-500 shadow-sm border border-red-200">
@@ -3037,7 +3037,6 @@ export default function App() {
                 </div>
               )}
             </div>
-          )}
           </div>
 
           {/* Column 3: Sidebar */}
