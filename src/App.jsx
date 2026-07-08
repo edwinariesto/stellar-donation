@@ -2942,6 +2942,11 @@ export default function App() {
           )
         })()}
 
+          {/* Animated Gold Separator */}
+          <div className="w-full h-1 mt-10 mb-2 bg-yellow-50 rounded-full overflow-hidden relative shadow-sm">
+            <div className="absolute top-0 bottom-0 left-0 w-1/3 bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-300 animate-shimmer-gold rounded-full"></div>
+          </div>
+
           {/* Owner Transfer History (Publicly Visible) */}
           <div className="bg-white rounded-3xl p-6 shadow-ios border border-ios-lightGray/30 mt-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-60"></div>
@@ -3016,23 +3021,23 @@ export default function App() {
               </div>
 
               {totalOwnerTransferPages > 1 && (
-                <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-gray-100">
-                  <button
+                <div className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-ios-lightGray/30 mt-6">
+                  <button 
                     onClick={() => setOwnerTransferPage(p => Math.max(1, p - 1))}
                     disabled={ownerTransferPage === 1}
-                    className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                    className="px-4 py-2 rounded-full text-sm font-bold bg-gray-50 text-ios-darkText border border-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    {t.prevPage || 'Previous'}
                   </button>
-                  <span className="text-sm font-bold text-ios-darkText">
-                    {ownerTransferPage} / {totalOwnerTransferPages}
+                  <span className="text-sm font-semibold text-ios-secondaryText">
+                    {t.page || 'Page'} {ownerTransferPage} {t.of || 'of'} {totalOwnerTransferPages}
                   </span>
-                  <button
+                  <button 
                     onClick={() => setOwnerTransferPage(p => Math.min(totalOwnerTransferPages, p + 1))}
                     disabled={ownerTransferPage === totalOwnerTransferPages}
-                    className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                    className="px-4 py-2 rounded-full text-sm font-bold bg-gray-50 text-ios-darkText border border-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    {t.nextPage || 'Next'}
                   </button>
                 </div>
               )}

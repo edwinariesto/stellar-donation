@@ -33,6 +33,16 @@
   animation: pulseGlow 2.5s infinite;
 }
 
+/* Gold Shimmer Animation */
+@keyframes shimmerGold {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
+.animate-shimmer-gold {
+  animation: shimmerGold 2s infinite linear;
+}
+
 /* Custom minimal scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
