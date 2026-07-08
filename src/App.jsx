@@ -4403,7 +4403,7 @@ export default function App() {
                 </div>
                 <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
                   <div 
-                    className="bg-blue-500 h-full rounded-full" 
+                    className="bg-gradient-to-r from-red-500 to-red-600 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" 
                     style={{ width: `${selectedCampaign.raised > 0 ? Math.min((selectedCampaign.funds_transferred / selectedCampaign.raised) * 100, 100) : 0}%` }}
                   ></div>
                 </div>
