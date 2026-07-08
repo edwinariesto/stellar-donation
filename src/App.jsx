@@ -2790,16 +2790,19 @@ export default function App() {
                       </div>
                     </div>
 
-                    <h3 className="font-bold text-xl text-ios-darkText leading-tight mb-2">
+                    <h3 className="font-bold text-xl text-ios-darkText leading-tight mb-1">
                       {activeTitle} 
                       {!camp.active && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-2 align-middle">{t.inactive || 'Inactive'}</span>}
-                      {camp.expiration > 0 && (
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full ml-2 align-middle border ${(Date.now()/1000) > camp.expiration ? 'bg-red-50 border-red-200 text-red-600' : 'bg-blue-50 border-blue-200 text-blue-600'}`}>
+                    </h3>
+                    
+                    {camp.expiration > 0 && (
+                      <div className="mb-3">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full border inline-block ${(Date.now()/1000) > camp.expiration ? 'bg-red-50 border-red-200 text-red-600' : 'bg-blue-50 border-blue-200 text-blue-600'}`}>
                           <svg className="w-3 h-3 inline mr-1 pb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                           {(Date.now()/1000) > camp.expiration ? t.campaignFinished : `${t.remaining} ${Math.ceil((camp.expiration - (Date.now()/1000)) / (60 * 60 * 24))} ${t.daysRemaining}`}
                         </span>
-                      )}
-                    </h3>
+                      </div>
+                    )}
 
                     <div className="flex flex-col sm:flex-row gap-4 mb-4">
                       <div className="flex-1 cursor-pointer" onClick={() => setSelectedCampaign(camp)}>
