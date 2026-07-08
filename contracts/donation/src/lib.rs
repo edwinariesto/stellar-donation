@@ -634,6 +634,10 @@ impl StelDotContract {
             active: true,
         };
         env.storage().persistent().set(&key, &v);
+
+        // Publish event for voucher registration
+        env.events()
+            .publish((Symbol::new(&env, "vouch_reg"), owner), code);
     }
 
     pub fn verify_and_claim_voucher(env: Env, code: String, cashier: Address) {
@@ -655,6 +659,10 @@ impl StelDotContract {
         }
 
         env.storage().persistent().set(&key, &v);
+
+        // Publish event for voucher claim
+        env.events()
+            .publish((Symbol::new(&env, "vouch_clm"), cashier), code);
     }
 
     pub fn get_voucher(env: Env, code: String) -> Voucher {

@@ -384,6 +384,67 @@ export const getGlobalVipHistory = async (contractId) => {
   }
 };
 
+export const getGlobalVoucherHistory = async (contractId) => {
+  try {
+    const allEvents = await fetchAllEventsFromExpert(contractId);
+    const history = [];
+    allEvents.forEach(evt => {
+      try {
+        const topic0 = scValToNative(evt.topic[0]);
+        if (topic0 === 'vouch_reg') {
+          const owner = scValToNative(evt.topic[1]);
+          const code = scValToNative(evt.value);
+          const dateObj = new Date(evt.ledgerClosedAt);
+          history.push({
+            id: evt.id,
+            hash: evt.txHash || evt.id.substring(0, 16),
+            address: owner,
+            code: code,
+            type: 'REGISTER',
+            amount: '0.00',
+            date: dateObj.toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit', second:'2-digit' }).replace(',', ''),
+            status: 'TERDAFTAR'
+          });
+        } else if (topic0 === 'vouch_clm') {
+          const cashier = scValToNative(evt.topic[1]);
+          const code = scValToNative(evt.value);
+          const dateObj = new Date(evt.ledgerClosedAt);
+          // Without native amount in the event, we can leave amount as 0.00 or "DISCOUNT" and calculate uses by counting claims per address.
+          // Wait, who is the owner of the code? The event only gives the code and cashier.
+          // The frontend will have to infer the owner of the code by finding the registration event for this code, or we can just push it and the frontend matches it.
+          history.push({
+            id: evt.id,
+            hash: evt.txHash || evt.id.substring(0, 16),
+            address: cashier, // The cashier processed it, but the UI expects the ambassador address. We will fix this by searching the reg event below.
+            code: code,
+            type: 'CLAIM',
+            amount: 'DISCOUNT', // The UI actually wants the discounted amount, but since it's not stored in the event, we just put DISCOUNT or 0.
+            date: dateObj.toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit', second:'2-digit' }).replace(',', ''),
+            status: 'SUCCESS'
+          });
+        }
+      } catch(e){}
+    });
+    
+    // Cross-reference CLAIM events with REGISTER events to attach the correct ambassador address to CLAIM events
+    const codeToOwner = {};
+    history.forEach(h => {
+      if (h.type === 'REGISTER') codeToOwner[h.code] = h.address;
+    });
+    history.forEach(h => {
+      if (h.type === 'CLAIM' && codeToOwner[h.code]) {
+        h.address = codeToOwner[h.code];
+      }
+    });
+
+    history.sort((a, b) => b.id.localeCompare(a.id));
+    return history;
+  } catch (err) {
+    console.error('Failed to get voucher history', err);
+    return [];
+  }
+};
+
 export const getGlobalTransactions = async (contractId) => {
   try {
     const allEvents = await fetchAllEventsFromExpert(contractId);

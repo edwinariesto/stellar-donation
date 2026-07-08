@@ -32,7 +32,7 @@ import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import bannerImg from './assets/banner.png';
 import frighterIcon from './image/frighter-icon.png';
 import walletConnectIcon from './image/walletconnect-icon.jfif';
-const DEFAULT_CONTRACT_ID = 'CCSAJFWRF45NLZACTCSGCXYAPRT6O3TCO4ZLNYUGEFZXMXYRMYW3W5Z4';
+const DEFAULT_CONTRACT_ID = 'CA5SWTEHS7BBX7ZYBEMJLHP3I7CPAF6I75XQWURTVU3II3RARE5KQSA2';
 const NATIVE_XLM_SAC = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
 const initialNet = localStorage.getItem('steldot_last_network') || 'TESTNET';
@@ -280,12 +280,21 @@ export default function App() {
   // Ambassador & VIP State
 
   
-  const [ambassadorHistory, setAmbassadorHistory] = useState(() => {
-    try {
-      const stored = localStorage.getItem('steldot_ambassador_history');
-      return stored ? JSON.parse(stored) : [];
-    } catch (e) { return []; }
-  });
+  const [ambassadorHistory, setAmbassadorHistory] = useState([]);
+
+  useEffect(() => {
+    const fetchAmbassador = async () => {
+      if (!contractId) return;
+      try {
+        const { getGlobalVoucherHistory } = await import('./utils/stellar');
+        const history = await getGlobalVoucherHistory(contractId);
+        setAmbassadorHistory(history);
+      } catch (err) {
+        console.error("Failed to fetch ambassador history", err);
+      }
+    };
+    fetchAmbassador();
+  }, [contractId]);
   
   const [vipHistory, setVipHistory] = useState([]);
   
@@ -1171,35 +1180,9 @@ export default function App() {
           didOpen: () => Swal.showLoading()
         });
         await new Promise(r => setTimeout(r, 2000));
-        mockHash = '0x' + Math.random().toString(16).substring(2, 10).toUpperCase() + '...';
       }
 
-      // Add to local history for UI rendering
-      const newTx = {
-        hash: mockHash,
-        type: 'AMBASSADOR_CLAIM',
-        amount: discountedAmount.toFixed(7),
-        date: new Date().toLocaleDateString('en-GB')
-      };
-      setUserTxData([newTx, ...userTxData]);
-
-      const newRecord = {
-        id: Math.random().toString(36).substring(2, 7).toUpperCase(),
-        address: ambassadorTarget,
-        code: simulateVoucherCode.trim().toUpperCase(),
-        type: 'CLAIM',
-        originalAmount: amount,
-        discountedAmount: discountedAmount,
-        date: new Date().toLocaleDateString('en-GB'),
-        time: new Date().toLocaleTimeString('en-GB'),
-        hash: mockHash,
-        cashier: userAddress
-      };
-  
-      const updatedHistory = [newRecord, ...ambassadorHistory];
-      setAmbassadorHistory(updatedHistory);
-      try { localStorage.setItem('steldot_ambassador_history', JSON.stringify(updatedHistory)); } catch (e) {}
-        setSimulateVoucherCode('');
+      setSimulateVoucherCode('');
       
       Swal.fire({
         icon: 'success',
@@ -1241,22 +1224,7 @@ export default function App() {
         userAddress
       );
 
-      const newRecord = {
-        id: Math.random().toString(36).substring(2, 7).toUpperCase(),
-        address: userAddress,
-        type: 'REGISTER',
-        code: ambassadorVoucherCode,
-        date: new Date().toLocaleDateString('en-GB'),
-        time: new Date().toLocaleTimeString('en-GB'),
-        hash: txRes?.hash || ''
-      };
-      
-      const updatedHistory = [newRecord, ...ambassadorHistory];
-      setAmbassadorHistory(updatedHistory);
-      setAmbassadorPage(1);
-      try { localStorage.setItem('steldot_ambassador_history', JSON.stringify(updatedHistory)); } catch (e) {}
-
-      Swal.fire(t.success || 'Berhasil!', t.registerVoucherSuccess || 'Kode voucher berhasil terdaftar di Blockchain! Sekarang kasir bisa melakukan verifikasi.', 'success');
+      Swal.fire(t.success || 'Berhasil!', t.registerVoucherSuccess || 'Kode voucher berhasil terdaftar di Blockchain! Sekarang kasir bisa melakukan verifikasi.', 'success').then(() => window.location.reload());
     } catch (err) {
       Swal.fire(t.errorTitle || 'Gagal', getTranslatedError(err.message || err), 'error');
     }
