@@ -828,6 +828,7 @@ export default function App() {
     if (msgLow.includes('no wallet') || msgLow.includes('not connected') || msgLow.includes('not detected')) return t.errNoWallet;
     if (msgLow.includes('decline') || msgLow.includes('reject') || msgLow.includes('not allow')) return t.errUserDeclined;
     if (msgLow.includes('unreachablecodereached') || msgLow.includes('invalidaction') || msgLow.includes('voucher not found')) return t.voucherNotFoundDesc || 'Kode voucher tidak ditemukan atau batas penggunaan telah habis.';
+    if (msgLow.includes('resulting balance is not within') || msgLow.includes('balance not within') || (msgLow.includes('error(contract, #10)') && msgLow.includes('transfer'))) return t.insufficientBalance || 'Saldo XLM di dompet Anda tidak cukup untuk melakukan transaksi ini. Silakan top up saldo Anda terlebih dahulu.';
     return errMessage;
   };
 
