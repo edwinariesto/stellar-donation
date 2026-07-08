@@ -685,8 +685,10 @@ impl StelDotContract {
         env.storage().persistent().set(&key, &v);
 
         // Publish event for voucher claim with amount info
-        env.events()
-            .publish((Symbol::new(&env, "vouch_clm"), cashier), (code, discounted_amount));
+        env.events().publish(
+            (Symbol::new(&env, "vouch_clm"), cashier),
+            (code, discounted_amount),
+        );
     }
 
     pub fn get_voucher(env: Env, code: String) -> Voucher {
