@@ -2872,11 +2872,11 @@ export default function App() {
                       <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 mb-6 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => setSelectedCampaign(camp)}>
                         <div className="flex justify-between items-center text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
                           <span>{t.transferredToClient || 'Funds Transferred'}</span>
-                          <span className="text-ios-blue">{camp.funds_transferred.toFixed(2)} / {camp.raised.toFixed(2)} XLM</span>
+                          <span className="text-red-500">{camp.funds_transferred.toFixed(2)} / {camp.raised.toFixed(2)} XLM</span>
                         </div>
                         <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
                           <div 
-                            className="bg-blue-400 h-full rounded-full transition-all duration-500" 
+                            className="bg-gradient-to-r from-red-500 to-red-600 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" 
                             style={{ width: `${camp.raised > 0 ? Math.min((camp.funds_transferred / camp.raised) * 100, 100) : 0}%` }}
                           ></div>
                         </div>
