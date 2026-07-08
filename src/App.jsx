@@ -3565,7 +3565,7 @@ export default function App() {
             ></div>
 
             {/* Modal Content */}
-            <div className="bg-gradient-to-b from-slate-900 to-black w-full max-w-md rounded-3xl shadow-2xl relative overflow-hidden border border-fuchsia-900/50 z-10 flex flex-col p-6 animate-ios-fade-in glow-fuchsia">
+            <div className="bg-gradient-to-b from-slate-900 to-black w-full max-w-md rounded-3xl shadow-2xl relative overflow-hidden border border-emerald-900/50 z-10 flex flex-col p-6 animate-ios-fade-in glow-emerald">
               <button 
                 onClick={() => setShowVIPBarcode(false)}
                 className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 rounded-full p-2 transition-colors z-20"
@@ -3574,7 +3574,7 @@ export default function App() {
               </button>
 
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 bg-gradient-to-br from-fuchsia-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/30 flex-shrink-0">
+                <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30 flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.956-.734L2.02 6.02a.5.5 0 0 1 .798-.518l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg>
                 </div>
                 <div>
@@ -3583,10 +3583,10 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="bg-white p-4 rounded-2xl shadow-inner mb-4 ring-4 ring-fuchsia-500/20 relative flex flex-col items-center justify-center">
+              <div className="bg-white p-4 rounded-2xl shadow-inner mb-4 ring-4 ring-emerald-500/20 relative flex flex-col items-center justify-center">
                 <QRCode value={userAddress || 'StelDot-Legend'} size={200} level="H" />
                 <div className="absolute bg-white rounded-lg p-1.5 shadow-sm flex items-center justify-center" style={{ width: 44, height: 44 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#d946ef" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                   </svg>
                 </div>
@@ -3594,7 +3594,7 @@ export default function App() {
 
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex flex-col items-center justify-center text-center">
-                  <span className="text-3xl font-bold text-fuchsia-400 mb-1">{vipUserHistory.length}</span>
+                  <span className="text-3xl font-bold text-emerald-400 mb-1">{vipUserHistory.length}</span>
                   <span className="text-[10px] text-slate-400 uppercase tracking-widest">{t.totalVisits || 'Total Kunjungan'}</span>
                 </div>
                 
@@ -3607,12 +3607,12 @@ export default function App() {
               {/* History List */}
               <div className="flex-1 bg-slate-900/80 rounded-2xl p-4 border border-slate-800 flex flex-col overflow-hidden relative shadow-inner">
                 {/* VIP Count Badge Stretched */}
-                <div className="w-full mb-4 flex items-center justify-between bg-fuchsia-400/10 border border-fuchsia-400/20 rounded-lg px-3 py-2">
-                   <span className="text-[10px] font-bold text-fuchsia-400 uppercase tracking-widest">{t.totalAttendance || 'Total Kehadiran'}</span>
+                <div className="w-full mb-4 flex items-center justify-between bg-emerald-400/10 border border-emerald-400/20 rounded-lg px-3 py-2">
+                   <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">{t.totalAttendance || 'Total Kehadiran'}</span>
                    {userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O' ? (
-                     <span className="text-[10px] font-mono font-bold text-fuchsia-300">{t.globalLabel || 'Global'}: <span className="text-white">{vipHistory.length}</span> <span className="mx-1 text-fuchsia-500/50">|</span> {t.youLabel || 'Anda'}: <span className="text-white">{vipHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase()).length}</span></span>
+                     <span className="text-[10px] font-mono font-bold text-emerald-300">{t.globalLabel || 'Global'}: <span className="text-white">{vipHistory.length}</span> <span className="mx-1 text-emerald-500/50">|</span> {t.youLabel || 'Anda'}: <span className="text-white">{vipHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase()).length}</span></span>
                    ) : (
-                     <span className="text-[10px] font-mono font-bold text-fuchsia-300 bg-fuchsia-400/20 px-2 py-0.5 rounded-md">{t.totalLabel || 'Total'}: <span className="text-white">{vipHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase()).length}</span></span>
+                     <span className="text-[10px] font-mono font-bold text-emerald-300 bg-emerald-400/20 px-2 py-0.5 rounded-md">{t.totalLabel || 'Total'}: <span className="text-white">{vipHistory.filter(r => r.address.toLowerCase() === (userAddress || '').toLowerCase()).length}</span></span>
                    )}
                 </div>
 
@@ -3623,7 +3623,7 @@ export default function App() {
                     placeholder="Cari acara..."
                     value={vipSearch}
                     onChange={(e) => { setVipSearch(e.target.value); setVipPage(1); }}
-                    className="bg-slate-800/80 border border-slate-700/50 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-fuchsia-500/50 w-32 sm:w-40 transition-colors"
+                    className="bg-slate-800/80 border border-slate-700/50 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-emerald-500/50 w-32 sm:w-40 transition-colors"
                   />
                 </div>
                 
@@ -3659,13 +3659,13 @@ export default function App() {
                           className="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50 flex justify-between items-center cursor-pointer hover:bg-slate-700/80 transition-colors"
                         >
                           <div>
-                            <p className="text-xs font-mono text-fuchsia-400 tracking-wider font-bold mb-1">
+                            <p className="text-xs font-mono text-emerald-400 tracking-wider font-bold mb-1">
                               {ref.eventName.length > 25 ? ref.eventName.substring(0, 25) + '...' : ref.eventName}
                             </p>
                             <p className="text-[10px] text-slate-500 mt-0.5">{ref.date} {ref.time || ''}</p>
                           </div>
                           <div className="flex flex-col items-end justify-center">
-                            <span className="text-[9px] font-bold text-fuchsia-400 bg-fuchsia-400/10 px-2 py-1 rounded-md uppercase">{t.vipPresent || 'HADIR'}</span>
+                            <span className="text-[9px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-md uppercase">{t.vipPresent || 'HADIR'}</span>
                           </div>
                         </div>
                       ))}
@@ -4031,7 +4031,7 @@ export default function App() {
                       {!isCheckingVip && (
                         <div className="text-right">
                           {targetVipTotalDonated >= 500 ? (
-                            <span className="text-[10px] font-bold text-fuchsia-400 bg-fuchsia-400/10 px-2 py-1 rounded-md uppercase">{t.legendValid || 'Legend Valid'}</span>
+                            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-md uppercase">{t.legendValid || 'Legend Valid'}</span>
                           ) : (
                             <span className="text-[10px] font-bold text-red-400 bg-red-400/10 px-2 py-1 rounded-md uppercase">{t.legendNotValid || 'Belum Legend'}</span>
                           )}
