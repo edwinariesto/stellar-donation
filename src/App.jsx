@@ -32,7 +32,7 @@ import { Address, nativeToScVal } from '@stellar/stellar-sdk';
 import bannerImg from './assets/banner.png';
 import frighterIcon from './image/frighter-icon.png';
 import walletConnectIcon from './image/walletconnect-icon.jfif';
-const DEFAULT_CONTRACT_ID = 'CB6UOV6HL3SU7LKXLCU25ISGHFQ3P3HN2Z5VLP22XPNXUPIAVUYD7KFM';
+const DEFAULT_CONTRACT_ID = 'CCSAJFWRF45NLZACTCSGCXYAPRT6O3TCO4ZLNYUGEFZXMXYRMYW3W5Z4';
 const NATIVE_XLM_SAC = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
 const initialNet = localStorage.getItem('steldot_last_network') || 'TESTNET';
@@ -287,46 +287,21 @@ export default function App() {
     } catch (e) { return []; }
   });
   
-  const [vipHistory, setVipHistory] = useState(() => {
-    try {
-      const stored = localStorage.getItem('steldot_vip_history');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && parsed.length > 0) return parsed;
+  const [vipHistory, setVipHistory] = useState([]);
+  
+  useEffect(() => {
+    const fetchVip = async () => {
+      if (!contractId) return;
+      try {
+        const { getGlobalVipHistory } = await import('./utils/stellar');
+        const history = await getGlobalVipHistory(contractId);
+        setVipHistory(history);
+      } catch (err) {
+        console.error("Failed to fetch VIP history", err);
       }
-      
-      // Inject default mock records if local storage is empty so Vercel deployment isn't blank
-      return [
-        {
-          id: 'MOCK1',
-          address: 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O',
-          cashier: 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O',
-          eventName: 'Corporate & Industry: AI Blockchain',
-          date: '08/07/2026',
-          time: '05:53:23',
-          status: 'HADIR'
-        },
-        {
-          id: 'MOCK2',
-          address: 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O',
-          cashier: 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O',
-          eventName: 'StelDot Event End Year 2026',
-          date: '08/07/2026',
-          time: '05:51:10',
-          status: 'HADIR'
-        },
-        {
-          id: 'MOCK3',
-          address: 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O',
-          cashier: 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O',
-          eventName: 'APAC Yogyakarta',
-          date: '08/07/2026',
-          time: '05:42:04',
-          status: 'HADIR'
-        }
-      ];
-    } catch (e) { return []; }
-  });
+    };
+    fetchVip();
+  }, [contractId]);
   
   const [ambassadorPage, setAmbassadorPage] = useState(1);
   const [ambassadorSearch, setAmbassadorSearch] = useState('');
@@ -1066,19 +1041,28 @@ export default function App() {
       return;
     }
 
-    const newRecord = {
-      id: Math.random().toString(36).substring(2, 9).toUpperCase(),
-      address: ambassadorTarget.trim(),
-      cashier: userAddress,
-      eventName: vipEventName.trim(),
-      date: new Date().toLocaleDateString('en-GB'),
-      time: new Date().toLocaleTimeString('en-GB'),
-      status: 'HADIR'
-    };
+    try {
+      Swal.fire({
+        title: 'Mencatat Kehadiran...',
+        text: 'Mohon tunggu konfirmasi transaksi blockchain.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
 
-    const updatedHistory = [newRecord, ...vipHistory];
-    setVipHistory(updatedHistory);
-    try { localStorage.setItem('steldot_vip_history', JSON.stringify(updatedHistory)); } catch (e) {}
+      const ownerSc = nativeToScVal(userAddress, { type: 'address' });
+      const participantSc = nativeToScVal(ambassadorTarget.trim(), { type: 'address' });
+      const eventNameSc = nativeToScVal(vipEventName.trim());
+
+      await executeTransaction(
+        contractId,
+        'register_vip_attendance',
+        [ownerSc, participantSc, eventNameSc],
+        userAddress
+      );
+    } catch (err) {
+      Swal.fire({ title: 'Transaksi Gagal', text: err.message || 'Terjadi kesalahan.', icon: 'error' });
+      return;
+    }
     
     setAmbassadorTarget('');
     setVipEventName('');

@@ -665,6 +665,21 @@ impl StelDotContract {
             .expect("voucher not found")
     }
 
+    pub fn register_vip_attendance(env: Env, owner: Address, participant: Address, event_name: String) {
+        let stored_owner: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Owner)
+            .expect("not initialized");
+        owner.require_auth();
+        if owner != stored_owner {
+            panic!("not authorized: only owner can register VIP attendance");
+        }
+        
+        env.events()
+            .publish((Symbol::short("vip_att"), participant), event_name);
+    }
+
     pub fn upgrade_contract(env: Env, new_wasm_hash: BytesN<32>) {
         let owner: Address = env
             .storage()

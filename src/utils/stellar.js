@@ -352,6 +352,38 @@ export const getGlobalClaims = async (contractId) => {
   }
 };
 
+export const getGlobalVipHistory = async (contractId) => {
+  try {
+    const allEvents = await fetchAllEventsFromExpert(contractId);
+    const history = [];
+    allEvents.forEach(evt => {
+      try {
+        const topic0 = scValToNative(evt.topic[0]);
+        if (topic0 === 'vip_att') {
+          const participant = scValToNative(evt.topic[1]);
+          const eventName = scValToNative(evt.value);
+          const dateObj = new Date(evt.ledgerClosedAt);
+          history.push({
+            id: evt.id,
+            address: participant,
+            cashier: 'Unknown', // Can't easily recover caller from standard event without adding to payload, but frontend hides it mostly or we just use event sender if available
+            eventName: eventName,
+            date: dateObj.toLocaleDateString('en-GB'),
+            time: dateObj.toLocaleTimeString('en-GB'),
+            status: 'HADIR'
+          });
+        }
+      } catch(e){}
+    });
+    
+    history.sort((a, b) => b.id.localeCompare(a.id));
+    return history;
+  } catch (err) {
+    console.error('Failed to get VIP history', err);
+    return [];
+  }
+};
+
 export const getGlobalTransactions = async (contractId) => {
   try {
     const allEvents = await fetchAllEventsFromExpert(contractId);
