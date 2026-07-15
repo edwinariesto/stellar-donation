@@ -4386,8 +4386,17 @@ export default function App() {
                     </span>
                   )}
                   {selectedCampaign.client_wallet && isOwner && (
-                    <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg border border-gray-200 break-all">
-                      Wallet: {selectedCampaign.client_wallet}
+                    <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg border border-gray-200 flex items-center gap-1.5 cursor-pointer hover:bg-gray-200 transition-colors"
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedCampaign.client_wallet);
+                        Swal.fire({ title: t.addressCopied || 'Address Copied!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, background: '#1f2937', color: '#fff' });
+                      }}
+                      title="Copy Address"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                      <span className="font-mono text-[11px] truncate">
+                        Wallet: {selectedCampaign.client_wallet.substring(0, 8)}...{selectedCampaign.client_wallet.substring(selectedCampaign.client_wallet.length - 8)}
+                      </span>
                     </span>
                   )}
                 </div>
