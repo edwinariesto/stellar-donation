@@ -1694,7 +1694,8 @@ export default function App() {
   const showOnboardingGuide = () => {
     Swal.fire({
       title: t.welcomeTitle,
-      iconHtml: '<div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center border-4 border-white shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M18 11V6a2 2 0 0 0-4 0v4"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V5a2 2 0 0 0-4 0v9"/><path d="M6 14v-2a2 2 0 0 0-4 0v5c0 4.418 4.477 8 10 8h2c4.418 0 8-3.582 8-8V9a2 2 0 0 0-4 0v5"/></svg></div>',
+      iconHtml: '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-top: 10px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>',
+      customClass: { icon: 'border-none' },
       html: t.welcomeDesc,
       confirmButtonText: t.letsGo
     });
