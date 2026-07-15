@@ -4156,7 +4156,7 @@ export default function App() {
                           className="bg-slate-800/80 hover:bg-slate-700/80 cursor-pointer transition-colors rounded-xl p-3 border border-slate-700/50 flex justify-between items-center"
                           onClick={() => {
                             Swal.fire({
-                              title: t.claimDetailTitle || 'Detail Transaksi',
+                              title: t.claimDetailTitle || 'Transaction Detail',
                               html: `
                                 <div style="text-align: left; font-family: monospace; font-size: 13px; padding: 0 16px 16px 16px; color: #374151; word-wrap: break-word;">
                                   ${userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O' ? `
@@ -4165,17 +4165,17 @@ export default function App() {
                                     <a href="${getExplorerLink(ref.referrer)}" target="_blank" style="color: #2563eb; text-decoration: underline;">${ref.referrer}</a>
                                   </span><br/>
                                   ` : ''}
-                                  <strong style="color: #111827;">Teman (Donor):</strong><br/>
+                                  <strong style="color: #111827;">${t.friendDonor || 'Friend (Donor)'}:</strong><br/>
                                   <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
                                     <a href="${getExplorerLink(ref.donorAddress)}" target="_blank" style="color: #2563eb; text-decoration: underline;">${ref.donorAddress}</a>
                                   </span><br/>
-                                  <strong style="color: #111827;">Jumlah Donasi (XLM):</strong> ${ref.amount.toFixed(2)} XLM<br/><br/>
-                                  <strong style="color: #111827;">Tanggal:</strong> ${ref.date}<br/><br/>
-                                  <strong style="color: #111827;">Status:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">SUKSES</span>
+                                  <strong style="color: #111827;">${t.donationAmount || 'Donation Amount (XLM)'}:</strong> ${ref.amount.toFixed(2)} XLM<br/><br/>
+                                  <strong style="color: #111827;">${t.dateLabel || 'Date'}:</strong> ${ref.date}<br/><br/>
+                                  <strong style="color: #111827;">${t.statusLabel || 'Status'}:</strong> <span style="color: #10b981; font-weight: bold; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">${t.success ? t.success.toUpperCase() : 'SUCCESS'}</span>
                                 </div>
                               `,
                               icon: 'info',
-                              confirmButtonText: t.close || 'Tutup',
+                              confirmButtonText: t.closeBtn || 'Close',
                               customClass: { 
                                 popup: 'rounded-2xl overflow-hidden !p-0',
                                 htmlContainer: '!p-0 !m-0',
@@ -4195,14 +4195,14 @@ export default function App() {
                           </div>
                           <div className="flex flex-col items-end">
                             <span className="text-[10px] font-bold text-fuchsia-400 mb-0.5">{ref.amount.toFixed(2)} XLM</span>
-                            <span className="text-[9px] font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded-md">+ Sukses</span>
+                            <span className="text-[9px] font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded-md">+ {t.successful || 'Success'}</span>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-[120px] text-center p-6 bg-slate-800/30 rounded-xl border border-slate-700/30 border-dashed">
-                      <p className="text-sm text-slate-500">{t.noReferralHistory || 'Belum ada teman yang berdonasi menggunakan link Anda.'}</p>
+                      <p className="text-sm text-slate-500">{t.noReferralHistory || 'No friends have donated using your link yet.'}</p>
                     </div>
                   )}
                 </div>
