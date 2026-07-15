@@ -366,6 +366,9 @@ export const getGlobalClaims = async (contractId) => {
 
 export const getGlobalVipHistory = async (contractId) => {
   try {
+    const ownerRes = await callReadOnly(contractId, 'get_owner');
+    const contractOwner = ownerRes || 'Unknown';
+    
     const allEvents = await fetchAllEventsFromExpert(contractId);
     const history = [];
     allEvents.forEach(evt => {
@@ -378,7 +381,7 @@ export const getGlobalVipHistory = async (contractId) => {
           history.push({
             id: evt.id,
             address: participant,
-            cashier: 'Unknown', // Can't easily recover caller from standard event without adding to payload, but frontend hides it mostly or we just use event sender if available
+            cashier: contractOwner, // Only owner can scan VIP
             eventName: eventName,
             date: dateObj.toLocaleDateString('en-GB'),
             time: dateObj.toLocaleTimeString('en-GB'),
