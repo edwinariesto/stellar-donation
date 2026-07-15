@@ -3060,7 +3060,7 @@ export default function App() {
                 {topDonors.length === 0 ? (
                   <p className="text-xs text-ios-secondaryText text-center py-4">{t.noTopDonors}</p>
                 ) : (
-                  topDonors.map((donor, idx) => (
+                  topDonors.slice(0, 10).map((donor, idx) => (
                     <div key={idx} className="flex justify-between items-center p-2.5 rounded-xl border border-ios-lightGray/20 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                       <div className="flex items-center gap-2.5">
                         <span className="text-xs font-extrabold text-ios-blue w-5 text-center">#{idx + 1}</span>

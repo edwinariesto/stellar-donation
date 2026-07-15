@@ -326,7 +326,7 @@ export const getGlobalTopDonors = async (contractId) => {
     
     const top = Object.entries(donorTotals).map(([address, amount]) => ({ address, amount }));
     top.sort((a, b) => b.amount - a.amount);
-    return top.slice(0, 10);
+    return top;
     
   } catch (err) {
     console.error('Failed to get global events', err);
