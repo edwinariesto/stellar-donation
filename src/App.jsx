@@ -3588,7 +3588,20 @@ export default function App() {
                 </div>
                 
                 <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 flex flex-col items-center justify-center text-center overflow-hidden">
-                  <span className="text-xs font-mono text-slate-300 break-all leading-tight">{userAddress ? `${userAddress.substring(0,6)}...${userAddress.substring(userAddress.length-6)}` : 'N/A'}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-mono text-slate-300 break-all leading-tight">{userAddress ? `${userAddress.substring(0,6)}...${userAddress.substring(userAddress.length-6)}` : 'N/A'}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(userAddress);
+                        Swal.fire({ title: t.addressCopied || 'Alamat Disalin!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, background: '#1f2937', color: '#fff' });
+                      }}
+                      className="p-1 rounded-md bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 transition-colors flex-shrink-0"
+                      title="Copy Address"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                  </div>
                   <span className="text-[10px] text-slate-400 uppercase tracking-widest mt-2">{t.vipWalletAddress || 'VIP Wallet'}</span>
                 </div>
               </div>
@@ -3720,6 +3733,25 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Wallet Address with Copy */}
+              <div className="w-full bg-slate-800/50 rounded-xl p-2.5 border border-slate-700/50 mb-4 flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-0.5">{t.walletOwner || 'Wallet Address Pemilik'}</p>
+                  <p className="text-[10px] font-mono text-cyan-300 truncate select-all">{userAddress}</p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(userAddress);
+                    Swal.fire({ title: t.addressCopied || 'Alamat Disalin!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, background: '#1f2937', color: '#fff' });
+                  }}
+                  className="flex-shrink-0 p-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 transition-colors"
+                  title="Copy Address"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+              </div>
+
               <div className="w-full bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 mb-4 text-center">
                 <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">{t.ambassadorVoucherCode || 'Shopping Voucher Code'}</p>
                 <p className="font-mono text-2xl font-bold text-cyan-300 tracking-[0.2em] mb-2">{ambassadorVoucherCode}</p>
@@ -3790,9 +3822,9 @@ export default function App() {
                                   <span style="color: #2563eb; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
                                     <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/tx/${ref.hash}" target="_blank" style="color: #2563eb; text-decoration: underline;">${ref.hash}</a>
                                   </span><br/>` : ''}
-                                  ${ref.type !== 'REGISTER' ? `<strong style="color: #111827;">${t.originalAmount || 'Nominal Asli'}:</strong> ${ref.originalAmount.toFixed(2)} XLM<br/>
-                                  <strong style="color: #111827;">${t.discountAmount || 'Potongan'}:</strong> -${(ref.originalAmount - ref.discountedAmount).toFixed(2)} XLM<br/>
-                                  <strong style="color: #111827;">${t.totalPay || 'Harga Bayar'}:</strong> ${ref.discountedAmount.toFixed(2)} XLM<br/><br/>` : ''}
+                                  ${ref.type !== 'REGISTER' && ref.originalAmount != null ? `<strong style="color: #111827;">${t.originalAmount || 'Nominal Asli'}:</strong> ${Number(ref.originalAmount).toFixed(2)} XLM<br/>
+                                  <strong style="color: #111827;">${t.discountAmount || 'Potongan'}:</strong> -${(Number(ref.originalAmount) - Number(ref.discountedAmount || 0)).toFixed(2)} XLM<br/>
+                                  <strong style="color: #111827;">${t.totalPay || 'Harga Bayar'}:</strong> ${Number(ref.discountedAmount || 0).toFixed(2)} XLM<br/><br/>` : ''}
                                   ${ref.type !== 'REGISTER' ? `<strong style="color: #111827;">${t.cashierWallet || 'Dompet Kasir'}:</strong><br/>
                                   <span style="color: #6b7280; user-select: all; display: block; background: #f3f4f6; padding: 8px; border-radius: 8px; margin-top: 4px; font-size: 11px;">
                                     <a href="https://stellar.expert/explorer/${networkMode.toLowerCase()}/account/${ref.cashier || ''}" target="_blank" style="color: inherit; text-decoration: underline;">${ref.cashier || 'N/A'}</a>
