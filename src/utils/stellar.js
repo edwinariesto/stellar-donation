@@ -753,10 +753,10 @@ export async function executeTransaction(contractId, functionName, args = [], us
   const accountData = await res.json();
   const account = new Account(userAddress, accountData.sequence);
 
-  // 2. Build transaction — Soroban calls need a higher fee than BASE_FEE
+  // 2. Build transaction
   const contractObj = new Contract(contractId);
   let tx = new TransactionBuilder(account, {
-    fee: String(10000000), // 1 XLM max fee for Soroban
+    fee: BASE_FEE,
     networkPassphrase: currentNetwork.passphrase,
   })
     .addOperation(contractObj.call(functionName, ...args))
