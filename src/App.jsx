@@ -847,7 +847,7 @@ export default function App() {
       title: 'Connect Wallet',
       html: `
         <div class="flex flex-col gap-4 mt-2">
-          <button id="btn-freighter" class="w-full bg-[#1e1e1e] hover:bg-[#121212] text-white rounded-xl py-4 font-bold flex items-center justify-center gap-3 transition-colors shadow-md">
+          <button id="btn-freighter" class="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-xl py-4 font-bold flex items-center justify-center gap-3 transition-colors shadow-md shadow-purple-500/20">
             <img src="${frighterIcon}" alt="Freighter" class="w-6 h-6 object-contain rounded-full bg-white p-0.5" /> ${t.freighterWeb || 'Freighter (Web)'}
           </button>
           <button id="btn-walletconnect" class="w-full bg-[#3b99fc] hover:bg-[#2a7bce] text-white rounded-xl py-4 font-bold flex items-center justify-center gap-3 transition-colors shadow-md shadow-blue-500/20">
