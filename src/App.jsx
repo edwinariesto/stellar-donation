@@ -860,7 +860,7 @@ export default function App() {
       showCloseButton: true,
       customClass: {
         popup: 'rounded-2xl',
-        closeButton: '!bg-red-500/10 hover:!bg-red-500/20 !text-red-500 !rounded-full !w-8 !h-8 !flex !items-center !justify-center !p-0 !mt-2 !mr-2 !pb-[2px] !outline-none transition-colors'
+        closeButton: '!bg-gray-500/10 hover:!bg-gray-500/20 !text-gray-500 !rounded-full !w-8 !h-8 !flex !items-center !justify-center !p-0 !mt-2 !mr-2 !pb-[2px] !outline-none transition-colors'
       },
       didOpen: () => {
         document.getElementById('btn-freighter').addEventListener('click', async () => {
