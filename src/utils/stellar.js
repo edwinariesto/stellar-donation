@@ -215,7 +215,8 @@ const fetchAllEventsFallback = async (contractId) => {
     let currentEnd = latest.sequence;
     let allEvents = [];
     
-    for (let i = 0; i < 6; i++) {
+    // Scan up to 60 chunks of 5000 ledgers = 300,000 ledgers (~20+ days)
+    for (let i = 0; i < 60; i++) {
       const startLedger = Math.max(minLedger, currentEnd - 5000);
       let pagingToken;
       try {
@@ -249,8 +250,8 @@ let lastContractId = null;
 
 const fetchAllEventsFromExpert = async (contractId) => {
   const now = Date.now();
-  // Cache for 10 seconds or if contract ID changes
-  if (cachedEventsPromise && lastContractId === contractId && (now - cachedEventsTime < 10000)) {
+  // Cache for 30 seconds or if contract ID changes
+  if (cachedEventsPromise && lastContractId === contractId && (now - cachedEventsTime < 30000)) {
     return cachedEventsPromise;
   }
   
@@ -261,8 +262,13 @@ const fetchAllEventsFromExpert = async (contractId) => {
     let allEvents = [];
     try {
       let url = `https://api.stellar.expert/explorer/testnet/contract/${contractId}/events?limit=100`;
-      while (url) {
-        const res = await fetch(url).then(r => r.json());
+      let pageCount = 0;
+      while (url && pageCount < 20) {
+        pageCount++;
+        const res = await fetch(url, { headers: { 'Accept': 'application/json' } }).then(r => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        });
         if (!res || !res._embedded || !res._embedded.records || res._embedded.records.length === 0) break;
         
         const records = res._embedded.records.map(evt => {
@@ -282,9 +288,15 @@ const fetchAllEventsFromExpert = async (contractId) => {
           break;
         }
       }
+      if (allEvents.length === 0) {
+        // stellar.expert might not have indexed yet, try RPC as supplement
+        console.warn('Stellar.expert returned 0 events, supplementing with RPC...');
+        const rpcEvents = await fetchAllEventsFallback(contractId);
+        return rpcEvents;
+      }
       return allEvents;
     } catch(e) {
-      console.warn('Direct fetch blocked by browser, falling back to RPC...', e.message);
+      console.warn('Stellar.expert fetch failed, falling back to RPC...', e.message);
       return await fetchAllEventsFallback(contractId);
     }
   })();

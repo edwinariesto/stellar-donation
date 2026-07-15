@@ -19,8 +19,8 @@ Donors can contribute native XLM to community campaigns. Their total donation vo
 
 ### Smart Contract Information (Testnet)
 
-- **Deployed Contract Address (ID)**: `CA5SWTEHS7BBX7ZYBEMJLHP3I7CPAF6I75XQWURTVU3II3RARE5KQSA2`
-- **View on Stellar Explorer**: [Stellar.Expert Contract Link](https://stellar.expert/explorer/testnet/contract/CA5SWTEHS7BBX7ZYBEMJLHP3I7CPAF6I75XQWURTVU3II3RARE5KQSA2)
+- **Deployed Contract Address (ID)**: `CCF3CR4LIGFXNFQSPIPX46VZBIWZ6VUFTVJ5UTRAT3FFPORPRYVHZ7XF`
+- **View on Stellar Explorer**: [Stellar.Expert Contract Link](https://stellar.expert/explorer/testnet/contract/CCF3CR4LIGFXNFQSPIPX46VZBIWZ6VUFTVJ5UTRAT3FFPORPRYVHZ7XF)
 - **Asset/Token Address (Native XLM SAC)**: `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
 - **Contract Owner (Master Wallet)**: `GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O`
 - **Example Transaction Hash (Contract Call)**: [`783d369bef326ac0950d0b58e0166418e4580e2c89d10afab555aa87083c4caf`](https://stellar.expert/explorer/testnet/tx/783d369bef326ac0950d0b58e0166418e4580e2c89d10afab555aa87083c4caf)

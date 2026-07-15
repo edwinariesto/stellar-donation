@@ -4285,8 +4285,8 @@ export default function App() {
                       </div>
                     </div>
                     <CustomDatePicker 
-                      selectedDate={editingCampaign.expirationDateStr}
-                      onChange={(e) => setEditingCampaign({ ...editingCampaign, expirationDateStr: e.target.value })}
+                      value={editingCampaign.expirationDateStr}
+                      onChange={(val) => setEditingCampaign({ ...editingCampaign, expirationDateStr: val })}
                     />
                   </div>
                 </div>
