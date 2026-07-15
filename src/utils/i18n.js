@@ -71,9 +71,6 @@ export const translations = {
           <div class="mt-4 p-3 bg-green-50 border border-green-100 rounded-xl text-xs text-green-800">
             <strong>Sepenuhnya Otomatis:</strong> Tidak perlu menunggu persetujuan admin. Smart contract memproses dan mengirim reward Anda secara instan!
           </div>
-          <div class="mt-2 p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700">
-            <strong>Mode Mock:</strong> Jika Freighter tidak terhubung, StelDot berjalan dalam Mode Mock agar Anda bisa menjelajahi fitur lengkap secara offline!
-          </div>
           <div class="mt-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-800">
             <strong class="animate-pulse">Biaya Ekosistem:</strong> Setiap donasi yang masuk dikenakan potongan <strong>5% untuk biaya operasional dan pengembangan</strong> ekosistem StelDot. Dana tersebut digunakan untuk menjaga keberlangsungan platform, pengembangan fitur, dan dukungan komunitas.
           </div>
@@ -439,9 +436,6 @@ export const translations = {
           </ol>
           <div class="mt-4 p-3 bg-green-50 border border-green-100 rounded-xl text-xs text-green-800">
             <strong>Fully Automatic:</strong> No admin approval needed. The smart contract processes and sends your reward instantly!
-          </div>
-          <div class="mt-2 p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700">
-            <strong>Mock Mode:</strong> If Freighter is not connected, StelDot runs in Mock Mode so you can explore the full feature set offline!
           </div>
           <div class="mt-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-800">
             <strong class="animate-pulse">Ecosystem Fee:</strong> Every incoming donation is subject to a <strong>5% operational and development fee</strong> for the StelDot ecosystem. These funds sustain the platform, support feature development, and fund community growth.
