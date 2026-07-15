@@ -856,8 +856,12 @@ export default function App() {
         </div>
       `,
       showConfirmButton: false,
-      showCancelButton: true,
-      cancelButtonText: t.close || 'Close',
+      showCancelButton: false,
+      showCloseButton: true,
+      customClass: {
+        popup: 'rounded-2xl',
+        closeButton: '!bg-red-500/10 hover:!bg-red-500/20 !text-red-500 !rounded-full !w-8 !h-8 !flex !items-center !justify-center !mt-2 !mr-2 transition-colors'
+      },
       didOpen: () => {
         document.getElementById('btn-freighter').addEventListener('click', async () => {
           Swal.close();
