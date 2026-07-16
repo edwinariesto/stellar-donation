@@ -12,7 +12,7 @@
     "@albedo-link/intent": "^0.13.0",
     "@creit.tech/stellar-wallets-kit": "^2.4.0",
     "@stellar/freighter-api": "^6.0.1",
-    "@stellar/stellar-sdk": "^12.3.0",
+    "@stellar/stellar-sdk": "^16.0.1",
     "html2canvas": "^1.4.1",
     "html5-qrcode": "^2.3.8",
     "react": "^18.3.1",

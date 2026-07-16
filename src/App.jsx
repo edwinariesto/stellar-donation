@@ -248,7 +248,7 @@ export default function App() {
   const [userAddress, setUserAddress] = useState('');
   const [freighterBalance, setFreighterBalance] = useState('0.00');
   const [contractId, setContractId] = useState(DEFAULT_CONTRACT_ID);
-  const [isMockMode, setIsMockMode] = useState(true);
+  const [isMockMode, setIsMockMode] = useState(false);
   const [networkMode, setNetworkMode] = useState(initialNet);
 
   // Platform & Contract State
