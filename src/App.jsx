@@ -611,7 +611,8 @@ export default function App() {
       setSyncProgress('Step 1/4: Fetching smart contract info...');
 
       // Attempt read calls from on-chain contract
-      const ownerRes = await callReadOnly(contractId, 'get_owner');
+      let ownerRes = '';
+      try { ownerRes = await callReadOnly(contractId, 'get_owner'); } catch(e) {}
       setOwnerAddress(ownerRes || '');
       
       
