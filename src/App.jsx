@@ -355,7 +355,7 @@ export default function App() {
   const [contractBalance, setContractBalance] = useState(0);
   const [topDonors, setTopDonors] = useState([]);
   const [ownerAddress, setOwnerAddress] = useState('');
-  const isOwner = ownerAddress ? userAddress === ownerAddress : userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O';
+  const isOwner = userAddress === 'GCANOQWHT5YRXX2EBQXZJLFPZ5VHZWZA5ZB3FQEUU6CHDCSHXGS3QJ2O' || (ownerAddress && userAddress === ownerAddress);
   const [lang, setLang] = useState('en');
   const t = translations[lang];
 
