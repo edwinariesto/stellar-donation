@@ -4,6 +4,13 @@ import QRCode from 'react-qr-code';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { translations } from './utils/i18n';
 import SwalOrig from 'sweetalert2';
+import homeImg from './image/home.png';
+import parentImg from './image/parent.png';
+import childImg from './image/child.png';
+import hillImg from './image/hill.png';
+import AnimatedClouds from './components/AnimatedClouds';
+import SplashScreen from './components/SplashScreen';
+import './style/css/background-decorations.css';
 
 const Swal = SwalOrig.mixin({
   customClass: {
@@ -1897,8 +1904,32 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F2F2F7] flex flex-col font-sans relative pb-12">
+    <>
+      <SplashScreen />
       
+      {/* Background Animated Clouds (Full Background) */}
+      <AnimatedClouds />
+
+      <div className="min-h-screen flex flex-col font-sans relative pb-12 z-10 overflow-hidden">
+      
+      {/* Left Background Animated Images & Fog */}
+      <div className="bg-decoration-container">
+        <img src={homeImg} alt="Home Background" className="bg-decoration-home" />
+        <img src={parentImg} alt="Parent Background" className="bg-decoration-parent" />
+        <div className="bg-decoration-fog-wrapper">
+           <div className="bg-decoration-fog-inner"></div>
+        </div>
+      </div>
+
+      {/* Right Background Animated Images & Fog */}
+      <div className="bg-decoration-container-right">
+        <img src={hillImg} alt="Hill Background" className="bg-decoration-hill" />
+        <img src={childImg} alt="Child Background" className="bg-decoration-child" />
+        <div className="bg-decoration-fog-wrapper">
+           <div className="bg-decoration-fog-inner rtl"></div>
+        </div>
+      </div>
+
       {/* Sync Progress Banner */}
       {syncProgress && (
         <div className="relative bg-blue-600/95 backdrop-blur-md text-white text-[10px] sm:text-xs font-bold text-center py-2 z-[50] shadow-md flex items-center justify-center gap-2 sm:gap-3 transition-all duration-300">
@@ -4566,5 +4597,6 @@ export default function App() {
         </div>
       )}
     </div>
+    </>
   );
 }

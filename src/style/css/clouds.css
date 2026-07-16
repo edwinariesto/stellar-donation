@@ -1,0 +1,40 @@
+.animated-cloud {
+  position: absolute;
+  left: 0;
+  background: #ffffff;
+  border-radius: 500px;
+  box-shadow: inset 0 -0.8vw 1.5vw rgba(180, 210, 245, 0.6);
+  pointer-events: none;
+}
+
+.animated-cloud::before {
+  content: '';
+  position: absolute;
+  background: #ffffff;
+  border-radius: 50%;
+  width: 45%;
+  height: 120%;
+  top: -60%;
+  left: 15%;
+}
+
+.animated-cloud::after {
+  content: '';
+  position: absolute;
+  background: #ffffff;
+  border-radius: 50%;
+  width: 55%;
+  height: 150%;
+  top: -80%;
+  right: 15%;
+}
+
+@keyframes cloudMoveLTR {
+  0% { transform: translateX(-150vw); }
+  100% { transform: translateX(150vw); }
+}
+
+@keyframes cloudMoveRTL {
+  0% { transform: translateX(150vw); }
+  100% { transform: translateX(-150vw); }
+}
