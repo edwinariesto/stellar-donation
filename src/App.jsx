@@ -616,29 +616,34 @@ export default function App() {
       setOwnerAddress(ownerRes || '');
       
       
-      const raisedRes = await callReadOnly(contractId, 'get_total_raised');
+      let raisedRes = 0;
+      try { raisedRes = await callReadOnly(contractId, 'get_total_raised'); } catch(e){}
       setTotalRaised(raisedRes ? Number(raisedRes) / 10000000 : 0);
 
-      const approvedClaimsRes = await callReadOnly(contractId, 'get_total_claims_approved');
+      let approvedClaimsRes = 0;
+      try { approvedClaimsRes = await callReadOnly(contractId, 'get_total_claims_approved'); } catch(e){}
       setTotalClaimsApproved(Number(approvedClaimsRes || 0));
 
       // Get contract active balance (in SAC token)
-      const balRes = await callReadOnly(NATIVE_XLM_SAC, 'balance', [
+      let balRes = 0;
+      try { balRes = await callReadOnly(NATIVE_XLM_SAC, 'balance', [
         nativeToScVal(contractId, { type: 'address' })
-      ]);
+      ]); } catch(e){}
       setContractBalance(balRes ? Number(balRes) / 10000000 : 0);
 
       // Fetch donor points & donations
       setSyncProgress('Step 2/4: Fetching your wallet data...');
       if (userAddress) {
-        const pointsRes = await callReadOnly(contractId, 'get_donor_points', [
+        let pointsRes = 0;
+        try { pointsRes = await callReadOnly(contractId, 'get_donor_points', [
           nativeToScVal(userAddress, { type: 'address' })
-        ]);
+        ]); } catch(e){}
         setLoyaltyPoints(pointsRes ? Number(pointsRes) / 10000000 : 0);
 
-        const donorTotalRes = await callReadOnly(contractId, 'get_donor_total_donated', [
+        let donorTotalRes = 0;
+        try { donorTotalRes = await callReadOnly(contractId, 'get_donor_total_donated', [
           nativeToScVal(userAddress, { type: 'address' })
-        ]);
+        ]); } catch(e){}
         const total = donorTotalRes ? Number(donorTotalRes) / 10000000 : 0;
         setTotalDonated(total);
 
@@ -654,9 +659,10 @@ export default function App() {
                 });
         }
 
-        const statusRes = await callReadOnly(contractId, 'get_donor_successful_claims', [
+        let statusRes = 0;
+        try { statusRes = await callReadOnly(contractId, 'get_donor_successful_claims', [
           nativeToScVal(userAddress, { type: 'address' })
-        ]);
+        ]); } catch(e){}
         setSuccessfulClaims(Number(statusRes || 0));
 
         import('./utils/stellar').then(stellar => {
