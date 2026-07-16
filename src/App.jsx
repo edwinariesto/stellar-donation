@@ -677,29 +677,35 @@ export default function App() {
 
       // Fetch all campaigns
       setSyncProgress('Step 3/4: Loading all campaigns...');
-      const campaignIdsRes = await callReadOnly(contractId, 'get_campaign_ids');
+      let campaignIdsRes = null;
+      try {
+        campaignIdsRes = await callReadOnly(contractId, 'get_campaign_ids');
+      } catch(e){ console.error('Failed to get campaign ids', e); }
+      
       const loadedCampaigns = [];
       if (campaignIdsRes) {
         for (const id of campaignIdsRes) {
-          const camp = await callReadOnly(contractId, 'get_campaign', [nativeToScVal(id, { type: 'u32' })]);
-          if (camp) {
-            loadedCampaigns.push({
-              id: camp.id,
-              title: camp.title.toString(),
-              description: camp.description.toString(),
-              target: Number(camp.target) / 10000000,
-              raised: Number(camp.raised) / 10000000,
-              active: camp.active,
-              youtube_link: camp.youtube_link?.toString() || '',
-              client_wallet: camp.client_wallet?.toString() || '',
-              expiration: camp.expiration ? Number(camp.expiration) : 0,
-              funds_transferred: camp.funds_transferred ? Number(camp.funds_transferred) / 10000000 : 0,
-              transfers: camp.transfers ? camp.transfers.map(t => ({ amount: Number(t.amount)/10000000, date: Number(t.date) })) : []
-            });
-          }
+          try {
+            const camp = await callReadOnly(contractId, 'get_campaign', [nativeToScVal(id, { type: 'u32' })]);
+            if (camp) {
+              loadedCampaigns.push({
+                id: camp.id,
+                title: camp.title.toString(),
+                description: camp.description.toString(),
+                target: Number(camp.target) / 10000000,
+                raised: Number(camp.raised) / 10000000,
+                active: camp.active,
+                youtube_link: camp.youtube_link?.toString() || '',
+                client_wallet: camp.client_wallet?.toString() || '',
+                expiration: camp.expiration ? Number(camp.expiration) : 0,
+                funds_transferred: camp.funds_transferred ? Number(camp.funds_transferred) / 10000000 : 0,
+                transfers: camp.transfers ? camp.transfers.map(t => ({ amount: Number(t.amount)/10000000, date: Number(t.date) })) : []
+              });
+            }
+          } catch(e) { console.error(`Failed to get campaign ${id}`, e); }
         }
+        setCampaigns(loadedCampaigns);
       }
-      setCampaigns(loadedCampaigns);
 
       // Fetch wallet balance
       if (userAddress) {
@@ -722,8 +728,8 @@ export default function App() {
 
       setIsMockMode(false);
     } catch (err) {
-      console.warn('On-chain fetch failed, falling back to mock mode:', err);
-      enableMockMode(`Unable to sync with Stellar ${networkMode}. Running in offline/mock preview mode.`);
+      console.warn('On-chain fetch failed:', err);
+      // We don't forcefully enable mock mode here anymore to prevent wiping user data on transient RPC errors.
     } finally {
       setIsLoading(false);
       setSyncProgress('');
