@@ -866,6 +866,9 @@ export default function App() {
     Swal.fire({
       title: 'Connect Wallet',
       html: `
+        <button id="btn-close-wallet" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-200/50 hover:bg-slate-300/70 rounded-full p-2 transition-colors z-20" style="position:absolute;top:12px;right:12px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
         <div class="flex flex-col gap-4 mt-2">
           <button id="btn-freighter" class="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-xl py-4 font-bold flex items-center justify-center gap-3 transition-colors shadow-md shadow-purple-500/20">
             <img src="${frighterIcon}" alt="Freighter" class="w-6 h-6 object-contain rounded-full bg-white p-0.5" /> ${t.freighterWeb || 'Freighter (Web)'}
@@ -877,12 +880,12 @@ export default function App() {
       `,
       showConfirmButton: false,
       showCancelButton: false,
-      showCloseButton: true,
+      showCloseButton: false,
       customClass: {
-        popup: 'rounded-2xl',
-        closeButton: '!bg-gray-500/10 hover:!bg-gray-500/20 !text-gray-500 !rounded-full !w-8 !h-8 !flex !items-center !justify-center !p-0 !mt-2 !mr-2 !pb-[2px] !outline-none transition-colors'
+        popup: 'rounded-2xl !overflow-visible'
       },
       didOpen: () => {
+        document.getElementById('btn-close-wallet').addEventListener('click', () => Swal.close());
         document.getElementById('btn-freighter').addEventListener('click', async () => {
           Swal.close();
           try {
